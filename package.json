@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "test": "jest",
+  "test:coverage": "jest --coverage"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Nabz863/group17_freelance_sd.git"
-  },
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
