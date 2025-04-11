@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Nabz863/group17_freelance_sd/issues"
   },
-  "homepage": "https://github.com/Nabz863/group17_freelance_sd#readme"
+  "homepage": "https://github.com/Nabz863/group17_freelance_sd#readme",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
