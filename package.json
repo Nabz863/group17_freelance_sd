@@ -1,0 +1,21 @@
+{
+  "name": "group17_freelance_sd",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nabz863/group17_freelance_sd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Nabz863/group17_freelance_sd/issues"
+  },
+  "homepage": "https://github.com/Nabz863/group17_freelance_sd#readme"
+}
