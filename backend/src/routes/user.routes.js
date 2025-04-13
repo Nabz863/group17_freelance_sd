@@ -1,4 +1,5 @@
 const express = require('express');
+const supabase = require('../utils/supabase');
 const { verifyToken, checkRole, users } = require('../middleware/auth.middleware');
 const { freelancerSignupValidation, clientSignupValidation } = require('../middleware/validation.middleware');
 const router = express.Router();
