@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors({
-  origin: '', // our frontend URL goes here
+  origin: 'https://blue-cliff-0aca0f410.6.azurestaticapps.net', // our frontend URL goes here
   credentials: true
 }));
 app.use(morgan('dev')); // Logging
@@ -70,3 +70,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+//Just checking whether backend-ci works or not

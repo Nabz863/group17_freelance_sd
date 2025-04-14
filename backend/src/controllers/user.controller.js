@@ -1,5 +1,4 @@
 // This file will be completed when database is set up
-// Here's a template with commented functionality:
 
 // Import database connection (uncomment when ready)
 const { supabase } = require("../config/db");
@@ -112,5 +111,5 @@ module.exports = {
   createFreelancer,
   createClient,
   getUserById,
-  updateUserStatus,
+  updateUserStatus
 };
