@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyPal Animated Signup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #0c0c0c;
+      overflow: hidden;
+    }
+
+    .page {
+      display: flex;
+      height: 100vh;
+      width: 200%;
+      transition: transform 1s ease-in-out;
+    }
+
+    .section {
+      width: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .intro-section {
+      background: url('https://images.unsplash.com/photo-1606760727456-eefaa7abf0fc?auto=format&fit=crop&w=1500&q=80') no-repeat center center/cover;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 1rem;
+      padding: 2rem;
+    }
+
+    .card {
+      background-color: #a4f0e0;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      text-align: center;
+      transition: transform 1s ease, opacity 1s ease;
+      color: #060606;
+    }
+
+    .card.purple { background-color: #b19cd9; }
+    .card.yellow { background-color: #fdf39a; }
+
+    .btn-get-started {
+      grid-column: span 2;
+      margin-top: 2rem;
+      background-color: #1abc9c;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    .btn-get-started:hover { background-color: #16a085; }
+
+    /* Parallax animation */
+    .parallax .card:nth-child(1) {
+      transform: translateX(100px) scale(1.1);
+    }
+    .parallax .card:nth-child(2) {
+      transform: translateY(-100px) scale(1.1);
+    }
+    .parallax .card:nth-child(3) {
+      transform: translateY(100px) scale(1.1);
+    }
+    .parallax .card:nth-child(4) {
+      transform: translateX(-100px) scale(1.1);
+    }
+
+    /* Right form panel */
+    .form-container {
+      width: 100%;
+      max-width: 360px;
+      color: white;
+      text-align: center;
+    }
+
+    .form-container h2 {
+      margin-bottom: 2rem;
+      font-size: 2rem;
+    }
+
+    /* Google Button Styles */
+    .btn {
+      display: grid;
+      place-items: center;
+      background: #e3edf7;
+      padding: 1.4em;
+      border-radius: 10px;
+      box-shadow:
+        6px 6px 10px -1px rgba(0, 0, 0, 0.15),
+        -6px -6px 10px -1px rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0);
+      cursor: pointer;
+      transition: transform 0.5s;
+      margin: 0 auto 20px;
+    }
+    
+    .btn:hover {
+      box-shadow:
+        inset 4px 4px 6px -1px rgba(0, 0, 0, 0.2),
+        inset -4px -4px 6px -1px rgba(255, 255, 255, 0.7),
+        -0.5px -0.5px 0px rgba(255, 255, 255, 1),
+        0.5px 0.5px 0px rgba(0, 0, 0, 0.15),
+        0px 12px 10px -10px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      transform: translateY(0.5em);
+    }
+    
+    .btn svg {
+      transition: transform 0.5s;
+    }
+    
+    .btn:hover svg {
+      transform: scale(0.9);
+      fill: #333333;
+    }
+
+    /* GitHub Button Styles */
+    .github-btn {
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition-duration: .4s;
+      cursor: pointer;
+      position: relative;
+      background-color: rgb(31, 31, 31);
+      overflow: hidden;
+    }
+
+    .github-btn .svgIcon {
+      transition-duration: .3s;
+    }
+
+    .github-btn .svgIcon path {
+      fill: white;
+    }
+
+    .github-btn .text {
+      position: absolute;
+      color: rgb(255, 255, 255);
+      width: 120px;
+      font-weight: 600;
+      opacity: 0;
+      transition-duration: .4s;
+    }
+
+    .github-btn:hover {
+      width: 110px;
+      transition-duration: .4s;
+      border-radius: 30px;
+    }
+
+    .github-btn:hover .text {
+      opacity: 1;
+      transition-duration: .4s;
+    }
+
+    .github-btn:hover .svgIcon {
+      opacity: 0;
+      transition-duration: .3s;
+    }
+    
+    /* LinkedIn Button Styles */
+    .linkedin-btn {
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition-duration: 0.4s;
+      cursor: pointer;
+      position: relative;
+      background: #0274b3;
+      overflow: hidden;
+    }
+    
+    .linkedin-btn .svgIcon {
+      transition-duration: 0.3s;
+    }
+    
+    .linkedin-btn .svgIcon path {
+      fill: white;
+    }
+    
+    .linkedin-btn .text {
+      position: absolute;
+      color: rgb(255, 255, 255);
+      width: 120px;
+      font-weight: 600;
+      opacity: 0;
+      transition-duration: 0.4s;
+    }
+    
+    .linkedin-btn:hover {
+      width: 110px;
+      transition-duration: 0.4s;
+      border-radius: 30px;
+    }
+    
+    .linkedin-btn:hover .text {
+      opacity: 1;
+      transition-duration: 0.4s;
+    }
+    
+    .linkedin-btn:hover .svgIcon {
+      opacity: 0;
+      transition-duration: 0.3s;
+    }
+
+    .or {
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #aaa;
+    }
+
+    .social-login {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    /* Fade Animation */
+    .fade-out {
+      animation: fadeOut 0.6s forwards;
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page" id="pageContainer">
+  <!-- Intro Section -->
+  <div class="section intro-section">
+    <div class="grid" id="gridBlocks">
+      <div class="card purple">🌟 Total Care</div>
+      <div class="card">💻 Trust in Tech</div>
+      <div class="card">🌀 Innovation</div>
+      <div class="card yellow">🚀 Own it</div>
+      <button class="btn-get-started" onclick="goToSignup()">Get Started</button>
+    </div>
+  </div>
+
+  <!-- Signup Section -->
+  <div class="section" style="background-color: #0e0e0e;" id="signup-section">
+    <div class="form-container">
+      <h2>Sign Up</h2>
+      <!-- Google Button -->
+      <button class="btn" id="googleSignUp">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          style="display:inline-block;vertical-align:middle"
+          role="img"
+          y="128"
+          x="128"
+          fill="#0092E4"
+          viewBox="0 0 24 24"
+          height="40px"
+          width="40px"
+        >
+          <path
+            d="M21.456 10.154c.123.659.19 1.348.19 2.067c0 5.624-3.764 9.623-9.449 9.623A9.841 9.841 0 0 1 2.353 12a9.841 9.841 0 0 1 9.844-9.844c2.658 0 4.879.978 6.583 2.566l-2.775 2.775V7.49c-1.033-.984-2.344-1.489-3.808-1.489c-3.248 0-5.888 2.744-5.888 5.993c0 3.248 2.64 5.998 5.888 5.998c2.947 0 4.953-1.685 5.365-3.999h-5.365v-3.839h9.26Z"
+          ></path>
+        </svg>
+      </button>
+      <div class="or">or</div>
+      <div class="social-login">
+        <!-- GitHub Button -->
+        <button class="github-btn">
+          <svg class="svgIcon" viewBox="0 0 496 512" height="1.4em" xmlns="http://www.w3.org/2000/svg">
+            <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+          </svg>
+          <span class="text">Github</span>
+        </button>
+
+        <!-- Updated LinkedIn Button -->
+        <button class="linkedin-btn">
+          <svg viewBox="0 0 16 16" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="svgIcon">
+            <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854zm4.943 12.248V6.169H2.542v7.225zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248S2.4 3.226 2.4 3.934c0 .694.521 1.248 1.327 1.248zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016l.016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225z"></path>
+          </svg>
+          <span class="text">LinkedIn</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function goToSignup() {
+    const grid = document.getElementById('gridBlocks');
+    const page = document.getElementById('pageContainer');
+
+    grid.classList.add('parallax');
+
+    setTimeout(() => {
+      page.style.transform = 'translateX(-50%)';
+    }, 600);
+  }
+
+  const googleBtn = document.getElementById('googleSignUp');
+  const section = document.getElementById('signup-section');
+
+  googleBtn.addEventListener('click', () => {
+    section.classList.add('fade-out');
+    setTimeout(() => {
+      window.location.href = 'nav.html';
+    }, 600); // matches fade-out duration
+  });
+</script>
+
+</body>
+</html>
