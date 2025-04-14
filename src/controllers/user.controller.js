@@ -2,78 +2,115 @@
 // Here's a template with commented functionality:
 
 // Import database connection (uncomment when ready)
-// const { db } = require('../config/db');
+const { supabase } = require("../config/db");
 
-const createFreelancer = async (userData) => {
-    try {
-      // After database is set up:
-      // const userRef = await db.collection('users').add({
-      //   ...userData,
-      //   role: 'freelancer',
-      //   status: 'pending',
-      //   createdAt: new Date()
-      // });
-      // return { id: userRef.id, ...userData };
-      
-      // Placeholder for now
-      return { id: 'temp-id', ...userData };
-    } catch (error) {
-      throw new Error(`Error creating freelancer: ${error.message}`);
+const createFreelancer = async (req, res) => {
+  const { user_id, profile, profile_picture_url, credentials_urls } = req.body;
+  try {
+    const { data, error } = await supabase
+      .from("freelancers")
+      .insert([
+        {
+          user_id,
+          profile,
+          profile_picture_url,
+          credentials_urls,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: `Error creating freelancer: ${err.message}`,
+    });
+  }
+};
+
+const createClient = async (req, res) => {
+  const { user_id, profile } = req.body;
+  try {
+    const { data, error } = await supabase
+      .from("clients")
+      .insert([{ user_id, profile }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating client: ${err.message}",
+    });
+  }
+};
+
+const getUserById = async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user_id)
+      .single();
+
+    if (error || !data) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not Found" });
     }
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching user: ${err.message}" });
+  }
+};
+
+const updateUserStatus = async (req, res) => {
+  const { userId } = req.params;
+  const { userType, ...updates } = req.body;
+
+  const allowedTables = {
+    freelancer: "freelancers",
+    client: "clients",
+    admin: "admins",
   };
-  
-  const createClient = async (userData) => {
-    try {
-      // After database is set up:
-      // const userRef = await db.collection('users').add({
-      //   ...userData,
-      //   role: 'client',
-      //   status: 'pending',
-      //   createdAt: new Date()
-      // });
-      // return { id: userRef.id, ...userData };
-      
-      // Placeholder for now
-      return { id: 'temp-id', ...userData };
-    } catch (error) {
-      throw new Error(`Error creating client: ${error.message}`);
-    }
-  };
-  
-  const getUserById = async (userId) => {
-    try {
-      // After database is set up:
-      // const userDoc = await db.collection('users').doc(userId).get();
-      // if (!userDoc.exists) return null;
-      // return { id: userDoc.id, ...userDoc.data() };
-      
-      // Placeholder for now
-      return null;
-    } catch (error) {
-      throw new Error(`Error fetching user: ${error.message}`);
-    }
-  };
-  
-  const updateUserStatus = async (userId, updates) => {
-    try {
-      // After database is set up:
-      // await db.collection('users').doc(userId).update({
-      //   ...updates,
-      //   updatedAt: new Date()
-      // });
-      // const updatedUser = await getUserById(userId);
-      // return updatedUser;
-      
-      // Placeholder for now
-      return { id: userId, ...updates };
-    } catch (error) {
-      throw new Error(`Error updating user: ${error.message}`);
-    }
-  };
-  
-  module.exports = {
-    createFreelancer,
-    createClient,
-    getUserById,
-    updateUserStatus
-  };
+
+  const table = allowedTables[userType];
+
+  if (!table) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid user type provided" });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(table)
+      .update(updates)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating user: ${err.message}" });
+  }
+};
+
+module.exports = {
+  createFreelancer,
+  createClient,
+  getUserById,
+  updateUserStatus,
+};
