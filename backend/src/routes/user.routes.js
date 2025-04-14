@@ -1,168 +1,172 @@
-const express = require('express');
-const supabase = require('../utils/supabase');
-const { verifyToken, checkRole, users } = require('../middleware/auth.middleware');
-const { freelancerSignupValidation, clientSignupValidation } = require('../middleware/validation.middleware');
+const express = require("express");
+const { verifyToken, checkRole } = require("../middleware/auth.middleware");
 const router = express.Router();
+const supabase = require("../config/supabaseClient");
 
 // Get all users (Admin only)
-router.get('/', verifyToken, checkRole(['admin']), (req, res) => {
-  // This will be replaced with database query
-  res.status(200).json({ 
-    success: true, 
-    users: users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      createdAt: user.createdAt
-    }))
-  });
+router.get("/", verifyToken, checkRole(["admin"]), async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("users").select("*");
+
+    if (error) throw new Error(error.message);
+
+    res.status(200).json({
+      success: true,
+      users: data,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Freelancer signup route
-router.post('/signup/freelancer', freelancerSignupValidation, (req, res) => {
-  // This will be replaced with database logic
-  const { email, fullName, skills, phoneNumber, location } = req.body;
-  
-  // Check if user already exists
-  const existingUser = users.find(user => user.email === email);
-  if (existingUser) {
-    return res.status(400).json({ message: 'User already exists' });
-  }
-  
-  // Create new user
-  const newUser = {
-    id: Date.now().toString(),
-    email,
-    name: fullName,
-    skills,
-    phoneNumber,
-    location,
-    role: 'pending',
-    type: 'freelancer',
-    createdAt: new Date(),
-    status: 'pending'
-  };
-  
-  users.push(newUser);
-  
-  // Send notification about status (will be implemented with database)
-  
-  res.status(201).json({
-    success: true,
-    message: 'Freelancer registration successful. Awaiting approval.',
-    user: {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      role: newUser.role,
-      status: newUser.status
+router.post("/signup/freelancer", verifyToken, async (req, res) => {
+  try {
+    const { role } = req.body;
+    const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
+
+    // Check if user already exists in Supabase
+    const { data: existingUser, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth0_id", auth0_id)
+      .single();
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
-  });
+
+    // Create new user in Supabase
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert([
+        {
+          auth0_id,
+          role,
+          status: "pending",
+        },
+      ])
+      .single();
+
+    if (insertError) throw new Error(insertError.message);
+
+    res.status(201).json({
+      success: true,
+      message: "Freelancer registration successful. Awaiting approval.",
+      user: newUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Client signup route
-router.post('/signup/client', clientSignupValidation, (req, res) => {
-  // This will be replaced with database logic
-  const { email, companyName, contactPerson, phoneNumber, location } = req.body;
-  
-  // Check if user already exists
-  const existingUser = users.find(user => user.email === email);
-  if (existingUser) {
-    return res.status(400).json({ message: 'User already exists' });
-  }
-  
-  // Create new user
-  const newUser = {
-    id: Date.now().toString(),
-    email,
-    companyName,
-    contactPerson,
-    phoneNumber,
-    location,
-    role: 'pending',
-    type: 'client',
-    createdAt: new Date(),
-    status: 'pending'
-  };
-  
-  users.push(newUser);
-  
-  // Send notification about status (will be implemented with database)
-  
-  res.status(201).json({
-    success: true,
-    message: 'Client registration successful. Awaiting approval.',
-    user: {
-      id: newUser.id,
-      email: newUser.email,
-      companyName: newUser.companyName,
-      role: newUser.role,
-      status: newUser.status
+router.post("/signup/client", verifyToken, async (req, res) => {
+  try {
+    const { role } = req.body;
+    const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
+
+    // Check if user already exists in Supabase
+    const { data: existingUser, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth0_id", auth0_id)
+      .single();
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
-  });
+
+    // Create new user in Supabase
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert([
+        {
+          auth0_id, // Linking user with Auth0 ID
+          role, // Client role
+          status: "pending", // Pending status by default
+        },
+      ])
+      .single();
+
+    if (insertError) throw new Error(insertError.message);
+
+    res.status(201).json({
+      success: true,
+      message: "Client registration successful. Awaiting approval.",
+      user: newUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Update user status (Admin only)
-router.patch('/:userId/status', verifyToken, checkRole(['admin']), (req, res) => {
-  // This will be replaced with database logic
-  const { userId } = req.params;
-  const { status, role } = req.body;
-  
-  const userIndex = users.findIndex(user => user.id === userId);
-  if (userIndex === -1) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-  
-  // Update user status and role
-  users[userIndex].status = status || users[userIndex].status;
-  users[userIndex].role = role || users[userIndex].role;
-  
-  // send notification to user about status update , implemented with db
-  
-  res.status(200).json({
-    success: true,
-    message: 'User status updated successfully',
-    user: {
-      id: users[userIndex].id,
-      email: users[userIndex].email,
-      name: users[userIndex].name,
-      role: users[userIndex].role,
-      status: users[userIndex].status
+router.patch(
+  "/:userId/status",
+  verifyToken,
+  checkRole(["admin"]),
+  async (req, res) => {
+    const { userId } = req.params;
+    const { status, role } = req.body;
+
+    try {
+      // Look for the user in the database by Auth0 ID
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("auth0_id", userId)
+        .single();
+
+      if (error || !user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user status and role
+      const { data: updatedUser, updateError } = await supabase
+        .from("users")
+        .update({
+          status: status || user.status,
+          role: role || user.role,
+        })
+        .eq("auth0_id", userId)
+        .single();
+
+      if (updateError) throw new Error(updateError.message);
+
+      res.status(200).json({
+        success: true,
+        message: "User status updated successfully",
+        user: updatedUser,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
-  });
-});
+  }
+);
 
 // Get user profile
-router.get('/profile', verifyToken, (req, res) => {
-  // This will be replaced with database query
-  const user = users.find(user => user.id === req.user.id);
-  
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-  
-  res.status(200).json({
-    success: true,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      // Include other profile details based on user type, double check what details will be asked for on form
-      ...(user.type === 'freelancer' ? {
-        skills: user.skills,
-        location: user.location,
-        phoneNumber: user.phoneNumber
-      } : {}),
-      ...(user.type === 'client' ? {
-        companyName: user.companyName,
-        contactPerson: user.contactPerson,
-        location: user.location,
-        phoneNumber: user.phoneNumber
-      } : {})
+router.get("/profile", verifyToken, async (req, res) => {
+  const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
+
+  try {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth0_id", auth0_id)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  });
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 module.exports = router;

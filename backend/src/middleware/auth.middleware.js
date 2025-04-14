@@ -4,9 +4,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Initialize passport
-passport.initialize();
+//passport.initialize();
 
-// needs to connect to db, using in memory storage for now
 const users = [];
 
 passport.use(new GoogleStrategy({
@@ -46,8 +45,10 @@ passport.serializeUser((user, done) => {
 // Deserialize user from session
 passport.deserializeUser((id, done) => {
   const user = users.find(user => user.id === id);
+/*passport.deserializeUser((id, done) => {
+  const user = users.find((user) => user.id === id);
   done(null, user || null);
-});
+});*/
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
