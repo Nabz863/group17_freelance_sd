@@ -25,6 +25,7 @@ jobs:
         working-directory: ./frontend
         run: |
           npm install
+          npm install @supabase/supabase-js
           npm run build
       
       # Backend build (if using Azure Functions)
