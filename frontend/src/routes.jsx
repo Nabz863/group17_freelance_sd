@@ -4,7 +4,7 @@ import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import FreelancerDashboard from "./pages/FreelancerDashboard";
-import Unauthorized from "./pages/Unauthorized";
+import Unauthorised from "./pages/Unauthorised";
 import RegisterRole from "./pages/RegisterRole";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
@@ -18,7 +18,7 @@ export default function RoutesComponent() {
     <Route path="/admin" element={<AdminDashboard />} />
     <Route path="/client" element={<ClientDashboard />} />
     <Route path="/freelancer" element={<FreelancerDashboard />} />
-    <Route path="/unauthorized" element={<Unauthorized />} />
+    <Route path="/unauthorized" element={<Unauthorised />} />
     <Route path="/register-role" element={<RegisterRole />} />
     {/* fallback route */}
     <Route path="*" element={<NotFound />} />
