@@ -29,11 +29,11 @@ jobs:
           npm run build
       
       # Backend build (if using Azure Functions)
-      - name: Build API
-        working-directory: ./backend
-        run: |
-          npm install
-          npm run build
+      #- name: Build API
+        #working-directory: ./backend
+        #run: |
+          #npm install
+          #npm run build
       
       # Deployment
       - name: Deploy to Azure
