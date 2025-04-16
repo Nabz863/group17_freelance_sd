@@ -21,7 +21,7 @@ export default function RoutesComponent() {
     <Route path="/unauthorized" element={<Unauthorised />} />
     <Route path="/register-role" element={<RegisterRole />} />
     {/* fallback route */}
-    <Route path="*" element={<NotFound />} />
+    {/*<Route path="*" element={<NotFound />} />*/}
   </Routes>
   );
 }
