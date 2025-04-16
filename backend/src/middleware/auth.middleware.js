@@ -1,90 +1,31 @@
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+//REPLACE stuff with environment variables from Azure!
+const { auth } = require('express-oauth2-jwt-bearer');
+const { expressJwtSecret } = require('jwks-rsa');
 
-// Initialize passport
-//passport.initialize();
-
-const users = [];
-
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.CALLBACK_URL
-  },
-  function(accessToken, refreshToken, profile, done) {
-    // This function will be replaced with database logic later
-    // For now, we'll use in-memory storage
-    const existingUser = users.find(user => user.googleId === profile.id);
-    
-    if (existingUser) {
-      return done(null, existingUser);
-    }
-    
-    // Create a new user if they do not exist
-    const newUser = {
-      id: Date.now().toString(),
-      googleId: profile.id,
-      email: profile.emails[0].value,
-      name: profile.displayName,
-      role: 'pending', // Default role is pending until approved
-      createdAt: new Date()
-    };
-    
-    users.push(newUser);
-    return done(null, newUser);
-  }
-));
-
-// Serialize user for session
-passport.serializeUser((user, done) => {
-  done(null, user.id);
+// Auth0 middleware
+const jwtCheck = auth({
+  secret: expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksUri: `https://dev-ttpqtow83wgggk7p.us.auth0.com/.well-known/jwks.json`//REPLACE ${process.env.AUTH0_DOMAIN}
+  }),
+  audience: 'https://dev-ttpqtow83wgggk7p.us.auth0.com/api/v2/',//REPLACE process.env.AUTH0_AUDIENCE
+  issuer: `https://dev-ttpqtow83wgggk7p.us.auth0.com/`,//REPLACE ${process.env.AUTH0_DOMAIN}
+  algorithms: ['RS256']
 });
 
-// Deserialize user from session
-passport.deserializeUser((id, done) => {
-  const user = users.find(user => user.id === id);
-/*passport.deserializeUser((id, done) => {
-  const user = users.find((user) => user.id === id);
-  done(null, user || null);
-});*/
-
-// Middleware to verify JWT token
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
-  
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+// Role checking middleware remains similar
+const checkRole = (roles) => (req, res, next) => {
+  if (!req.auth || !req.auth.payload) {
+    return res.status(401).json({ message: 'Unauthorized' });
   }
   
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
+  const userRoles = req.auth.payload[`https://dev-ttpqtow83wgggk7p.us.auth0.com/roles`] || [];//REPLACE ${process.env.AUTH0_NAMESPACE}
+  if (!roles.some(role => userRoles.includes(role))) {
+    return res.status(403).json({ message: 'Insufficient permissions' });
   }
+  
+  next();
 };
 
-// Middleware to check user role
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Forbidden - insufficient permissions' });
-    }
-    
-    next();
-  };
-};
-
-module.exports = {
-  passport,
-  verifyToken,
-  checkRole,
-  users // Temporary export for development purposes
-};
+module.exports = { jwtCheck, checkRole };
