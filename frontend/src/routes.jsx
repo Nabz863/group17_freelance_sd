@@ -23,7 +23,7 @@ export default function RoutesComponent() {
     <Route path="/unauthorized" element={<Unauthorised />} />
     <Route path="/register-role" element={<RegisterRole />} />
     {/* fallback route */}
-    <Route path="*" element={<Home />} />
+    <Route path="*" element={<Landing />} />
     <Route path="*" element={<div className="p-8 text-center text-white">404 - Not Found</div>} />
   </Routes>
   );
