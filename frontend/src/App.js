@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import RoutesComponent from "./routes";
 
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.REACT_APP_SUPABASE_URL,
+  import.meta.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
 function App() {
