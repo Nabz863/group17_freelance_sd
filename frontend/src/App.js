@@ -5,14 +5,20 @@ import { createClient } from "@supabase/supabase-js";
 import RoutesComponent from "./routes";
 
 const supabase = createClient(
-  import.meta.env.REACT_APP_SUPABASE_URL,
-  import.meta.env.REACT_APP_SUPABASE_ANON_KEY
+ process.env.REACT_APP_SUPABASE_URL,
+ process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
 function App() {
-  const { isAuthenticated, user, isLoading } = useAuth0();
+  const { isAuthenticated, user, isLoading, loginWithRedirect} = useAuth0();
   const navigate = useNavigate();
 
+  useEffect(() => {
+  if (!isLoading && !isAuthenticated) {
+    loginWithRedirect();
+  }
+}, [isLoading, isAuthenticated, loginWithRedirect]);
+  
   const handleAuth = useCallback(async () => {
     if (!isAuthenticated || !user) return;
 
