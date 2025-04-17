@@ -24,6 +24,7 @@ export default function RoutesComponent() {
     <Route path="/register-role" element={<RegisterRole />} />
     {/* fallback route */}
     <Route path="*" element={<Home />} />
+    <Route path="/error" element={<div>Error during authentication.</div>} />
   </Routes>
   );
 }
