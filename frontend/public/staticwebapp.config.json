@@ -3,4 +3,11 @@
       "rewrite": "/index.html",
       "exclude": ["/static/*", "/images/*", "/*.css", "/*.js"]
     }
+    "routes": [
+    {
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
+    }
+    ]
   }
