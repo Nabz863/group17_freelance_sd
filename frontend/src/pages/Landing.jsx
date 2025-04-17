@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import "./Landing.css";
+import "./styles/Landing.css";
 
 export default function Landing() {
   const { loginWithRedirect } = useAuth0();
