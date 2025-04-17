@@ -1,5 +1,4 @@
 import PendingApproval from "./pages/PendingApproval";
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
