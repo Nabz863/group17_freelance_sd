@@ -7,13 +7,14 @@ import ClientDashboard from "./pages/ClientDashboard";
 import FreelancerDashboard from "./pages/FreelancerDashboard";
 import Unauthorised from "./pages/Unauthorised";
 import RegisterRole from "./pages/RegisterRole";
+import Landing from "./pages/Landing";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
 export default function RoutesComponent() {
     return (
     <Routes>
-    <Route path="/" element={<Home />} />
+    <Route path="/" element={<Landing />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
     <Route path="/pending" element={<PendingApproval />} />
@@ -24,7 +25,7 @@ export default function RoutesComponent() {
     <Route path="/register-role" element={<RegisterRole />} />
     {/* fallback route */}
     <Route path="*" element={<Home />} />
-    <Route path="/error" element={<div>Error during authentication.</div>} />
+    <Route path="*" element={<div className="p-8 text-center text-white">404 - Not Found</div>} />
   </Routes>
   );
 }
