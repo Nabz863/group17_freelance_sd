@@ -10,11 +10,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Auth0Provider
-      domain="dev-ttpqtow83wgggk7p.us.auth0.com"
-      clientId="GzU5loBovWg9jBrw2eheEhyOjLSJ2msl"
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-      }}
+      domain={import.meta.env.REACT_APP_AUTH0_DOMAIN}
+      clientId={import.meta.env.REACT_APP_AUTH0_CLIENT_ID}
+    authorizationParams={{
+       redirect_uri: import.meta.env.REACT_APP_AUTH0_CALLBACK_URL
+    }}
     >
     <BrowserRouter>
       <App />
