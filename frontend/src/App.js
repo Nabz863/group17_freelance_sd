@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import RoutesComponent from "./routes";
 
 const supabase = createClient(
-  "https://zmpoydirinhziqedzjmi.supabase.co", 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptcG95ZGlyaW5oemlxZWR6am1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1NzUwODYsImV4cCI6MjA2MDE1MTA4Nn0.qmI2YB1KBHvrEPzyYB1ISy2b9GWvcd1O9JxAPCZn2_I"
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 function App() {
