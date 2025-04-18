@@ -3,7 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const supabase = createClient("https://your-project.supabase.co", "public-anon-key");
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
 
 export default function RegisterRole() {
   const { user } = useAuth0();
@@ -26,9 +29,9 @@ export default function RegisterRole() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-xl font-bold">Choose Your Role</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+    <main>
+      <h1>Select Role</h1>
+      <form onSubmit={handleSubmit}>
         <label>
           <input
             type="radio"
@@ -36,7 +39,7 @@ export default function RegisterRole() {
             value="client"
             checked={role === "client"}
             onChange={() => setRole("client")}
-          />{" "}
+          />
           Client
         </label>
         <label>
@@ -46,11 +49,11 @@ export default function RegisterRole() {
             value="freelancer"
             checked={role === "freelancer"}
             onChange={() => setRole("freelancer")}
-          />{" "}
+          />
           Freelancer
         </label>
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+        <button type="submit">Continue</button>
       </form>
-    </div>
+    </main>
   );
 }
