@@ -37,6 +37,7 @@ function App() {
   
     if (!user.email_verified) {
       console.log("Email not verified.");
+      navigate("/verify-email");
       return;
     }
   
