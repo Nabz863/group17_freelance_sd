@@ -16,16 +16,34 @@ export default function RegisterRole() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const userId = user.sub;
-
-    await supabase.from("users").insert({ id: userId }).onConflict("id").ignore();
-
-    if (role === "client") {
-      await supabase.from("clients").insert({ user_id: userId, status: "pending" });
-    } else {
-      await supabase.from("freelancers").insert({ user_id: userId, status: "pending" });
+  
+    try {
+      const { error: userError } = await supabase
+        .from("users")
+        .insert({ id: userId })
+        .onConflict("id")
+        .ignore();
+  
+      if (userError) throw userError;
+  
+      if (role === "client") {
+        const { error } = await supabase
+          .from("clients")
+          .insert({ user_id: userId, status: "pending" });
+  
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("freelancers")
+          .insert({ user_id: userId, status: "pending" });
+  
+        if (error) throw error;
+      }
+  
+      navigate("/pending");
+    } catch (err) {
+      console.error("Registration error:", err.message);
     }
-
-    navigate("/pending");
   };
 
   return (

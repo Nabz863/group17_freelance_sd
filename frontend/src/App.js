@@ -60,8 +60,9 @@ function App() {
   }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
+    if (location.pathname === "/") return;
     handleAuth();
-  }, [handleAuth]);
+  }, [handleAuth, location.pathname]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
