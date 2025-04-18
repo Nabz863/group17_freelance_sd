@@ -16,6 +16,7 @@ export default function RegisterRole() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const userId = user.sub;
+    console.log("Submitting role for:", userId);
   
     try {
       const { error: userError } = await supabase
@@ -25,19 +26,22 @@ export default function RegisterRole() {
         .ignore();
   
       if (userError) throw userError;
+      console.log("Inserted into users");
   
       if (role === "client") {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("clients")
           .insert({ user_id: userId, status: "pending" });
   
         if (error) throw error;
+        console.log("Inserted into clients", data);
       } else {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("freelancers")
           .insert({ user_id: userId, status: "pending" });
   
         if (error) throw error;
+        console.log("Inserted into freelancers", data);
       }
   
       navigate("/pending");

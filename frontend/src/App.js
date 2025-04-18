@@ -24,7 +24,7 @@ function App() {
     const publicRoutes = ["/"];
     const currentPath = location.pathname;
 
-    if (!isLoading && !isAuthenticated && !publicRoutes.includes(currentPath)) {
+    if (!isLoading && !isAuthenticated && currentPath !== "/" && !currentPath.startsWith("/callback")) {
       loginWithRedirect();
     }
   }, [isLoading, isAuthenticated, loginWithRedirect, location.pathname]);
@@ -64,6 +64,11 @@ function App() {
     if (location.pathname === "/") return;
     handleAuth();
   }, [handleAuth, location.pathname]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user || location.pathname === "/register-role") return;
+    handleAuth();
+  }, [isAuthenticated, user, location.pathname])
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
