@@ -1,12 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "../utils/supabaseClient";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
 
 export default function RegisterRole() {
   const { user } = useAuth0();

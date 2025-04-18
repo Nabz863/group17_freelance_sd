@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import supabase from "../utils/supabaseClient";
+import supabase from "./utils/supabaseClient";
 import RoutesComponent from "./routes";
 
 function App() {
