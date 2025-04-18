@@ -21,7 +21,6 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    const publicRoutes = ["/"];
     const currentPath = location.pathname;
 
     if (!isLoading && !isAuthenticated && currentPath !== "/" && !currentPath.startsWith("/callback")) {
@@ -68,7 +67,7 @@ function App() {
   useEffect(() => {
     if (!isAuthenticated || !user || location.pathname === "/register-role") return;
     handleAuth();
-  }, [isAuthenticated, user, location.pathname])
+  }, [handleAuth, isAuthenticated, user, location.pathname])
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
