@@ -1,13 +1,8 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "../utils/supabaseClient";
 import RoutesComponent from "./routes";
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
 
 function App() {
   const {
@@ -41,8 +36,8 @@ function App() {
 
     try {
       const [{ data: client }, { data: freelancer }] = await Promise.all([
-        supabase.from("clients").select("status").eq("user_id", userId).single(),
-        supabase.from("freelancers").select("status").eq("user_id", userId).single()
+        supabase.from("clients").select("status").eq("user_id", userId).maybeSingle(),
+        supabase.from("freelancers").select("status").eq("user_id", userId).maybeSingle()
       ]);
 
       if (client) {
