@@ -1,6 +1,4 @@
 import PendingApproval from "./pages/PendingApproval";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import FreelancerDashboard from "./pages/FreelancerDashboard";
@@ -14,8 +12,6 @@ export default function RoutesComponent() {
     return (
     <Routes>
     <Route path="/" element={<Landing />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
     <Route path="/pending" element={<PendingApproval />} />
     <Route path="/admin" element={<AdminDashboard />} />
     <Route path="/client" element={<ClientDashboard />} />
