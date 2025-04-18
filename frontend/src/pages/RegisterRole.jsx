@@ -16,9 +16,7 @@ export default function RegisterRole() {
     try {
       const { error: userError } = await supabase
         .from("users")
-        .insert({ id: userId })
-        .onConflict("id")
-        .ignore();
+        .upsert({ id: userId }, { onConflict: "id" });
   
       if (userError) throw userError;
       console.log("Inserted into users");
@@ -26,14 +24,14 @@ export default function RegisterRole() {
       if (role === "client") {
         const { error, data } = await supabase
           .from("clients")
-          .insert({ user_id: userId, status: "pending" });
+          .upsert({ user_id: userId, status: "pending" }, { onConflict: "user_id" });
   
         if (error) throw error;
         console.log("Inserted into clients", data);
       } else {
         const { error, data } = await supabase
           .from("freelancers")
-          .insert({ user_id: userId, status: "pending" });
+          .upsert({ user_id: userId, status: "pending" }, { onConflict: "user_id" });
   
         if (error) throw error;
         console.log("Inserted into freelancers", data);
