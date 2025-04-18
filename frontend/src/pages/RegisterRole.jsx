@@ -37,7 +37,7 @@ export default function RegisterRole() {
         console.log("Inserted into freelancers", data);
       }
   
-      navigate("/pending");
+      navigate("/create-profile");
     } catch (err) {
       console.error("Registration error:", err.message);
     }

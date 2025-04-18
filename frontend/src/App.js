@@ -25,25 +25,45 @@ function App() {
 
   const handleAuth = useCallback(async () => {
     if (!isAuthenticated || !user) return;
+  
     console.log("User is authenticated:", user);
-
+  
     const userId = user.sub;
-
+  
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       navigate("/admin");
       return;
     }
-
+  
+    if (!user.email_verified) {
+      console.log("Email not verified.");
+      return;
+    }
+  
     try {
       const [{ data: client }, { data: freelancer }] = await Promise.all([
-        supabase.from("clients").select("status").eq("user_id", userId).maybeSingle(),
-        supabase.from("freelancers").select("status").eq("user_id", userId).maybeSingle()
+        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
+        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
       ]);
-
+  
+      const profileExists = client?.profile || freelancer?.profile;
+  
       if (client) {
-        navigate(client.status === "approved" ? "/client" : "/pending");
+        if (!profileExists) {
+          navigate("/create-profile");
+        } else if (client.status === "approved") {
+          navigate("/client");
+        } else {
+          navigate("/pending");
+        }
       } else if (freelancer) {
-        navigate(freelancer.status === "approved" ? "/freelancer" : "/pending");
+        if (!profileExists) {
+          navigate("/create-profile");
+        } else if (freelancer.status === "approved") {
+          navigate("/freelancer");
+        } else {
+          navigate("/pending");
+        }
       } else {
         navigate("/register-role");
       }
@@ -52,6 +72,7 @@ function App() {
       navigate("/error");
     }
   }, [isAuthenticated, user, navigate]);
+  
 
   useEffect(() => {
     console.log("Current location:", location.pathname);
