@@ -60,6 +60,7 @@ function App() {
   }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
+    console.log("Current location:", location.pathname);
     if (location.pathname === "/") return;
     handleAuth();
   }, [handleAuth, location.pathname]);
