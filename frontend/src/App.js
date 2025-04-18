@@ -20,7 +20,6 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 👇 Only redirect to login if not on the landing page
   useEffect(() => {
     const publicRoutes = ["/"];
     const currentPath = location.pathname;
@@ -32,11 +31,11 @@ function App() {
 
   const handleAuth = useCallback(async () => {
     if (!isAuthenticated || !user) return;
+    console.log("User is authenticated:", user);
 
     const userId = user.sub;
 
-    // ✅ Hardcoded admin check
-    if (userId === "auth0|YOUR_ADMIN_ID_HERE") {
+    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       navigate("/admin");
       return;
     }
