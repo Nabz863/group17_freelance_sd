@@ -29,15 +29,15 @@ function App() {
     console.log("User is authenticated:", user);
   
     const userId = user.sub;
-  
-    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
-      navigate("/admin");
-      return;
-    }
-  
+    
     if (!user.email_verified) {
       console.log("Email not verified.");
       navigate("/verify-email");
+      return;
+    }
+
+    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
+      navigate("/admin");
       return;
     }
   
@@ -76,15 +76,10 @@ function App() {
   
 
   useEffect(() => {
-    console.log("Current location:", location.pathname);
-    if (location.pathname === "/") return;
-    handleAuth();
-  }, [handleAuth, location.pathname]);
-
-  useEffect(() => {
     if (!isAuthenticated || !user || location.pathname === "/register-role") return;
     handleAuth();
-  }, [handleAuth, isAuthenticated, user, location.pathname])
+  }, [handleAuth, isAuthenticated, user, location.pathname]);
+  
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
