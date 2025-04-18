@@ -13,12 +13,12 @@ root.render(
       domain={process.env.REACT_APP_AUTH0_DOMAIN}
       clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
       authorizationParams={{
-        redirect_uri: process.env.REACT_APP_AUTH0_CALLBACK_URL
-      }
-    }
-    cacheLocation="localstorage"
-    useRefreshTokens={true}
-    >
+        redirect_uri: process.env.REACT_APP_AUTH0_CALLBACK_URL,
+        prompt: "login"  // Disables cache and forces login
+      }}
+      cacheLocation="memory"  // Disables cache for refresh tokens
+      useRefreshTokens={false}  // Prevent token refresh
+>
     <BrowserRouter>
       <App />
     </BrowserRouter>
