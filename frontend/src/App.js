@@ -5,31 +5,32 @@ import supabase from "./utils/supabaseClient";
 import RoutesComponent from "./routes";
 
 function App() {
-  const { isAuthenticated, user, isLoading, loginWithRedirect } = useAuth0();
+  const {
+    isAuthenticated,
+    user,
+    isLoading,
+    loginWithRedirect
+  } = useAuth0();
+
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 👇 Redirect to Auth0 login from any non-public path if not authenticated
-  useEffect(() => {
-    const publicPaths = ["/"];
-    if (!isLoading && !isAuthenticated && !publicPaths.includes(location.pathname)) {
-      loginWithRedirect();
-    }
-  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect]);
-
-  // 👇 Handle all routing logic after login
-  const handlePostLoginRouting = useCallback(async () => {
+  const handleAuth = useCallback(async () => {
     if (!user) return;
 
     const userId = user.sub;
 
     if (!user.email_verified) {
-      navigate("/verify-email");
+      if (location.pathname !== "/verify-email") {
+        navigate("/verify-email");
+      }
       return;
     }
 
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
-      navigate("/admin");
+      if (location.pathname !== "/admin") {
+        navigate("/admin");
+      }
       return;
     }
 
@@ -61,16 +62,24 @@ function App() {
         navigate("/register-role");
       }
     } catch (error) {
-      console.error("Routing error:", error);
+      console.error("Auth logic failed:", error);
       navigate("/error");
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading && location.pathname === "/") {
-      handlePostLoginRouting(); // 👈 prevent flicker back to landing
+    const publicPaths = ["/"];
+    const currentPath = location.pathname;
+
+    if (!isLoading && !isAuthenticated && !publicPaths.includes(currentPath)) {
+      loginWithRedirect();
+      return;
     }
-  }, [isAuthenticated, isLoading, location.pathname, handlePostLoginRouting]);
+
+    if (!isLoading && isAuthenticated) {
+      handleAuth();
+    }
+  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect, handleAuth]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
