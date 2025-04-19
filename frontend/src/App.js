@@ -42,10 +42,10 @@ function App() {
         return;
       }
 
-      if (!profile) {
-        if (location.pathname !== "/create-profile") navigate("/create-profile");
-        return;
-      }
+      //if (!profile) {
+        //if (location.pathname !== "/create-profile") navigate("/create-profile");
+        //return;
+      //}
 
       if (status === "approved") {
         if (location.pathname !== `/${role}`) navigate(`/${role}`);
