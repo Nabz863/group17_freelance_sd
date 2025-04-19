@@ -17,7 +17,6 @@ function App() {
 
   useEffect(() => {
     const currentPath = location.pathname;
-
     if (!isLoading && !isAuthenticated && currentPath !== "/" && !currentPath.startsWith("/callback")) {
       loginWithRedirect();
     }
@@ -25,61 +24,69 @@ function App() {
 
   const handleAuth = useCallback(async () => {
     if (!isAuthenticated || !user) return;
-  
+
     console.log("User is authenticated:", user);
-  
+
     const userId = user.sub;
-    
+    const roles = user["https://blue-cliff-the-gig-is-up.app/roles"] || [];
+
     if (!user.email_verified) {
       console.log("Email not verified.");
       navigate("/verify-email");
       return;
     }
 
-    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
+    if (roles.includes("admin")) {
       navigate("/admin");
       return;
     }
-  
+
     try {
-      const [{ data: client }, { data: freelancer }] = await Promise.all([
-        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
-        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
-      ]);
-  
-      const profileExists = client?.profile || freelancer?.profile;
-  
-      if (client) {
-        if (!profileExists) {
+      if (roles.includes("client")) {
+        const { data: client } = await supabase
+          .from("clients")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!client?.profile) {
           navigate("/create-profile");
         } else if (client.status === "approved") {
           navigate("/client");
         } else {
           navigate("/pending");
         }
-      } else if (freelancer) {
-        if (!profileExists) {
+        return;
+      }
+
+      if (roles.includes("freelancer")) {
+        const { data: freelancer } = await supabase
+          .from("freelancers")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!freelancer?.profile) {
           navigate("/create-profile");
         } else if (freelancer.status === "approved") {
           navigate("/freelancer");
         } else {
           navigate("/pending");
         }
-      } else {
-        navigate("/register-role");
+        return;
       }
+
+      navigate("/register-role");
     } catch (error) {
       console.error("Authentication error:", error);
       navigate("/error");
     }
   }, [isAuthenticated, user, navigate]);
-  
 
   useEffect(() => {
     if (!isAuthenticated || !user || location.pathname === "/register-role") return;
     handleAuth();
   }, [handleAuth, isAuthenticated, user, location.pathname]);
-  
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
