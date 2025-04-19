@@ -15,17 +15,8 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const isPublic = ["/"].includes(currentPath);
-
-    if (!isLoading && !isAuthenticated && !isPublic) {
-      loginWithRedirect();
-    }
-  }, [isLoading, isAuthenticated, loginWithRedirect, location.pathname]);
-
   const handleAuth = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!user) return;
 
     const userId = user.sub;
 
@@ -67,18 +58,24 @@ function App() {
         navigate("/register-role");
       }
     } catch (error) {
-      console.error("Authentication error:", error);
+      console.error("Auth logic failed:", error);
       navigate("/error");
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    const publicPaths = ["/"];
+    const currentPath = location.pathname;
 
-    if (["/", "/callback"].includes(location.pathname)) {
+    if (!isLoading && !isAuthenticated && !publicPaths.includes(currentPath)) {
+      loginWithRedirect();
+      return;
+    }
+
+    if (!isLoading && isAuthenticated) {
       handleAuth();
     }
-  }, [handleAuth, isAuthenticated, user, location.pathname]);
+  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect, handleAuth]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
