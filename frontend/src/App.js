@@ -34,7 +34,7 @@ function App() {
       ]);
 
       const role = client ? "client" : freelancer ? "freelancer" : null;
-      //const profile = client?.profile || freelancer?.profile;
+      const profile = client?.profile || freelancer?.profile;
       const status = client?.status || freelancer?.status;
 
       if (!role) {
@@ -42,10 +42,10 @@ function App() {
         return;
       }
 
-      //if (!profile) {
-        //if (location.pathname !== "/create-profile") navigate("/create-profile");
-        //return;
-      //}
+      if (!profile) {
+        if (location.pathname !== "/create-profile") navigate("/create-profile");
+        return;
+      }
 
       if (status === "approved") {
         if (location.pathname !== `/${role}`) navigate(`/${role}`);
@@ -61,16 +61,17 @@ function App() {
   useEffect(() => {
     const publicPaths = ["/"];
     const currentPath = location.pathname;
-
+  
     if (!isLoading && !isAuthenticated && !publicPaths.includes(currentPath)) {
       loginWithRedirect();
       return;
     }
-
+  
     if (!isLoading && isAuthenticated && user) {
-      if (!user.email_verified && currentPath !== "/verify-email") {
-        navigate("/verify-email");
-        return;
+      if (!user.email_verified) {
+        if (currentPath !== "/verify-email") {
+          navigate("/verify-email");
+        }
       }
       handleAuth();
     }
