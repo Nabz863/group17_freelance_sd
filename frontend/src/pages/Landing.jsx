@@ -3,9 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/Landing.css";
 
 export default function Landing() {
-  const { isAuthenticated, isLoading } = useAuth0();
-
-  if (isLoading || isAuthenticated) return null;
+  const { loginWithRedirect } = useAuth0();
 
   return (
     <main className="landing-page">
@@ -30,7 +28,7 @@ export default function Landing() {
         <nav aria-label="Primary">
           <button
             className="btn-get-started"
-            onClick={() => window.location.assign("/")}
+            onClick={loginWithRedirect}
             aria-label="Begin signup or login"
           >
             Get Started
@@ -40,4 +38,3 @@ export default function Landing() {
     </main>
   );
 }
-
