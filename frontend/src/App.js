@@ -17,7 +17,9 @@ function App() {
 
   useEffect(() => {
     const currentPath = location.pathname;
-    if (!isLoading && !isAuthenticated && currentPath !== "/" && !currentPath.startsWith("/callback")) {
+    const isPublic = ["/"].includes(currentPath);
+
+    if (!isLoading && !isAuthenticated && !isPublic) {
       loginWithRedirect();
     }
   }, [isLoading, isAuthenticated, loginWithRedirect, location.pathname]);
@@ -25,58 +27,45 @@ function App() {
   const handleAuth = useCallback(async () => {
     if (!isAuthenticated || !user) return;
 
-    console.log("User is authenticated:", user);
-
     const userId = user.sub;
-    const roles = user["https://blue-cliff-the-gig-is-up.app/roles"] || [];
 
     if (!user.email_verified) {
-      console.log("Email not verified.");
       navigate("/verify-email");
       return;
     }
 
-    if (roles.includes("admin")) {
+    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       navigate("/admin");
       return;
     }
 
     try {
-      if (roles.includes("client")) {
-        const { data: client } = await supabase
-          .from("clients")
-          .select("status, profile")
-          .eq("user_id", userId)
-          .maybeSingle();
+      const [{ data: client }, { data: freelancer }] = await Promise.all([
+        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
+        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
+      ]);
 
-        if (!client?.profile) {
+      const hasProfile = client?.profile || freelancer?.profile;
+
+      if (client) {
+        if (!hasProfile) {
           navigate("/create-profile");
         } else if (client.status === "approved") {
           navigate("/client");
         } else {
           navigate("/pending");
         }
-        return;
-      }
-
-      if (roles.includes("freelancer")) {
-        const { data: freelancer } = await supabase
-          .from("freelancers")
-          .select("status, profile")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (!freelancer?.profile) {
+      } else if (freelancer) {
+        if (!hasProfile) {
           navigate("/create-profile");
         } else if (freelancer.status === "approved") {
           navigate("/freelancer");
         } else {
           navigate("/pending");
         }
-        return;
+      } else {
+        navigate("/register-role");
       }
-
-      navigate("/register-role");
     } catch (error) {
       console.error("Authentication error:", error);
       navigate("/error");
@@ -84,8 +73,11 @@ function App() {
   }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
-    if (!isAuthenticated || !user || location.pathname === "/register-role") return;
-    handleAuth();
+    if (!isAuthenticated || !user) return;
+
+    if (["/", "/callback"].includes(location.pathname)) {
+      handleAuth();
+    }
   }, [handleAuth, isAuthenticated, user, location.pathname]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
