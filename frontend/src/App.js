@@ -16,10 +16,11 @@ function App() {
   const location = useLocation();
 
   const handleAuth = useCallback(async () => {
-    if (!user) return;
+    if (!isAuthenticated || !user) return;
 
     const userId = user.sub;
 
+    // 🚫 Email must be verified
     if (!user.email_verified) {
       if (location.pathname !== "/verify-email") {
         navigate("/verify-email");
@@ -27,6 +28,7 @@ function App() {
       return;
     }
 
+    // ✅ Admin check
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       if (location.pathname !== "/admin") {
         navigate("/admin");
@@ -40,32 +42,30 @@ function App() {
         supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
       ]);
 
-      const profileExists = client?.profile || freelancer?.profile;
+      const role = client ? "client" : freelancer ? "freelancer" : null;
+      const profile = client?.profile || freelancer?.profile;
+      const status = client?.status || freelancer?.status;
 
-      if (client) {
-        if (!profileExists) {
-          navigate("/create-profile");
-        } else if (client.status === "approved") {
-          navigate("/client");
-        } else {
-          navigate("/pending");
-        }
-      } else if (freelancer) {
-        if (!profileExists) {
-          navigate("/create-profile");
-        } else if (freelancer.status === "approved") {
-          navigate("/freelancer");
-        } else {
-          navigate("/pending");
-        }
+      if (!role) {
+        if (location.pathname !== "/register-role") navigate("/register-role");
+        return;
+      }
+
+      if (!profile) {
+        if (location.pathname !== "/create-profile") navigate("/create-profile");
+        return;
+      }
+
+      if (status === "approved") {
+        if (location.pathname !== `/${role}`) navigate(`/${role}`);
       } else {
-        navigate("/register-role");
+        if (location.pathname !== "/pending") navigate("/pending");
       }
     } catch (error) {
       console.error("Auth logic failed:", error);
       navigate("/error");
     }
-  }, [user, navigate, location.pathname]);
+  }, [isAuthenticated, user, location.pathname, navigate]);
 
   useEffect(() => {
     const publicPaths = ["/"];
