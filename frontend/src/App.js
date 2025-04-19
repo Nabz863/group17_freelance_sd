@@ -20,55 +20,66 @@ function App() {
 
     const userId = user.sub;
 
+    // 🛑 Admin shortcut
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
-      if (location.pathname !== "/admin") {
-        navigate("/admin");
+      if (location.pathname !== "/admin") navigate("/admin");
+      return;
+    }
+
+    try {
+      const [{ data: client }, { data: freelancer }] = await Promise.all([
+        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
+        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
+      ]);
+
+      const role = client ? "client" : freelancer ? "freelancer" : null;
+      const profile = client?.profile || freelancer?.profile;
+      const status = client?.status || freelancer?.status;
+
+      if (!role && location.pathname !== "/register-role") {
+        navigate("/register-role");
+        return;
       }
-      return;
-    }
 
-    const [{ data: client }, { data: freelancer }] = await Promise.all([
-      supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
-      supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
-    ]);
+      if (role && !profile && location.pathname !== "/create-profile") {
+        navigate("/create-profile");
+        return;
+      }
 
-    const role = client ? "client" : freelancer ? "freelancer" : null;
-    const profile = client?.profile || freelancer?.profile;
-    const status = client?.status || freelancer?.status;
+      if (role && profile) {
+        if (status === "approved" && location.pathname !== `/${role}`) {
+          navigate(`/${role}`);
+        } else if (status !== "approved" && location.pathname !== "/pending") {
+          navigate("/pending");
+        }
+      }
 
-    if (!role) {
-      if (location.pathname !== "/register-role") navigate("/register-role");
-      return;
-    }
-
-    if (!profile) {
-      if (location.pathname !== "/create-profile") navigate("/create-profile");
-      return;
-    }
-
-    if (status === "approved") {
-      if (location.pathname !== `/${role}`) navigate(`/${role}`);
-    } else {
-      if (location.pathname !== "/pending") navigate("/pending");
+    } catch (err) {
+      console.error("Auth flow error:", err);
+      navigate("/error");
     }
   }, [user, location.pathname, navigate]);
 
   useEffect(() => {
     const currentPath = location.pathname;
 
-    if (!isLoading && !isAuthenticated && currentPath !== "/") {
+    // 🟢 While loading, do nothing
+    if (isLoading) return;
+
+    // 🔒 Redirect unauthenticated users away from protected routes
+    if (!isAuthenticated && currentPath !== "/") {
       loginWithRedirect();
       return;
     }
 
+    // 🔐 Email verification gate
     if (isAuthenticated && user) {
-      if (!user.email_verified) {
-        if (currentPath !== "/verify-email") {
-          navigate("/verify-email");
-        }
+      if (!user.email_verified && currentPath !== "/verify-email") {
+        navigate("/verify-email");
         return;
       }
 
+      // ⚙ Continue full logic
       handleAuth();
     }
   }, [isLoading, isAuthenticated, user, location.pathname, loginWithRedirect, navigate, handleAuth]);
