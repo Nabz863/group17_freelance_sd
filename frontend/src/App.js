@@ -34,7 +34,7 @@ function App() {
       ]);
 
       const role = client ? "client" : freelancer ? "freelancer" : null;
-      const profile = client?.profile || freelancer?.profile;
+      //const profile = client?.profile || freelancer?.profile;
       const status = client?.status || freelancer?.status;
 
       if (!role) {
