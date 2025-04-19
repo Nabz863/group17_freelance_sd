@@ -5,17 +5,20 @@ import supabase from "./utils/supabaseClient";
 import RoutesComponent from "./routes";
 
 function App() {
-  const {
-    isAuthenticated,
-    user,
-    isLoading,
-    loginWithRedirect
-  } = useAuth0();
-
+  const { isAuthenticated, user, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleAuth = useCallback(async () => {
+  // 👇 Redirect to Auth0 login from any non-public path if not authenticated
+  useEffect(() => {
+    const publicPaths = ["/"];
+    if (!isLoading && !isAuthenticated && !publicPaths.includes(location.pathname)) {
+      loginWithRedirect();
+    }
+  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect]);
+
+  // 👇 Handle all routing logic after login
+  const handlePostLoginRouting = useCallback(async () => {
     if (!user) return;
 
     const userId = user.sub;
@@ -36,10 +39,10 @@ function App() {
         supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
       ]);
 
-      const hasProfile = client?.profile || freelancer?.profile;
+      const profileExists = client?.profile || freelancer?.profile;
 
       if (client) {
-        if (!hasProfile) {
+        if (!profileExists) {
           navigate("/create-profile");
         } else if (client.status === "approved") {
           navigate("/client");
@@ -47,7 +50,7 @@ function App() {
           navigate("/pending");
         }
       } else if (freelancer) {
-        if (!hasProfile) {
+        if (!profileExists) {
           navigate("/create-profile");
         } else if (freelancer.status === "approved") {
           navigate("/freelancer");
@@ -58,24 +61,16 @@ function App() {
         navigate("/register-role");
       }
     } catch (error) {
-      console.error("Auth logic failed:", error);
+      console.error("Routing error:", error);
       navigate("/error");
     }
   }, [user, navigate]);
 
   useEffect(() => {
-    const publicPaths = ["/"];
-    const currentPath = location.pathname;
-
-    if (!isLoading && !isAuthenticated && !publicPaths.includes(currentPath)) {
-      loginWithRedirect();
-      return;
+    if (isAuthenticated && !isLoading && location.pathname === "/") {
+      handlePostLoginRouting(); // 👈 prevent flicker back to landing
     }
-
-    if (!isLoading && isAuthenticated) {
-      handleAuth();
-    }
-  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect, handleAuth]);
+  }, [isAuthenticated, isLoading, location.pathname, handlePostLoginRouting]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
