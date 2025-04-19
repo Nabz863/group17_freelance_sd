@@ -20,15 +20,6 @@ function App() {
 
     const userId = user.sub;
 
-    // 🚫 Email must be verified
-    if (!user.email_verified) {
-      if (location.pathname !== "/verify-email") {
-        navigate("/verify-email");
-      }
-      return;
-    }
-
-    // ✅ Admin check
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       if (location.pathname !== "/admin") {
         navigate("/admin");
@@ -76,10 +67,14 @@ function App() {
       return;
     }
 
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && user) {
+      if (!user.email_verified && currentPath !== "/verify-email") {
+        navigate("/verify-email");
+        return;
+      }
       handleAuth();
     }
-  }, [isLoading, isAuthenticated, location.pathname, loginWithRedirect, handleAuth]);
+  }, [isLoading, isAuthenticated, user, location.pathname, loginWithRedirect, navigate, handleAuth]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
