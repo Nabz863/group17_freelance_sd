@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./styles/Landing.css";
 
 export default function Landing() {
   const { isAuthenticated, isLoading } = useAuth0();
 
-  // 🛑 Don't render the landing page if authenticated — let App.js handle redirection
   if (isLoading || isAuthenticated) return null;
 
   return (
@@ -31,7 +30,7 @@ export default function Landing() {
         <nav aria-label="Primary">
           <button
             className="btn-get-started"
-            onClick={() => window.location.assign("/")} // This will trigger Auth0
+            onClick={() => window.location.assign("/")}
             aria-label="Begin signup or login"
           >
             Get Started
