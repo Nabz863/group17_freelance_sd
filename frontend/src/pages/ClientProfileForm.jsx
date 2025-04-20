@@ -50,9 +50,11 @@ export default function ClientProfileForm() {
     const userId = user?.sub;
 
     const { error } = await supabase
-      .from("clients")
-      .update({ profile: formData, status: "pending" })
-      .eq("user_id", userId);
+    .from("clients")
+    .update({ profile: formData, status: "pending" })
+    .eq("user_id", userId);
+  
+  if (error) console.error("Client profile submission error:", error.message);
 
     if (!error) navigate("/pending");
     else console.error("Client profile submission failed", error);
