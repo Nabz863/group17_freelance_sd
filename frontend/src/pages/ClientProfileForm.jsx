@@ -22,24 +22,28 @@ export default function ClientProfileForm() {
   useEffect(() => {
     const checkClient = async () => {
       if (!user) return;
-
+  
       const { data, error } = await supabase
         .from("clients")
         .select("profile")
         .eq("user_id", user.sub)
         .maybeSingle();
-
+  
+      if (error) {
+        console.error("Failed to check client role:", error);
+      }
+  
       if (!data) {
         console.warn("Client role not found. Redirecting...");
         navigate("/create-profile");
         return;
       }
-
+  
       setLoading(false);
     };
-
+  
     checkClient();
-  }, [user, navigate]);
+  }, [user, navigate])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

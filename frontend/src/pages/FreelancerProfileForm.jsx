@@ -21,24 +21,28 @@ export default function FreelancerProfileForm() {
   useEffect(() => {
     const checkFreelancer = async () => {
       if (!user) return;
-
+  
       const { data, error } = await supabase
         .from("freelancers")
         .select("profile")
         .eq("user_id", user.sub)
         .maybeSingle();
-
+  
+      if (error) {
+        console.error("Failed to check freelancer role:", error);
+      }
+  
       if (!data) {
         console.warn("Freelancer role not found. Redirecting...");
         navigate("/create-profile");
         return;
       }
-
+  
       setLoading(false);
     };
-
+  
     checkFreelancer();
-  }, [user, navigate]);
+  }, [user, navigate])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
