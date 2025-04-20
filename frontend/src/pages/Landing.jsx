@@ -21,7 +21,7 @@ export default function Landing() {
       <section className="hero-section">
         <h1 className="hero-title">The Gig Is Up</h1>
         <p className="hero-subtitle">
-          Manage freelancers, projects, and payments in one powerful platform.
+            Connect, collaborate, and get paid. A centralized platform for freelancers and clients to transform work relationships.
         </p>
         <button className="get-started-btn" onClick={handleClick}>
           Get Started
@@ -31,23 +31,23 @@ export default function Landing() {
       <section className="features-carousel" aria-label="Platform Benefits">
         <article className="feature-card">
           <div className="feature-icon">🎯</div>
-          <h3 className="feature-title">Project Focused</h3>
-          <p className="feature-description">Track progress from start to finish.</p>
+          <h3 className="feature-title">Milestone Tracking</h3>
+          <p className="feature-description">Track project progress, set milestones, and ensure smooth collaboration.</p>
         </article>
         <article className="feature-card">
-          <div className="feature-icon">🤝</div>
-          <h3 className="feature-title">Trust Driven</h3>
-          <p className="feature-description">Profiles and approvals ensure quality.</p>
+          <div className="feature-icon"><Award /></div>
+          <h3 className="feature-title">Secure Payments</h3>
+          <p className="feature-description">Transparent payment system with milestones and escrow protection.</p>
         </article>
         <article className="feature-card">
           <div className="feature-icon">💼</div>
-          <h3 className="feature-title">Freelancer Ready</h3>
-          <p className="feature-description">Easily apply, get hired, and get paid.</p>
+          <h3 className="feature-title">Easy Job Posting</h3>
+          <p className="feature-description">Clients can quickly post jobs with detailed requirements and expectations.</p>
         </article>
         <article className="feature-card">
           <div className="feature-icon">🚀</div>
-          <h3 className="feature-title">Scalable</h3>
-          <p className="feature-description">Built for growth and rapid onboarding.</p>
+          <h3 className="feature-title">Freelancer Profiles</h3>
+          <p className="feature-description">Showcase your skills, portfolio, and professional history to potential clients.</p>
         </article>
       </section>
 
