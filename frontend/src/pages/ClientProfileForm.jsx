@@ -60,6 +60,10 @@ export default function ClientProfileForm() {
 
   if (loading) return <main className="text-white text-center p-10">Loading...</main>;
 
+  if (error) {
+    console.error("Error updating profile:", error.message);
+  }
+
   return (
     <ProfileFormLayout
       title="Client Profile"
