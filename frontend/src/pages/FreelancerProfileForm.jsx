@@ -56,10 +56,8 @@ export default function FreelancerProfileForm() {
   if (!error) {
     navigate("/pending");
   } else {
-    console.error("Profile submission failed:", error);
+    console.error("Freelancer profile submission failed:", error);
   }
-  
-  
   };
 
   if (loading) return <main className="text-white text-center p-10">Loading...</main>;
