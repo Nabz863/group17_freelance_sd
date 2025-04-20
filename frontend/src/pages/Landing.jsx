@@ -35,7 +35,7 @@ export default function Landing() {
           <p className="feature-description">Track project progress, set milestones, and ensure smooth collaboration.</p>
         </article>
         <article className="feature-card">
-          <div className="feature-icon"><Award /></div>
+          <div className="feature-icon">🤝</div>
           <h3 className="feature-title">Secure Payments</h3>
           <p className="feature-description">Transparent payment system with milestones and escrow protection.</p>
         </article>
