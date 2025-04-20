@@ -1,0 +1,64 @@
+:root {
+    --bg-primary: #0c0c0c;
+    --text-light: #ffffff;
+    --font-main: 'Nunito', system-ui, sans-serif;
+    --btn-gradient: linear-gradient(90deg, #1abc9c 0%, #16a085 100%);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --border-faint: rgba(255, 255, 255, 0.1);
+    --gradient-bg: linear-gradient(45deg, #0c0c0c, #1a1a1a);
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes floatAnimation {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  @keyframes gradientFlow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes spread {
+    0% {
+      opacity: 1;
+      transform: scale(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(4);
+    }
+  }
+  
