@@ -1,40 +1,49 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-import FreelancerProfileForm from "./FreelancerProfileForm";
-import ClientProfileForm from "./ClientProfileForm";
+import "./styles/theme.css";
 
 export default function CreateProfile() {
-  const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth0();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRole = async () => {
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
+    const checkRoleAndRedirect = async () => {
+      const userId = user?.sub;
+      if (!userId) return;
 
-      const { data: client } = await supabase
+      const { data: client, error: clientError } = await supabase
         .from("clients")
         .select("user_id")
         .eq("user_id", userId)
         .maybeSingle();
 
-      const { data: freelancer } = await supabase
+      if (client && !clientError) {
+        navigate("/client-profile");
+        return;
+      }
+
+      const { data: freelancer, error: freelancerError } = await supabase
         .from("freelancers")
         .select("user_id")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (client) setRole("client");
-      else if (freelancer) setRole("freelancer");
+      if (freelancer && !freelancerError) {
+        navigate("/freelancer-profile");
+        return;
+      }
 
-      setLoading(false);
+      navigate("/register-role");
     };
 
-    fetchRole();
-  }, []);
+    checkRoleAndRedirect();
+  }, [user, navigate]);
 
-  if (loading) return <main><p>Loading profile form...</p></main>;
-  if (!role) return <main><p>Role not found.</p></main>;
-
-  return role === "client" ? <ClientProfileForm /> : <FreelancerProfileForm />;
+  return (
+    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0c0c0c] to-[#1a1a1a] text-white text-xl tracking-wide">
+      <p className="animate-pulse">Loading your profile form...</p>
+    </main>
+  );
 }

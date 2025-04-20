@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "./components/ProfileFormLayout";
 import "./styles/theme.css";
 
 export default function FreelancerProfileForm() {
+  const { user } = useAuth0();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     profession: "",
     experience: "",
@@ -13,24 +17,29 @@ export default function FreelancerProfileForm() {
     description: ""
   });
 
-  const navigate = useNavigate();
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
+
+    const userId = user?.sub;
+    if (!userId) {
+      console.error("Auth0 user ID is missing.");
+      return;
+    }
 
     const { error } = await supabase
       .from("freelancers")
       .update({ profile: formData, status: "pending" })
       .eq("user_id", userId);
 
-    if (!error) navigate("/pending");
-    else console.error("Profile submission failed", error);
+    if (error) {
+      console.error("Profile submission failed:", error);
+    } else {
+      navigate("/pending");
+    }
   };
 
   return (
@@ -47,6 +56,7 @@ export default function FreelancerProfileForm() {
           value={formData.profession}
           onChange={handleChange}
           required
+          className="form-input"
         />
       </label>
 
@@ -59,6 +69,7 @@ export default function FreelancerProfileForm() {
           onChange={handleChange}
           min="0"
           required
+          className="form-input"
         />
       </label>
 
@@ -70,6 +81,7 @@ export default function FreelancerProfileForm() {
           value={formData.skills}
           onChange={handleChange}
           required
+          className="form-input"
         />
       </label>
 
@@ -81,6 +93,7 @@ export default function FreelancerProfileForm() {
           value={formData.hourly_rate}
           onChange={handleChange}
           required
+          className="form-input"
         />
       </label>
 
@@ -92,11 +105,14 @@ export default function FreelancerProfileForm() {
           onChange={handleChange}
           rows="5"
           required
+          className="form-textarea"
         />
       </label>
 
-      <footer>
-        <button type="submit">Submit Profile</button>
+      <footer className="form-footer">
+        <button type="submit" className="primary-btn">
+          Submit Profile
+        </button>
       </footer>
     </ProfileFormLayout>
   );

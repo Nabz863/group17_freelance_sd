@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "./components/ProfileFormLayout";
 import "./styles/theme.css";
 
 export default function ClientProfileForm() {
+  const { user } = useAuth0();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     companyName: "",
     industry: "",
@@ -16,22 +19,31 @@ export default function ClientProfileForm() {
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
+
+    const userId = user?.sub;
+    if (!userId) {
+      console.error("Missing Auth0 user ID");
+      return;
+    }
 
     const { error } = await supabase
       .from("clients")
       .update({ profile: formData, status: "pending" })
       .eq("user_id", userId);
 
-    if (!error) navigate("/pending");
-    else console.error("Client profile submission failed", error);
+    if (error) {
+      console.error("Client profile submission failed:", error);
+    } else {
+      navigate("/pending");
+    }
   };
 
   return (
@@ -41,69 +53,81 @@ export default function ClientProfileForm() {
       onSubmit={handleSubmit}
     >
       <label>
-        Company Name
+        Company Name:
         <input
-          required
+          type="text"
           name="companyName"
           value={formData.companyName}
           onChange={handleChange}
+          required
+          className="form-input"
         />
       </label>
 
       <label>
-        Industry
+        Industry:
         <input
-          required
+          type="text"
           name="industry"
           value={formData.industry}
           onChange={handleChange}
+          required
+          className="form-input"
         />
       </label>
 
       <label>
-        Project Needs
+        Project Needs:
         <textarea
-          required
           name="projectNeeds"
           value={formData.projectNeeds}
           onChange={handleChange}
           rows="4"
+          required
+          className="form-textarea"
         />
       </label>
 
       <label>
-        Location
+        Location:
         <input
-          required
+          type="text"
           name="location"
           value={formData.location}
           onChange={handleChange}
+          required
+          className="form-input"
         />
       </label>
 
       <label>
-        Budget Range
+        Budget Range:
         <input
-          required
+          type="text"
           name="budgetRange"
           value={formData.budgetRange}
           onChange={handleChange}
+          required
+          className="form-input"
         />
       </label>
 
       <label>
-        Contact Email
+        Contact Email:
         <input
           type="email"
-          required
           name="contactEmail"
           value={formData.contactEmail}
           onChange={handleChange}
+          required
+          className="form-input"
         />
       </label>
 
-      <footer>
-        <button type="submit">Submit Profile</button>
+      <footer className="form-footer">
+        <button type="submit" className="primary-btn">
+          Submit Profile
+        </button>
       </footer>
     </ProfileFormLayout>
   );
