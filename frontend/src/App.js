@@ -61,28 +61,23 @@ function App() {
   }, [user, location.pathname, navigate]);
 
   useEffect(() => {
+    const publicPaths = ["/"];
     const currentPath = location.pathname;
-
-    // 🟢 While loading, do nothing
-    if (isLoading) return;
-
-    // 🔒 Redirect unauthenticated users away from protected routes
-    if (!isAuthenticated && currentPath !== "/") {
+  
+    if (!isLoading && !isAuthenticated && !publicPaths.includes(currentPath)) {
       loginWithRedirect();
       return;
     }
-
-    // 🔐 Email verification gate
-    if (isAuthenticated && user) {
-      if (!user.email_verified && currentPath !== "/verify-email") {
-        navigate("/verify-email");
-        return;
+  
+    if (!isLoading && isAuthenticated && user) {
+      if (!user.email_verified) {
+        if (currentPath !== "/verify-email") navigate("/verify-email");
+      } else {
+        handleAuth();
       }
-
-      // ⚙ Continue full logic
-      handleAuth();
     }
   }, [isLoading, isAuthenticated, user, location.pathname, loginWithRedirect, navigate, handleAuth]);
+  
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
