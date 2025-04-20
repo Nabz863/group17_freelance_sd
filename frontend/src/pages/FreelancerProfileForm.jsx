@@ -48,10 +48,18 @@ export default function FreelancerProfileForm() {
     e.preventDefault();
     const userId = user?.sub;
 
-    await supabase
+    const { error } = await supabase
     .from("freelancers")
     .update({ profile: formData, status: "pending" })
     .eq("user_id", userId);
+  
+  if (!error) {
+    navigate("/pending");
+  } else {
+    console.error("Profile submission failed:", error);
+  }
+  
+  
   };
 
   if (loading) return <main className="text-white text-center p-10">Loading...</main>;
