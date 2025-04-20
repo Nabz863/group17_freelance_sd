@@ -1,12 +1,17 @@
+import "../styles/theme.css";
+
 export default function VerifyEmail() {
   return (
-    <main className="page-center text-center text-white">
-      <header>
-        <h1 className="text-4xl font-bold text-accent mb-4">Verify Your Email</h1>
-        <p className="text-lg text-muted max-w-xl mx-auto">
-          A verification email has been sent to your address. Please click the link in your inbox before continuing.
+    <main className="landing-container">
+      <section className="hero-section">
+        <h1 className="hero-title">Verify Your Email</h1>
+        <p className="hero-subtitle">
+          We've sent a verification link to your email. Please check your inbox and click the link to continue.
         </p>
-      </header>
+        <p className="hero-subtitle" style={{ animationDelay: "0.4s" }}>
+          After verifying, refresh this page or log in again to proceed.
+        </p>
+      </section>
     </main>
   );
 }
