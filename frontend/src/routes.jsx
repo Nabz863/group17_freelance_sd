@@ -22,8 +22,8 @@ export default function RoutesComponent() {
     <Route path="/freelancer" element={<FreelancerDashboard />} />
     <Route path="/unauthorized" element={<Unauthorised />} />
     <Route path="/register-role" element={<RegisterRole />} />
-    <Route path="/freelancer-profile" element={<FreelancerProfileForm />} />
-    <Route path="/client-profile" element={<ClientProfileForm />} />
+    <Route path="/create-freelancer-profile" element={<FreelancerProfileForm />} />
+    <Route path="/create-client-profile" element={<ClientProfileForm />} />
     <Route path="/create-profile" element={<CreateProfile />} />
     <Route path="/verify-email" element={<VerifyEmail />} />
     <Route path="*" element={<div className="p-8 text-center text-white">404 - Not Found</div>} />
