@@ -2,6 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
+import "../styles/theme.css";
 
 export default function RegisterRole() {
   const { user } = useAuth0();
@@ -11,13 +12,11 @@ export default function RegisterRole() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const userId = user.sub;
-
     try {
       const { error: userError } = await supabase
         .from("users")
         .insert({ id: userId })
-        .select()
-        .single();
+        .select();
 
       if (userError && userError.code !== "23505") throw userError;
 
@@ -27,7 +26,6 @@ export default function RegisterRole() {
         .insert({ user_id: userId, status: "pending" });
 
       if (error) throw error;
-
       navigate("/create-profile");
     } catch (err) {
       console.error("Registration error:", err.message);
@@ -35,49 +33,36 @@ export default function RegisterRole() {
   };
 
   return (
-    <main className="page-center text-center text-white">
-      <header>
-        <h1 className="text-4xl font-bold text-accent mb-4">Choose Your Role</h1>
-        <p className="text-lg text-muted mb-8">
-          How would you like to use the platform?
-        </p>
-      </header>
-
-      <form onSubmit={handleSubmit} className="form-grid max-w-md w-full">
-        <fieldset>
-          <legend className="sr-only">User Role</legend>
-
-          <label className="flex items-center gap-4 justify-start cursor-pointer mb-4">
-            <input
-              type="radio"
-              name="role"
-              value="client"
-              checked={role === "client"}
-              onChange={() => setRole("client")}
-              className="accent-accent"
-            />
-            <strong>Client – Post jobs & manage freelancers</strong>
-          </label>
-
-          <label className="flex items-center gap-4 justify-start cursor-pointer">
-            <input
-              type="radio"
-              name="role"
-              value="freelancer"
-              checked={role === "freelancer"}
-              onChange={() => setRole("freelancer")}
-              className="accent-accent"
-            />
-            <strong>Freelancer – Apply to jobs & get paid</strong>
-          </label>
-        </fieldset>
-
-        <footer className="mt-8">
-          <button type="submit" className="btn-accent w-full">
-            Continue
-          </button>
-        </footer>
-      </form>
+    <main className="landing-container">
+      <section className="hero-section">
+        <h1 className="hero-title">Choose Your Role</h1>
+        <p className="hero-subtitle">Select how you'd like to use the platform.</p>
+        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6 items-center">
+          <fieldset className="flex flex-col gap-4">
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="client"
+                checked={role === "client"}
+                onChange={() => setRole("client")}
+              />
+              <strong className="ml-2">Client – Post and manage projects</strong>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="freelancer"
+                checked={role === "freelancer"}
+                onChange={() => setRole("freelancer")}
+              />
+              <strong className="ml-2">Freelancer – Apply and get hired</strong>
+            </label>
+          </fieldset>
+          <button type="submit" className="get-started-btn">Continue</button>
+        </form>
+      </section>
     </main>
   );
 }
