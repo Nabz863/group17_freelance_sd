@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
 import "../styles/theme.css";
 
-export default function DashboardLayout({ role = "User", menuItems = [] }) {
+export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState(menuItems[0]);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -31,22 +30,23 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
         <h2 className="text-2xl uppercase font-bold tracking-widest border-b-2 border-[#1abc9c] pb-2 mb-6">
           {role}
         </h2>
-
-        {menuItems.map(({ label, path }, index) => (
+        {menuItems.map((label, index) => (
           <button
             key={index}
-            onClick={() => navigate(path)}
-            className="relative w-32 h-10 my-2 font-medium border-2 border-[#1abc9c] text-[#1abc9c] rounded-lg transition-all overflow-hidden z-10 hover:text-white group"
+            onClick={() => setActiveSection(label)}
+            className={`relative w-32 h-10 my-2 font-medium border-2 border-[#1abc9c] rounded-lg z-10 overflow-hidden group transition-all hover:text-white ${
+              activeSection === label ? "text-white" : "text-[#1abc9c]"
+            }`}
           >
             {label}
-            <span className="absolute z-[-1] w-full h-full bg-[#1abc9c] left-0 top-full group-hover:top-0 transition-all duration-500 ease-in-out rounded-b-full group-hover:rounded-b-none"></span>
+            <span className="absolute z-[-1] w-full h-full bg-[#1abc9c] left-0 top-full group-hover:top-0 transition-all duration-500 ease-in-out rounded-b-full group-hover:rounded-b-none" />
           </button>
         ))}
       </nav>
 
       {/* Main content */}
       <section className="flex-1 overflow-y-auto p-6 animate-fadeInUp">
-        <Outlet />
+        {contentMap[activeSection] || <p>No content for this section.</p>}
       </section>
     </main>
   );

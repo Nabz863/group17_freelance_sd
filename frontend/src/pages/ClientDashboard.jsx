@@ -1,58 +1,81 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import DashboardLayout from "./components/DashboardLayout";
 import "./styles/theme.css";
 
-export default function ClientDashboard() {
-  const navigate = useNavigate();
-
-  const menuItems = [
-    { label: "Account Settings", path: "/client" },
-    { label: "Freelancers", path: "/freelancer" },
-    { label: "Inbox", path: "/inbox" },
-    { label: "Payments", path: "/payments" },
-    { label: "Projects", path: "/projects" },
-    { label: "Post a Job", path: "/post-job" },
-  ];
-
+function OverviewSection() {
   return (
-    <DashboardLayout role="Client" menuItems={menuItems}>
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-accent animate-fadeInUp">
-          Client Dashboard
-        </h1>
-        <p className="text-gray-400 mt-2">
-          Manage your projects, freelancers, and payments in one place.
-        </p>
-      </header>
-
-      <section className="grid gap-6 md:grid-cols-2">
-        <article
-          className="card-glow p-6 rounded-xl bg-[#1a1a1a] animate-float cursor-pointer hover:bg-[#1f1f1f] transition"
-          onClick={() => navigate("/post-job")}
-        >
-          <h2 className="text-xl text-accent font-semibold mb-2">
-            Post a New Job
-          </h2>
-          <p className="text-gray-300">
-            Quickly publish a job with your requirements and budget.
-          </p>
-        </article>
-
-        <article
-          className="card-glow p-6 rounded-xl bg-[#1a1a1a] animate-float cursor-pointer hover:bg-[#1f1f1f] transition"
-          onClick={() => navigate("/review-applicants")}
-        >
-          <h2 className="text-xl text-accent font-semibold mb-2">
-            Review Applicants
-          </h2>
-          <p className="text-gray-300">
-            View freelancer applications and assign projects with ease.
-          </p>
-        </article>
-      </section>
-    </DashboardLayout>
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">Welcome to the Client Dashboard</h2>
+      <p className="text-gray-300">
+        Manage your freelancers, projects, and payments all in one place.
+      </p>
+    </section>
   );
 }
 
+function PostJobSection() {
+  return (
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">Post a New Job</h2>
+      <p className="text-gray-300">Quickly publish a job with your requirements and budget.</p>
+    </section>
+  );
+}
 
+function ProjectsSection() {
+  return (
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">My Projects</h2>
+      <p className="text-gray-300">Review your current and past projects.</p>
+    </section>
+  );
+}
+
+function InboxSection() {
+  return (
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">Inbox</h2>
+      <p className="text-gray-300">Messages and updates from freelancers.</p>
+    </section>
+  );
+}
+
+function PaymentsSection() {
+  return (
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">Payments</h2>
+      <p className="text-gray-300">Manage and track your transactions securely.</p>
+    </section>
+  );
+}
+
+function FreelancersSection() {
+  return (
+    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
+      <h2 className="text-xl text-accent font-semibold mb-2">Freelancers</h2>
+      <p className="text-gray-300">Search, view, and connect with freelancers.</p>
+    </section>
+  );
+}
+
+export default function ClientDashboard() {
+  const menuItems = [
+    "Overview",
+    "Post a Job",
+    "Projects",
+    "Inbox",
+    "Payments",
+    "Freelancers"
+  ];
+
+  const contentMap = {
+    Overview: <OverviewSection />,
+    "Post a Job": <PostJobSection />,
+    Projects: <ProjectsSection />,
+    Inbox: <InboxSection />,
+    Payments: <PaymentsSection />,
+    Freelancers: <FreelancersSection />
+  };
+
+  return <DashboardLayout role="Client" menuItems={menuItems} contentMap={contentMap} />;
+}
