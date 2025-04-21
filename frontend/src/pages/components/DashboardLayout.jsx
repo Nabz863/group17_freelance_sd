@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import "../styles/theme.css";
 
 export default function DashboardLayout({ role = "User", menuItems = [] }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -30,9 +31,11 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
         <h2 className="text-2xl uppercase font-bold tracking-widest border-b-2 border-[#1abc9c] pb-2 mb-6">
           {role}
         </h2>
-        {menuItems.map((label, index) => (
+
+        {menuItems.map(({ label, path }, index) => (
           <button
             key={index}
+            onClick={() => navigate(path)}
             className="relative w-32 h-10 my-2 font-medium border-2 border-[#1abc9c] text-[#1abc9c] rounded-lg transition-all overflow-hidden z-10 hover:text-white group"
           >
             {label}
@@ -48,3 +51,4 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
     </main>
   );
 }
+
