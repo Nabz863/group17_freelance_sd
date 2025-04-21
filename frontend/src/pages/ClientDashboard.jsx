@@ -75,20 +75,12 @@ export default function ClientDashboard() {
   };
 
   return (
-    <main className="flex h-screen w-full bg-[#0e0e0e] text-white font-main relative">
-      <button
-        className="dashboard-hamburger"
-        aria-label="Toggle navigation menu"
-        onClick={toggleSidebar}
-        type="button"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
+    <div className="flex h-screen w-full bg-[#0e0e0e] text-white font-main">
+      {/* Sidebar */}
       <nav
-        className={"dashboard-sidebar" + (sidebarOpen ? "" : " hidden")}
+        className={
+          "dashboard-sidebar" + (sidebarOpen ? "" : " hidden")
+        }
         aria-label="Sidebar"
       >
         <h2>Clients</h2>
@@ -107,12 +99,29 @@ export default function ClientDashboard() {
           </button>
         ))}
       </nav>
-
-      <section className="dashboard-content animate-fadeInUp">
-        {activeSection === "Post a Job"
-          ? <PostJobForm embed />
-          : staticContent[activeSection] || <p>No content found.</p>}
-      </section>
-    </main>
+  
+      {/* Content area */}
+      <div className="flex-1 flex flex-col relative overflow-y-auto">
+        {/* Mobile hamburger */}
+        <button
+          className="dashboard-hamburger"
+          aria-label="Toggle navigation menu"
+          onClick={toggleSidebar}
+          type="button"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+  
+        {/* Main content */}
+        <section className="dashboard-content animate-fadeInUp">
+          {activeSection === "Post a Job"
+            ? <PostJobForm embed />
+            : staticContent[activeSection] || <p>No content found.</p>}
+        </section>
+      </div>
+    </div>
   );
+  
 }
