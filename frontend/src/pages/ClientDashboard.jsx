@@ -1,17 +1,16 @@
-import { useState } from "react";
+import DashboardLayout from "../components/DashboardLayout";
 import PostJobForm from "./PostJobForm";
-import "../styles/theme.css";
 
-const clientSections = [
+const menuItems = [
   "Account Settings",
   "Freelancers",
   "Inbox",
   "Payments",
   "Projects",
-  "Post a Job"
+  "Post a Job",
 ];
 
-const staticContent = {
+const contentMap = {
   "Account Settings": (
     <>
       <h1>Account Settings</h1>
@@ -41,87 +40,17 @@ const staticContent = {
       <h1>Projects</h1>
       <p>See current and past projects with freelancers.</p>
     </>
-  )
+  ),
+  "Post a Job": <PostJobForm embed />,
 };
 
 export default function ClientDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
-  const [activeSection, setActiveSection] = useState(clientSections[0]);
-
-  const toggleSidebar = () => setSidebarOpen((v) => !v);
-
-  const handleSidebarBtnClick = (e, label) => {
-    setActiveSection(label);
-    const btn = e.currentTarget;
-    const ripple = document.createElement("span");
-    ripple.className = "ripple";
-    const rect = btn.getBoundingClientRect();
-    const size = Math.max(btn.offsetWidth, btn.offsetHeight) * 0.8;
-    let x, y;
-    if (e.touches) {
-      x = e.touches[0].clientX - rect.left - size / 2;
-      y = e.touches[0].clientY - rect.top - size / 2;
-    } else {
-      x = e.clientX - rect.left - size / 2;
-      y = e.clientY - rect.top - size / 2;
-    }
-    ripple.style.width = ripple.style.height = size + "px";
-    ripple.style.left = `${x}px`;
-    ripple.style.top = `${y}px`;
-    btn.appendChild(ripple);
-    setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 520);
-
-    if (window.innerWidth < 900) setSidebarOpen(false);
-  };
-
   return (
-    <div className="flex h-screen w-full bg-[#0e0e0e] text-white font-main">
-      {/* Sidebar */}
-      <nav
-        className={
-          "dashboard-sidebar" + (sidebarOpen ? "" : " hidden")
-        }
-        aria-label="Sidebar"
-      >
-        <h2>Clients</h2>
-        {clientSections.map((label) => (
-          <button
-            key={label}
-            className={
-              "dashboard-sidebar-btn" +
-              (activeSection === label ? " selected" : "")
-            }
-            type="button"
-            onClick={(e) => handleSidebarBtnClick(e, label)}
-            onTouchStart={(e) => handleSidebarBtnClick(e, label)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-  
-      {/* Content area */}
-      <div className="flex-1 flex flex-col relative overflow-y-auto">
-        {/* Mobile hamburger */}
-        <button
-          className="dashboard-hamburger"
-          aria-label="Toggle navigation menu"
-          onClick={toggleSidebar}
-          type="button"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-  
-        {/* Main content */}
-        <section className="dashboard-content animate-fadeInUp">
-          {activeSection === "Post a Job"
-            ? <PostJobForm embed />
-            : staticContent[activeSection] || <p>No content found.</p>}
-        </section>
-      </div>
-    </div>
+    <DashboardLayout
+      role="Clients"
+      menuItems={menuItems}
+      contentMap={contentMap}
+    />
   );
-  
 }
+
