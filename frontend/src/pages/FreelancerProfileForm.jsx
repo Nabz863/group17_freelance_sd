@@ -27,12 +27,6 @@ export default function FreelancerProfileForm() {
     description: ""
   });
 
-  {/*const [files, setFiles] = useState({
-    cv: null,
-    qualification: null,
-    certificates: []
-  });*/}
-
   useEffect(() => {
     const checkFreelancer = async () => {
       if (!user) return;
@@ -58,20 +52,6 @@ export default function FreelancerProfileForm() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  {/*const handleFileChange = (fileType, newFiles) => {
-    if (fileType === "certificates") {
-      setFiles(prev => ({
-        ...prev,
-        certificates: [...prev.certificates, ...newFiles]
-      }));
-    } else {
-      setFiles(prev => ({
-        ...prev,
-        [fileType]: newFiles[0]
-      }));
-    }
-  };*/}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -263,33 +243,6 @@ export default function FreelancerProfileForm() {
           rows="5"
         />
       </div>
-
-      {/* File Uploads */}
-      {/*<FileUpload 
-        label="Curriculum Vitae (CV)"
-        required={true}
-        fileTypeLabel="Required"
-        accept=".pdf,.doc,.docx"
-        onChange={(files) => handleFileChange("cv", files)}
-        fileType="cv"
-      />
-      <FileUpload 
-        label="Latest Qualification"
-        required={true}
-        fileTypeLabel="Required"
-        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-        onChange={(files) => handleFileChange("qualification", files)}
-        fileType="qualification"
-      />
-      <FileUpload 
-        label="Additional Certifications"
-        required={false}
-        fileTypeLabel="Optional"
-        multiple={true}
-        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-        onChange={(files) => handleFileChange("certificates", files)}
-        fileType="certificates"
-      />*/}
 
       <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
