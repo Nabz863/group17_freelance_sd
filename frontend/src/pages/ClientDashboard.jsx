@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PostJobForm from "./PostJobForm";
-import "../styles/theme.css";
+import "./styles/theme.css";
 
 const clientSections = [
   "Account Settings",

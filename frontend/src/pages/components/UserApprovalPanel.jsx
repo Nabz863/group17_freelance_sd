@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import supabase from "../../utils/supabaseClient";
+import "../styles/theme.css";
 
 export default function UserApprovalPanel() {
   const [clients, setClients] = useState([]);
