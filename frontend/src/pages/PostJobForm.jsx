@@ -5,7 +5,7 @@ import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "./components/ProfileFormLayout";
 import "./styles/theme.css";
 
-export default function ClientJobPostForm() {
+export default function PostJobForm() {
   const { user } = useAuth0();
   const navigate = useNavigate();
 
