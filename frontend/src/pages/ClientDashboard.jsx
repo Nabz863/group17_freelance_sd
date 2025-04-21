@@ -22,7 +22,6 @@ export default function ClientDashboard() {
       </header>
 
       <section className="grid gap-6 md:grid-cols-2">
-        {/*}
          <article
           className="card-glow p-6 rounded-xl bg-[#1a1a1a] animate-float cursor-pointer hover:bg-[#1f1f1f] transition"
           onClick={() => navigate("/post-job")}
@@ -30,8 +29,7 @@ export default function ClientDashboard() {
           <h2 className="text-xl text-accent font-semibold mb-2">Post a New Job</h2>
           <p className="text-gray-300">Quickly publish a job with your requirements and budget.</p>
         </article>
-         */}
-         <button
+         {/*<button
           onClick={() => {
           console.log("Navigating to /post-job...");
           navigate("/post-job");
@@ -39,7 +37,7 @@ export default function ClientDashboard() {
           className="bg-[#1a1a1a] text-white rounded-lg p-6 w-full hover:bg-[#1f1f1f] transition"
         >
         Post a New Job
-        </button>
+        </button>*/}
 
         <article
           className="card-glow p-6 rounded-xl bg-[#1a1a1a] animate-float cursor-pointer hover:bg-[#1f1f1f] transition"

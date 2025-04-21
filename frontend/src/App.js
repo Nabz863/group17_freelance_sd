@@ -52,7 +52,10 @@ export default function App() {
       }
 
       const dashboard = isClient ? "/client" : "/freelancer";
-      if (location.pathname !== dashboard) navigate(dashboard);
+      const protectedPaths = ["/client", "/freelancer", "/post-job", "/review-applicants"]; //whitelist
+      if (!protectedPaths.includes(location.pathname)) {
+        navigate(dashboard);
+      }
     } catch (err) {
       console.error("Auth logic failed:", err);
       navigate("/error");
