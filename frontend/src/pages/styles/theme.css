@@ -61,4 +61,15 @@
       transform: scale(4);
     }
   }
+  .card-glow {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+  .card-glow:hover {
+    border-color: #1abc9c;
+    background-color: rgba(26, 188, 156, 0.05);
+  }
+  .text-accent {
+    color: #1abc9c;
+  }
   

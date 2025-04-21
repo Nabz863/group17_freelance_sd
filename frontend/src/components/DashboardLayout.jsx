@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
+import "../styles/theme.css";
 
 export default function DashboardLayout({ role = "User", menuItems = [] }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -7,7 +8,7 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <main className="flex h-screen bg-[#0e0e0e] text-white">
+    <main className="flex h-screen bg-[#0e0e0e] text-white font-sans">
       {/* Hamburger for mobile */}
       <button
         onClick={toggleSidebar}
@@ -21,13 +22,13 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
 
       {/* Sidebar */}
       <nav
-        className={`$ {
+        className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-300 ease-in-out fixed md:relative z-40 md:w-64 w-60 bg-[#132d28] p-6 flex flex-col items-center shadow-lg`}
         aria-label="Sidebar"
       >
         <h2 className="text-2xl uppercase font-bold tracking-widest border-b-2 border-[#1abc9c] pb-2 mb-6">
-          {role}s
+          {role}
         </h2>
         {menuItems.map((label, index) => (
           <button
@@ -41,7 +42,7 @@ export default function DashboardLayout({ role = "User", menuItems = [] }) {
       </nav>
 
       {/* Main content */}
-      <section className="flex-1 overflow-y-auto p-6">
+      <section className="flex-1 overflow-y-auto p-6 animate-fadeInUp">
         <Outlet />
       </section>
     </main>
