@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import DashboardLayout from "./components/DashboardLayout";
-import UserApprovalPanel from "./components/UserApprovalPanel";
+import DashboardLayout from "../components/DashboardLayout";
+import UserApprovalPanel from "../components/UserApprovalPanel";
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("Requests");

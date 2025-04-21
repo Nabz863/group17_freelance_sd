@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-import "./styles/theme.css";
+import "../styles/theme.css";
 
 export default function PostJobForm({ embed = false }) {
   const { user } = useAuth0();

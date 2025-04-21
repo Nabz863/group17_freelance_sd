@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
 import FileUpload from "../components/FileUpload";
-import "./styles/theme.css";
+import "../styles/theme.css";
 
 export default function FreelancerProfileForm() {
   const { user } = useAuth0();

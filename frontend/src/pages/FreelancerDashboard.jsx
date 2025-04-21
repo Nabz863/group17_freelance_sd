@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import supabase from "../utils/supabaseClient";
 import { useAuth0 } from "@auth0/auth0-react";
-import "./styles/theme.css";
+import "../styles/theme.css";
 
 const { user } = useAuth0();
 const userId = user?.sub;
