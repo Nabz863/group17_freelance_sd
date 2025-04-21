@@ -1,81 +1,118 @@
-import React from "react";
-import DashboardLayout from "./components/DashboardLayout";
-import "./styles/theme.css";
+import { useState } from "react";
+import PostJobForm from "./PostJobForm";
+import "../styles/theme.css";
 
-function OverviewSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">Welcome to the Client Dashboard</h2>
-      <p className="text-gray-300">
-        Manage your freelancers, projects, and payments all in one place.
-      </p>
-    </section>
-  );
-}
+const clientSections = [
+  "Account Settings",
+  "Freelancers",
+  "Inbox",
+  "Payments",
+  "Projects",
+  "Post a Job"
+];
 
-function PostJobSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">Post a New Job</h2>
-      <p className="text-gray-300">Quickly publish a job with your requirements and budget.</p>
-    </section>
-  );
-}
-
-function ProjectsSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">My Projects</h2>
-      <p className="text-gray-300">Review your current and past projects.</p>
-    </section>
-  );
-}
-
-function InboxSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">Inbox</h2>
-      <p className="text-gray-300">Messages and updates from freelancers.</p>
-    </section>
-  );
-}
-
-function PaymentsSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">Payments</h2>
-      <p className="text-gray-300">Manage and track your transactions securely.</p>
-    </section>
-  );
-}
-
-function FreelancersSection() {
-  return (
-    <section className="card-glow bg-[#1a1a1a] p-6 rounded-xl animate-fadeInUp">
-      <h2 className="text-xl text-accent font-semibold mb-2">Freelancers</h2>
-      <p className="text-gray-300">Search, view, and connect with freelancers.</p>
-    </section>
-  );
-}
+const staticContent = {
+  "Account Settings": (
+    <>
+      <h1>Account Settings</h1>
+      <p>Edit profile, password and more.</p>
+    </>
+  ),
+  "Freelancers": (
+    <>
+      <h1>Freelancers</h1>
+      <p>View or manage freelancers you've worked with.</p>
+    </>
+  ),
+  "Inbox": (
+    <>
+      <h1>Inbox</h1>
+      <p>Your messages with freelancers.</p>
+    </>
+  ),
+  "Payments": (
+    <>
+      <h1>Payments</h1>
+      <p>Review invoices and payment history.</p>
+    </>
+  ),
+  "Projects": (
+    <>
+      <h1>Projects</h1>
+      <p>See current and past projects with freelancers.</p>
+    </>
+  )
+};
 
 export default function ClientDashboard() {
-  const menuItems = [
-    "Overview",
-    "Post a Job",
-    "Projects",
-    "Inbox",
-    "Payments",
-    "Freelancers"
-  ];
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+  const [activeSection, setActiveSection] = useState(clientSections[0]);
 
-  const contentMap = {
-    Overview: <OverviewSection />,
-    "Post a Job": <PostJobSection />,
-    Projects: <ProjectsSection />,
-    Inbox: <InboxSection />,
-    Payments: <PaymentsSection />,
-    Freelancers: <FreelancersSection />
+  const toggleSidebar = () => setSidebarOpen((v) => !v);
+
+  const handleSidebarBtnClick = (e, label) => {
+    setActiveSection(label);
+    const btn = e.currentTarget;
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(btn.offsetWidth, btn.offsetHeight) * 0.8;
+    let x, y;
+    if (e.touches) {
+      x = e.touches[0].clientX - rect.left - size / 2;
+      y = e.touches[0].clientY - rect.top - size / 2;
+    } else {
+      x = e.clientX - rect.left - size / 2;
+      y = e.clientY - rect.top - size / 2;
+    }
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 520);
+
+    if (window.innerWidth < 900) setSidebarOpen(false);
   };
 
-  return <DashboardLayout role="Client" menuItems={menuItems} contentMap={contentMap} />;
+  return (
+    <main className="flex h-screen w-full bg-[#0e0e0e] text-white font-main relative">
+      <button
+        className="dashboard-hamburger"
+        aria-label="Toggle navigation menu"
+        onClick={toggleSidebar}
+        type="button"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav
+        className={"dashboard-sidebar" + (sidebarOpen ? "" : " hidden")}
+        aria-label="Sidebar"
+      >
+        <h2>Clients</h2>
+        {clientSections.map((label) => (
+          <button
+            key={label}
+            className={
+              "dashboard-sidebar-btn" +
+              (activeSection === label ? " selected" : "")
+            }
+            type="button"
+            onClick={(e) => handleSidebarBtnClick(e, label)}
+            onTouchStart={(e) => handleSidebarBtnClick(e, label)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      <section className="dashboard-content animate-fadeInUp">
+        {activeSection === "Post a Job"
+          ? <PostJobForm embed />
+          : staticContent[activeSection] || <p>No content found.</p>}
+      </section>
+    </main>
+  );
 }

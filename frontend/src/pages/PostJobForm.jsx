@@ -1,14 +1,10 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
-import ProfileFormLayout from "./components/ProfileFormLayout";
-import "./styles/theme.css";
+import "../styles/theme.css";
 
-export default function PostJobForm() {
+export default function PostJobForm({ embed = false }) {
   const { user } = useAuth0();
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -16,6 +12,7 @@ export default function PostJobForm() {
     budget: "",
     deadline: ""
   });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,16 +34,33 @@ export default function PostJobForm() {
       completed: false
     });
 
-    if (!error) navigate("/client");
-    else console.error("Job post submission failed:", error);
+    if (!error) {
+      setSubmitted(true);
+    } else {
+      console.error("Job post submission failed:", error);
+    }
   };
 
+  if (submitted) {
+    return (
+      <section className="text-center">
+        <h1 className="text-accent text-2xl mb-4">Job Posted Successfully</h1>
+        <p>Your job is now live for freelancers to apply.</p>
+      </section>
+    );
+  }
+
   return (
-    <ProfileFormLayout
-      title="Post a New Job"
-      subtitle="Describe your project and attract the right freelancers"
-      onSubmit={handleSubmit}
-    >
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+      {!embed && (
+        <>
+          <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
+          <p className="text-gray-400 mb-6">
+            Describe your project and attract the right freelancers
+          </p>
+        </>
+      )}
+
       <label className="form-label">
         Job Title:
         <input
@@ -110,6 +124,6 @@ export default function PostJobForm() {
           Submit Job
         </button>
       </footer>
-    </ProfileFormLayout>
+    </form>
   );
 }
