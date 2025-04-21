@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-import "./styles/theme.css";
+import "../styles/theme.css";
 
 export default function CreateProfile() {
   const { user } = useAuth0();
