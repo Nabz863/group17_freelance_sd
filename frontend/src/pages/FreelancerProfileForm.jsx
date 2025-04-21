@@ -59,7 +59,7 @@ export default function FreelancerProfileForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (fileType, newFiles) => {
+  {/*const handleFileChange = (fileType, newFiles) => {
     if (fileType === "certificates") {
       setFiles(prev => ({
         ...prev,
@@ -71,7 +71,7 @@ export default function FreelancerProfileForm() {
         [fileType]: newFiles[0]
       }));
     }
-  };
+  };*/}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -265,7 +265,7 @@ export default function FreelancerProfileForm() {
       </div>
 
       {/* File Uploads */}
-      <FileUpload 
+      {/*<FileUpload 
         label="Curriculum Vitae (CV)"
         required={true}
         fileTypeLabel="Required"
@@ -289,7 +289,7 @@ export default function FreelancerProfileForm() {
         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
         onChange={(files) => handleFileChange("certificates", files)}
         fileType="certificates"
-      />
+      />*/}
 
       <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
