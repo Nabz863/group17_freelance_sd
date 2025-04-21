@@ -8,47 +8,68 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <main className="flex h-screen bg-[#0e0e0e] text-white font-sans">
-      {/* Hamburger for mobile */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute top-4 left-4 z-50 flex flex-col justify-between w-9 h-7 md:hidden"
-        aria-label="Toggle navigation menu"
-      >
-        <span className="block h-1 bg-white rounded"></span>
-        <span className="block h-1 bg-white rounded"></span>
-        <span className="block h-1 bg-white rounded"></span>
-      </button>
-
+    <div className="flex bg-[#0e0e0e] text-white font-sans min-h-screen">
       {/* Sidebar */}
       <nav
-        className={`${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 transition-transform duration-300 ease-in-out fixed md:relative z-40 md:w-64 w-60 bg-[#132d28] p-6 flex flex-col items-center shadow-lg`}
-        aria-label="Sidebar"
+        className={
+          "dashboard-sidebar fixed md:relative z-40 transition-transform duration-300 ease-in-out" +
+          (sidebarOpen ? " translate-x-0" : " -translate-x-full")
+        }
       >
-        <h2 className="text-2xl uppercase font-bold tracking-widest border-b-2 border-[#1abc9c] pb-2 mb-6">
-          {role}
-        </h2>
-        {menuItems.map((label, index) => (
+        <h2>{role}</h2>
+        {menuItems.map((label) => (
           <button
-            key={index}
-            onClick={() => setActiveSection(label)}
-            className={`relative w-32 h-10 my-2 font-medium border-2 border-[#1abc9c] rounded-lg z-10 overflow-hidden group transition-all hover:text-white ${
-              activeSection === label ? "text-white" : "text-[#1abc9c]"
-            }`}
+            key={label}
+            className={
+              "dashboard-sidebar-btn" + (activeSection === label ? " selected" : "")
+            }
+            type="button"
+            onClick={(e) => {
+              setActiveSection(label);
+
+              const btn = e.currentTarget;
+              const ripple = document.createElement("span");
+              ripple.className = "ripple";
+              const rect = btn.getBoundingClientRect();
+              const size = Math.max(btn.offsetWidth, btn.offsetHeight) * 0.8;
+              const x = e.clientX - rect.left - size / 2;
+              const y = e.clientY - rect.top - size / 2;
+              ripple.style.width = ripple.style.height = `${size}px`;
+              ripple.style.left = `${x}px`;
+              ripple.style.top = `${y}px`;
+              btn.appendChild(ripple);
+              setTimeout(() => ripple.remove(), 520);
+
+              if (window.innerWidth < 900) setSidebarOpen(false);
+            }}
+            onTouchStart={(e) => {
+              setActiveSection(label);
+              if (window.innerWidth < 900) setSidebarOpen(false);
+            }}
           >
             {label}
-            <span className="absolute z-[-1] w-full h-full bg-[#1abc9c] left-0 top-full group-hover:top-0 transition-all duration-500 ease-in-out rounded-b-full group-hover:rounded-b-none" />
           </button>
         ))}
       </nav>
 
-      {/* Main content */}
-      <section className="flex-1 overflow-y-auto p-6 animate-fadeInUp">
-        {contentMap[activeSection] || <p>No content for this section.</p>}
-      </section>
-    </main>
+      {/* Content */}
+      <div className="flex-1 md:ml-[250px] w-full min-h-screen">
+        <button
+          className="dashboard-hamburger"
+          aria-label="Toggle navigation menu"
+          onClick={toggleSidebar}
+          type="button"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <section className="dashboard-content animate-fadeInUp">
+          {contentMap[activeSection] || <p>No content found.</p>}
+        </section>
+      </div>
+    </div>
   );
 }
 
