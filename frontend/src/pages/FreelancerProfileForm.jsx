@@ -27,12 +27,11 @@ export default function FreelancerProfileForm() {
     description: ""
   });
 
-  const [files, setFiles] = useState(null);
-    {/*{
+  {/*const [files, setFiles] = useState({
     cv: null,
     qualification: null,
     certificates: []
-  }*/}
+  });*/}
 
   useEffect(() => {
     const checkFreelancer = async () => {
