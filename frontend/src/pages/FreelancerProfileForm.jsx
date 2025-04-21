@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
 import "../styles/theme.css";
-{/*import FileUpload from "../components/FileUpload";*/}
 
 export default function FreelancerProfileForm() {
   const { user } = useAuth0();
@@ -30,7 +29,6 @@ export default function FreelancerProfileForm() {
   useEffect(() => {
     const checkFreelancer = async () => {
       if (!user) return;
-      {/*{ data, error } */}
       const { data } = await supabase
         .from("freelancers")
         .select("profile")
@@ -86,7 +84,6 @@ export default function FreelancerProfileForm() {
       subtitle="Tell us about your skills and experience to connect with clients"
       onSubmit={handleSubmit}
     >
-      {/* Personal Information */}
       <div className="form-label">
         First Name
         <input
