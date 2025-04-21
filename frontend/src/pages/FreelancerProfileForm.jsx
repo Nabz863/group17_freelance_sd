@@ -27,17 +27,18 @@ export default function FreelancerProfileForm() {
     description: ""
   });
 
-  const [files, setFiles] = useState({
+  const [files, setFiles] = useState(null);
+    {/*{
     cv: null,
     qualification: null,
     certificates: []
-  });
+  }*/}
 
   useEffect(() => {
     const checkFreelancer = async () => {
       if (!user) return;
-
-      const { data, error } = await supabase
+      {/*{ data, error } */}
+      const { data } = await supabase
         .from("freelancers")
         .select("profile")
         .eq("user_id", user.sub)
