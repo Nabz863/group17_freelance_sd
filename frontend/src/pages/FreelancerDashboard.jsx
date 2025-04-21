@@ -3,9 +3,6 @@ import supabase from "../utils/supabaseClient";
 import { useAuth0 } from "@auth0/auth0-react";
 import "../styles/theme.css";
 
-const { user } = useAuth0();
-const userId = user?.sub;
-
 const freelancerSections = [
   "Account Settings",
   "Clients",
@@ -16,6 +13,8 @@ const freelancerSections = [
 ];
 
 export default function FreelancerDashboard() {
+  const { user } = useAuth0();
+  const userId = user?.sub;
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
   const [activeSection, setActiveSection] = useState(freelancerSections[0]);
   const [projects, setProjects] = useState([]);
