@@ -180,6 +180,17 @@
   .dashboard-hamburger:hover span {
     background: #1abc9c;
   }
+  .dashboard-sidebar {
+    position: absolute; /* make it float */
+    left: 0;
+    top: 0;
+    height: 100vh;
+  }
+  
+  /* Push content to the right */
+  .dashboard-content {
+    margin-left: 250px; /* match sidebar width */
+  }
   @media (max-width: 900px) {
     .dashboard-sidebar {
       position: fixed;
