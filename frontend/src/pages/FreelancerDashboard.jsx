@@ -41,10 +41,6 @@ export default function FreelancerDashboard() {
     if (window.innerWidth < 900) setSidebarOpen(false);
   };
 
-  useEffect(() => {
-    if (activeSection === "Available Jobs") fetchProjects();
-  }, [activeSection]);
-
   const sectionContent = {
     "Account Settings": (
       <>
