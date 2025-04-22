@@ -8,33 +8,50 @@ export default function ViewApplicationsSection() {
   const [expanded, setExpanded] = useState({});
   const [assigning, setAssigning] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
       setLoading(true);
-      const { data } = await supabase
+      setErrorMsg(null);
+
+      const { data, error } = await supabase
         .from("projects")
-        .select("id, description, freelancer_id, applications(freelancerID, status, freelancer:freelancerID(profile))")
+        .select(`
+          id,
+          description,
+          freelancer_id,
+          applications (
+            freelancerID,
+            status,
+            freelancer:freelancerID (
+              profile
+            )
+          )
+        `)
         .eq("client_id", user?.sub);
 
-      if (data) {
-        setJobs(data);
+      if (error) {
+        console.error("Error loading job applications:", error);
+        setErrorMsg("Could not load job applications.");
+      } else {
+        setJobs(data || []);
       }
 
       setLoading(false);
     };
 
-    if (user) fetchApplications();
+    if (user?.sub) fetchApplications();
   }, [user]);
 
   const handleAssign = async (projectId, freelancerID) => {
     setAssigning(projectId);
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from("projects")
       .update({ freelancer_id: freelancerID })
       .eq("id", projectId);
 
-    if (!updateError) {
+    if (!error) {
       setJobs((prev) =>
         prev.map((job) =>
           job.id === projectId
@@ -43,7 +60,7 @@ export default function ViewApplicationsSection() {
         )
       );
     } else {
-      console.error("Error assigning freelancer:", updateError);
+      console.error("Error assigning freelancer:", error);
     }
 
     setAssigning(null);
@@ -58,15 +75,20 @@ export default function ViewApplicationsSection() {
       <h1>Job Applications</h1>
       {loading ? (
         <p className="mt-4 text-gray-400">Loading applications...</p>
+      ) : errorMsg ? (
+        <p className="mt-4 text-red-400">{errorMsg}</p>
       ) : jobs.length === 0 ? (
         <p className="mt-4 text-gray-400">No jobs found.</p>
       ) : (
         jobs.map((job) => (
-          <div key={job.id} className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
+          <div
+            key={job.id}
+            className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]"
+          >
             <header className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg text-accent font-semibold">
-                  {job.description?.title}
+                  {job.description?.title || "Untitled Job"}
                 </h2>
                 <p className="text-gray-400 text-sm">{job.description?.details}</p>
               </div>
@@ -80,7 +102,7 @@ export default function ViewApplicationsSection() {
 
             {expanded[job.id] && (
               <ul className="mt-4 space-y-4">
-                {job.applications.length === 0 ? (
+                {job.applications?.length === 0 ? (
                   <p className="text-gray-500 text-sm">No applicants yet.</p>
                 ) : (
                   job.applications.map((app) => {
@@ -88,7 +110,10 @@ export default function ViewApplicationsSection() {
                     const assigned = job.freelancer_id === app.freelancerID;
 
                     return (
-                      <li key={app.freelancerID} className="p-3 rounded bg-[#222]">
+                      <li
+                        key={app.freelancerID}
+                        className="p-3 rounded bg-[#222] shadow-sm"
+                      >
                         <p className="text-white font-bold">
                           {profile.firstName} {profile.lastName}
                         </p>
@@ -96,7 +121,11 @@ export default function ViewApplicationsSection() {
                         <p className="text-sm text-gray-400">{profile.email}</p>
 
                         <button
-                          className={`primary-btn mt-2 ${assigned || assigning === job.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`primary-btn mt-2 ${
+                            assigned || assigning === job.id
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                           disabled={assigned || assigning === job.id}
                           onClick={() => handleAssign(job.id, app.freelancerID)}
                         >
