@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import supabase from "../utils/supabaseClient";
-import { useAuth0 } from "@auth0/auth0-react";
+import React, { useState } from "react";
 import ApplyJobSection from "../components/ApplyJobSection";
 import "../styles/theme.css";
 
@@ -14,7 +12,6 @@ const freelancerSections = [
 ];
 
 export default function FreelancerDashboard() {
-  const { user } = useAuth0();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
   const [activeSection, setActiveSection] = useState(freelancerSections[0]);
 
