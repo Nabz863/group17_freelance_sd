@@ -17,7 +17,6 @@ export default function FreelancerDashboard() {
   const { user } = useAuth0();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
   const [activeSection, setActiveSection] = useState(freelancerSections[0]);
-  const [projects, setProjects] = useState([]);
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
@@ -40,28 +39,6 @@ export default function FreelancerDashboard() {
   const sectionSelect = (e, label) => {
     handleSidebarBtnClick(e, label);
     if (window.innerWidth < 900) setSidebarOpen(false);
-  };
-
-  const fetchProjects = async () => {
-    const { data, error } = await supabase.from("projects").select("*").eq("completed", false);
-    if (!error) setProjects(data);
-    else console.error("Failed to fetch projects", error);
-  };
-
-  const applyToProject = async (projectId) => {
-    const userId = user?.sub;
-    if (!userId) return;
-  
-    const application = {
-      applicationID: `${userId}_${projectId}`,
-      freelancerID: userId,
-      projectID: projectId,
-      status: "pending",
-    };
-  
-    const { error } = await supabase.from("applications").insert(application);
-    if (error) console.error("Application failed:", error);
-    else alert("Applied successfully!");
   };
 
   useEffect(() => {
