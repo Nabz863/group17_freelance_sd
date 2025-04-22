@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import supabase from "../utils/supabaseClient";
 import { useAuth0 } from "@auth0/auth0-react";
+import "../components/ApplyJobSection";
 import "../styles/theme.css";
 
 const freelancerSections = [
@@ -98,32 +99,7 @@ export default function FreelancerDashboard() {
         <p>Manage project documents and uploads.</p>
       </>
     ),
-    "Available Jobs": (
-      <>
-        <h1>Available Jobs</h1>
-        {projects.length === 0 ? (
-          <p className="text-gray-400 mt-4">No jobs available at the moment.</p>
-        ) : (
-          <div className="grid gap-4 mt-6">
-            {projects.map((job) => (
-              <div key={job.id} className="card-glow p-5 bg-[#1a1a1a] rounded-lg">
-                <h2 className="text-lg font-bold text-accent">{job.description?.title}</h2>
-                <p className="text-sm text-gray-300 mt-1">{job.description?.details}</p>
-                <p className="text-sm mt-2"><strong>Requirements:</strong> {job.description?.requirements}</p>
-                <p className="text-sm"><strong>Budget:</strong> R{job.description?.budget}</p>
-                <p className="text-sm"><strong>Deadline:</strong> {job.description?.deadline}</p>
-                <button
-                  className="primary-btn mt-4"
-                  onClick={() => applyToProject(job.id)}
-                >
-                  Apply
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
-    ),
+    "Available Jobs": <ApplyJobSection />
   };
 
   return (
