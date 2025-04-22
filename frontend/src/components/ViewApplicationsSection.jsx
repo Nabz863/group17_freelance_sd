@@ -4,140 +4,116 @@ import supabase from "../utils/supabaseClient";
 
 export default function ViewApplicationsSection() {
   const { user } = useAuth0();
-  const [projects, setProjects] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [expanded, setExpanded] = useState({});
+  const [assigning, setAssigning] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [assigning, setAssigning] = useState({});
 
   useEffect(() => {
-    const fetchClientProjectsWithApplicants = async () => {
+    const fetchApplications = async () => {
       setLoading(true);
-      setError(null);
-
-      const { data: projectList, error: projectError } = await supabase
+      const { data } = await supabase
         .from("projects")
-        .select("id, description, freelancer_id")
+        .select("id, description, freelancer_id, applications(freelancerID, status, freelancer:freelancerID(profile))")
         .eq("client_id", user?.sub);
 
-      if (projectError) {
-        console.error("Project fetch error:", projectError);
-        setError("Could not fetch projects.");
-        setLoading(false);
-        return;
+      if (data) {
+        setJobs(data);
       }
 
-      const enrichedProjects = await Promise.all(
-        projectList.map(async (proj) => {
-          const { data: apps, error: appsError } = await supabase
-            .from("applications")
-            .select("freelancerID, status")
-            .eq("projectID", proj.id);
-
-          if (appsError) {
-            console.error("Application fetch error:", appsError);
-            return { ...proj, applicants: [] };
-          }
-
-          const profiles = await Promise.all(
-            apps.map(async (app) => {
-              const { data, error } = await supabase
-                .from("freelancers")
-                .select("user_id, profile")
-                .eq("user_id", app.freelancerID)
-                .maybeSingle();
-              return {
-                ...app,
-                profile: data?.profile || null,
-              };
-            })
-          );
-
-          return { ...proj, applicants: profiles };
-        })
-      );
-
-      setProjects(enrichedProjects);
       setLoading(false);
     };
 
-    if (user) fetchClientProjectsWithApplicants();
+    if (user) fetchApplications();
   }, [user]);
 
-  const handleAssign = async (projectId, freelancerId) => {
-    setAssigning((prev) => ({ ...prev, [projectId]: freelancerId }));
-
-    const { error } = await supabase
+  const handleAssign = async (projectId, freelancerID) => {
+    setAssigning(projectId);
+    const { error: updateError } = await supabase
       .from("projects")
-      .update({ freelancer_id: freelancerId })
+      .update({ freelancer_id: freelancerID })
       .eq("id", projectId);
 
-    if (error) {
-      console.error("Assignment error:", error);
-      alert("Failed to assign freelancer.");
+    if (!updateError) {
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === projectId
+            ? { ...job, freelancer_id: freelancerID }
+            : job
+        )
+      );
     } else {
-      alert("Freelancer assigned successfully!");
+      console.error("Error assigning freelancer:", updateError);
     }
 
-    setAssigning((prev) => ({ ...prev, [projectId]: null }));
+    setAssigning(null);
+  };
+
+  const toggleExpanded = (projectId) => {
+    setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
   };
 
   return (
     <section className="dashboard-content">
-      <h1 className="text-accent text-2xl mb-6">Your Job Postings</h1>
+      <h1>Job Applications</h1>
       {loading ? (
-        <p>Loading applications...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : projects.length === 0 ? (
-        <p>You have not posted any jobs.</p>
+        <p className="mt-4 text-gray-400">Loading applications...</p>
+      ) : jobs.length === 0 ? (
+        <p className="mt-4 text-gray-400">No jobs found.</p>
       ) : (
-        <div className="space-y-6">
-          {projects.map((proj) => (
-            <article key={proj.id} className="bg-[#1a1a1a] p-5 rounded-lg card-glow">
-              <h2 className="text-xl font-bold text-accent">{proj.description?.title || "Untitled Job"}</h2>
-              <p className="text-sm text-gray-400 mb-3">{proj.description?.details}</p>
-
+        jobs.map((job) => (
+          <div key={job.id} className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
+            <header className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg text-accent font-semibold">
+                  {job.description?.title}
+                </h2>
+                <p className="text-gray-400 text-sm">{job.description?.details}</p>
+              </div>
               <button
-                onClick={() => setSelectedProject(selectedProject === proj.id ? null : proj.id)}
-                className="primary-btn mb-4"
+                className="primary-btn"
+                onClick={() => toggleExpanded(job.id)}
               >
-                {selectedProject === proj.id ? "Hide Applicants" : "View Applicants"}
+                {expanded[job.id] ? "Hide Applicants" : "View Applicants"}
               </button>
+            </header>
 
-              {selectedProject === proj.id && (
-                <div className="space-y-4">
-                  {proj.applicants.length === 0 ? (
-                    <p className="text-gray-400">No applicants yet.</p>
-                  ) : (
-                    proj.applicants.map((app) => (
-                      <div
-                        key={app.freelancerID}
-                        className="p-3 rounded border border-[#1abc9c] bg-[#151515]"
-                      >
-                        <p className="font-semibold text-white">
-                          {app.profile?.firstName} {app.profile?.lastName}
+            {expanded[job.id] && (
+              <ul className="mt-4 space-y-4">
+                {job.applications.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No applicants yet.</p>
+                ) : (
+                  job.applications.map((app) => {
+                    const profile = app.freelancer?.profile || {};
+                    const assigned = job.freelancer_id === app.freelancerID;
+
+                    return (
+                      <li key={app.freelancerID} className="p-3 rounded bg-[#222]">
+                        <p className="text-white font-bold">
+                          {profile.firstName} {profile.lastName}
                         </p>
-                        <p className="text-gray-400 text-sm">{app.profile?.profession}</p>
-                        <p className="text-gray-500 text-xs mb-2">{app.profile?.email}</p>
+                        <p className="text-sm text-gray-400">{profile.profession}</p>
+                        <p className="text-sm text-gray-400">{profile.email}</p>
 
                         <button
-                          className="primary-btn"
-                          onClick={() => handleAssign(proj.id, app.freelancerID)}
-                          disabled={assigning[proj.id] === app.freelancerID}
+                          className={`primary-btn mt-2 ${assigned || assigning === job.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                          disabled={assigned || assigning === job.id}
+                          onClick={() => handleAssign(job.id, app.freelancerID)}
                         >
-                          {assigning[proj.id] === app.freelancerID
+                          {assigned
+                            ? "Assigned"
+                            : assigning === job.id
                             ? "Assigning..."
                             : "Assign Freelancer"}
                         </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            )}
+          </div>
+        ))
       )}
     </section>
   );
