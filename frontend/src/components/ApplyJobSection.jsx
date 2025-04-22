@@ -10,30 +10,33 @@ export default function ApplyJobSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    const loadData = async () => {
+      if (!user) return;
 
-    const fetchData = async () => {
       setLoading(true);
-      const { data: projectData, error: projectError } = await supabase
+
+      const { data: allProjects, error: projectError } = await supabase
         .from("projects")
-        .select("id, description")
+        .select("*")
+        .eq("completed", false)
         .is("freelancer_id", null);
 
-      const { data: appData, error: appError } = await supabase
+      const { data: applications, error: appError } = await supabase
         .from("applications")
         .select("projectID")
         .eq("freelancerID", user.sub);
 
       if (projectError || appError) {
-        console.error("Error fetching data:", projectError || appError);
+        console.error("Error loading job data", projectError || appError);
       } else {
-        setProjects(projectData || []);
-        setAppliedProjectIds(appData.map((a) => a.projectID));
+        setProjects(allProjects || []);
+        setAppliedProjectIds(applications.map((a) => a.projectID));
       }
+
       setLoading(false);
     };
 
-    fetchData();
+    loadData();
   }, [user]);
 
   const handleApply = async (projectId) => {
@@ -45,7 +48,7 @@ export default function ApplyJobSection() {
     });
 
     if (error) {
-      console.error("Failed to apply:", error);
+      console.error("Application failed:", error);
     } else {
       setAppliedProjectIds((prev) => [...prev, projectId]);
     }
@@ -100,3 +103,4 @@ export default function ApplyJobSection() {
     </section>
   );
 }
+
