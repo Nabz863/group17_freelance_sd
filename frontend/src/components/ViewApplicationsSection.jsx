@@ -22,14 +22,17 @@ export default function ViewApplicationsSection() {
             applications(
               freelancerid,
               status,
-              freelancer:freelancerid(profile)
+              freelancer:freelancerid(
+                profile
+              )
             )
           `)
           .eq("client_id", user?.sub);
 
         if (error) {
-          console.error("Error loading job applications:", error);
+          console.error("Supabase error:", error);
         } else {
+          console.log("Fetched jobs with applications:", data);
           setJobs(data || []);
         }
       } catch (err) {
@@ -98,6 +101,8 @@ export default function ViewApplicationsSection() {
                   {Array.isArray(job.applications) && job.applications.length > 0 ? (
                     job.applications.map((app) => {
                       const profile = app.freelancer?.profile;
+                      console.log("Applicant profile for project", job.id, profile);
+
                       const firstName = profile?.firstName || "Unnamed";
                       const lastName = profile?.lastName || "";
                       const profession = profile?.profession || "Unknown Profession";
