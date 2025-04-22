@@ -21,10 +21,10 @@ export default function ApplyJobSection() {
         .eq("completed", false)
         .is("freelancer_id", null);
 
-      const { data: applications, error: appError } = await supabase
+        const { data: applications, error: appError } = await supabase
         .from("applications")
-        .select("projectID")
-        .eq("freelancerID", user.sub);
+        .select("projectid")
+        .eq("freelancerid", user.sub);
 
       if (projectError || appError) {
         console.error("Error loading job data", projectError || appError);
@@ -41,11 +41,11 @@ export default function ApplyJobSection() {
 
   const handleApply = async (projectId) => {
     const { error } = await supabase.from("applications").insert({
-      applicationID: crypto.randomUUID(),
-      freelancerID: user.sub,
-      projectID: projectId,
-      status: "pending"
-    });
+        applicationid: crypto.randomUUID(),
+        freelancerid: user.sub,
+        projectid: projectId,
+        status: "pending"
+      });
 
     if (error) {
       console.error("Application failed:", error);
