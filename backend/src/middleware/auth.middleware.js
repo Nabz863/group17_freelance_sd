@@ -1,30 +1,44 @@
-//REPLACE stuff with environment variables from Azure!
-const { auth } = require('express-oauth2-jwt-bearer');
-const { expressJwtSecret } = require('jwks-rsa');
+const { auth } = require("express-oauth2-jwt-bearer");
+const jwksRsa = require("jwks-rsa");
+require("dotenv").config();
 
-// Auth0 middleware
+// Auth0 configuration from environment variables - use fallbacks for development
+const auth0Domain =
+  process.env.AUTH0_DOMAIN || "dev-ttpqtow83wgggk7p.us.auth0.com";
+const auth0Audience =
+  process.env.AUTH0_AUDIENCE ||
+  "https://dev-ttpqtow83wgggk7p.us.auth0.com/api/v2/";
+
+// Create middleware for validating JWTs
 const jwtCheck = auth({
-  secret: expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksUri: `https://dev-ttpqtow83wgggk7p.us.auth0.com/.well-known/jwks.json`//REPLACE ${process.env.AUTH0_DOMAIN}
-  }),
-  audience: 'https://dev-ttpqtow83wgggk7p.us.auth0.com/api/v2/',//REPLACE process.env.AUTH0_AUDIENCE
-  issuer: `https://dev-ttpqtow83wgggk7p.us.auth0.com/`,//REPLACE ${process.env.AUTH0_DOMAIN}
-  algorithms: ['RS256']
+  audience: auth0Audience,
+  issuerBaseURL: `https://${auth0Domain}/`,
+  tokenSigningAlg: "RS256",
+  jwksUri: `https://${auth0Domain}/.well-known/jwks.json`,
 });
 
-// Role checking middleware remains similar
+// Role checking middleware
 const checkRole = (roles) => (req, res, next) => {
   if (!req.auth || !req.auth.payload) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  
-  const userRoles = req.auth.payload[`https://dev-ttpqtow83wgggk7p.us.auth0.com/roles`] || [];//REPLACE ${process.env.AUTH0_NAMESPACE}
-  if (!roles.some(role => userRoles.includes(role))) {
-    return res.status(403).json({ message: 'Insufficient permissions' });
+
+  // Safe access to roles with fallback to empty array if undefined
+  const namespace =
+    process.env.AUTH0_NAMESPACE || "https://dev-ttpqtow83wgggk7p.us.auth0.com";
+  const userRoles =
+    (req.auth.payload && req.auth.payload[`${namespace}/roles`]) || [];
+
+  // Check if user has at least one of the required roles
+  const hasRequiredRole =
+    Array.isArray(roles) &&
+    Array.isArray(userRoles) &&
+    roles.some((role) => userRoles.includes(role));
+
+  if (!hasRequiredRole) {
+    return res.status(403).json({ message: "Insufficient permissions" });
   }
-  
+
   next();
 };
 

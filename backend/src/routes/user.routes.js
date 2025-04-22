@@ -1,10 +1,10 @@
 const express = require("express");
-const { verifyToken, checkRole } = require("../middleware/auth.middleware");
+const { jwtCheck, checkRole } = require("../middleware/auth.middleware");
 const router = express.Router();
-const supabase = require("../config/supabaseClient");
+const supabase = require("../config/db");
 
 // Get all users (Admin only)
-router.get("/", verifyToken, checkRole(["admin"]), async (req, res) => {
+router.get("/", jwtCheck, checkRole(["admin"]), async (req, res) => {
   try {
     const { data, error } = await supabase.from("users").select("*");
 
@@ -20,7 +20,7 @@ router.get("/", verifyToken, checkRole(["admin"]), async (req, res) => {
 });
 
 // Freelancer signup route
-router.post("/signup/freelancer", verifyToken, async (req, res) => {
+router.post("/signup/freelancer", jwtCheck, async (req, res) => {
   try {
     const { role } = req.body;
     const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
@@ -61,7 +61,7 @@ router.post("/signup/freelancer", verifyToken, async (req, res) => {
 });
 
 // Client signup route
-router.post("/signup/client", verifyToken, async (req, res) => {
+router.post("/signup/client", jwtCheck, async (req, res) => {
   try {
     const { role } = req.body;
     const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
@@ -104,7 +104,7 @@ router.post("/signup/client", verifyToken, async (req, res) => {
 // Update user status (Admin only)
 router.patch(
   "/:userId/status",
-  verifyToken,
+  jwtCheck,
   checkRole(["admin"]),
   async (req, res) => {
     const { userId } = req.params;
@@ -146,7 +146,7 @@ router.patch(
 );
 
 // Get user profile
-router.get("/profile", verifyToken, async (req, res) => {
+router.get("/profile", jwtCheck, async (req, res) => {
   const auth0_id = req.auth.sub; // Getting Auth0 user ID from token
 
   try {
