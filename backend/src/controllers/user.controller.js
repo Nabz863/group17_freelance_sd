@@ -4,18 +4,17 @@
 const { supabase } = require("../config/db");
 
 const createFreelancer = async (req, res) => {
-  const { user_id, profile, profile_picture_url, credentials_urls } = req.body;
+  const { auth0_id } = req.auth.payload; // From Auth0 JWT
+  const { profile_picture_url, credentials_urls } = req.body; // Non-PII only
+  
   try {
     const { data, error } = await supabase
       .from("freelancers")
-      .insert([
-        {
-          user_id,
-          profile,
-          profile_picture_url,
-          credentials_urls,
-        },
-      ])
+      .insert([{
+        auth0_id, // Reference only
+        profile_picture_url, // URL to storage (no image data)
+        credentials_urls // Array of storage URLs
+      }])
       .select()
       .single();
 
@@ -24,17 +23,22 @@ const createFreelancer = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: `Error creating freelancer: ${err.message}`,
+      message: `Error creating freelancer: ${err.message}`
     });
   }
 };
 
 const createClient = async (req, res) => {
-  const { user_id, profile } = req.body;
+  const { auth0_id } = req.auth.payload; // From Auth0 JWT
+  const { profile_picture_url, credentials_urls } = req.body; // Non-PII only
   try {
     const { data, error } = await supabase
       .from("clients")
-      .insert([{ user_id, profile }])
+      .insert([{
+        auth0_id, // Reference only
+        profile_picture_url, // URL to storage (no image data)
+        credentials_urls // Array of storage URLs
+      }])
       .select()
       .single();
 
