@@ -1,90 +1,45 @@
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const { auth } = require("express-oauth2-jwt-bearer");
+const jwksRsa = require("jwks-rsa");
+require("dotenv").config();
 
-// Initialize passport
-//passport.initialize();
+// Auth0 configuration from environment variables - use fallbacks for development
+const auth0Domain =
+  process.env.AUTH0_DOMAIN || "dev-ttpqtow83wgggk7p.us.auth0.com";
+const auth0Audience =
+  process.env.AUTH0_AUDIENCE ||
+  "https://dev-ttpqtow83wgggk7p.us.auth0.com/api/v2/";
 
-const users = [];
-
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.CALLBACK_URL
-  },
-  function(accessToken, refreshToken, profile, done) {
-    // This function will be replaced with database logic later
-    // For now, we'll use in-memory storage
-    const existingUser = users.find(user => user.googleId === profile.id);
-    
-    if (existingUser) {
-      return done(null, existingUser);
-    }
-    
-    // Create a new user if they do not exist
-    const newUser = {
-      id: Date.now().toString(),
-      googleId: profile.id,
-      email: profile.emails[0].value,
-      name: profile.displayName,
-      role: 'pending', // Default role is pending until approved
-      createdAt: new Date()
-    };
-    
-    users.push(newUser);
-    return done(null, newUser);
-  }
-));
-
-// Serialize user for session
-passport.serializeUser((user, done) => {
-  done(null, user.id);
+// Create middleware for validating JWTs
+const jwtCheck = auth({
+  audience: auth0Audience,
+  issuerBaseURL: `https://${auth0Domain}/`,
+  tokenSigningAlg: "RS256",
+  jwksUri: `https://${auth0Domain}/.well-known/jwks.json`,
 });
 
-// Deserialize user from session
-passport.deserializeUser((id, done) => {
-  const user = users.find(user => user.id === id);
-/*passport.deserializeUser((id, done) => {
-  const user = users.find((user) => user.id === id);
-  done(null, user || null);
-});*/
-
-// Middleware to verify JWT token
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
-  
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+// Role checking middleware
+const checkRole = (roles) => (req, res, next) => {
+  if (!req.auth || !req.auth.payload) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
+
+  // Safe access to roles with fallback to empty array if undefined
+  const namespace =
+    process.env.AUTH0_NAMESPACE || "https://dev-ttpqtow83wgggk7p.us.auth0.com";
+  const userRoles =
+    (req.auth.payload && req.auth.payload[`${namespace}/roles`]) || [];
+
+  // Check if user has at least one of the required roles
+  const hasRequiredRole =
+    Array.isArray(roles) &&
+    Array.isArray(userRoles) &&
+    roles.some((role) => userRoles.includes(role));
+
+  if (!hasRequiredRole) {
+    return res.status(403).json({ message: "Insufficient permissions" });
   }
+
+  next();
 };
 
-// Middleware to check user role
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Forbidden - insufficient permissions' });
-    }
-    
-    next();
-  };
-};
-
-module.exports = {
-  passport,
-  verifyToken,
-  checkRole,
-  users // Temporary export for development purposes
-};
+module.exports = { jwtCheck, checkRole };

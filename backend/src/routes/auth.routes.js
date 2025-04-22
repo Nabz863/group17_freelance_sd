@@ -1,10 +1,11 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { passport, verifyToken } = require("../middleware/auth.middleware");
-const supabase = require("../config/supabaseClient"); // Assuming you're using Supabase
+const { jwtCheck } = require("../middleware/auth.middleware");
+const supabase = require("../config/db"); // Assuming you're using Supabase
 const router = express.Router();
 
 // Google OAuth login route
+/*
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -84,7 +85,7 @@ router.get(
       });
     }
   }
-);
+);*/
 
 // Login failed route
 router.get("/login-failed", (req, res) => {
@@ -103,8 +104,8 @@ router.get("/logout", (req, res) => {
 });
 
 // Get current user information
-router.get("/me", verifyToken, async (req, res) => {
-  const auth0_id = req.user.id; // Extract from token (auth0_id)
+router.get("/me", jwtCheck, async (req, res) => {
+  const auth0_id = req.auth.sub; // Extract from token (auth0_id)
 
   try {
     const { data: user, error } = await supabase
