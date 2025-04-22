@@ -32,7 +32,6 @@ export default function ViewApplicationsSection() {
         if (error) {
           console.error("Supabase error:", error);
         } else {
-          console.log("Fetched jobs with applications:", data);
           setJobs(data || []);
         }
       } catch (err) {
@@ -67,6 +66,14 @@ export default function ViewApplicationsSection() {
     setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
   };
 
+  const parseDescription = (desc) => {
+    try {
+      return typeof desc === "string" ? JSON.parse(desc) : desc || {};
+    } catch {
+      return {};
+    }
+  };
+
   return (
     <section className="dashboard-content">
       <h1>Job Applications</h1>
@@ -76,7 +83,7 @@ export default function ViewApplicationsSection() {
         <p className="mt-4 text-gray-400">No jobs found.</p>
       ) : (
         jobs.map((job) => {
-          const desc = typeof job.description === "object" ? job.description : {};
+          const desc = parseDescription(job.description);
           return (
             <div
               key={job.id}
@@ -100,13 +107,7 @@ export default function ViewApplicationsSection() {
                 <ul className="mt-4 space-y-4">
                   {Array.isArray(job.applications) && job.applications.length > 0 ? (
                     job.applications.map((app) => {
-                      const profile = app.freelancer?.profile;
-                      console.log("Applicant profile for project", job.id, profile);
-
-                      const firstName = profile?.firstName || "Unnamed";
-                      const lastName = profile?.lastName || "";
-                      const profession = profile?.profession || "Unknown Profession";
-                      const email = profile?.email || "No email";
+                      const profile = app.freelancer?.profile || {};
                       const assigned = job.freelancer_id === app.freelancerid;
 
                       return (
@@ -115,10 +116,14 @@ export default function ViewApplicationsSection() {
                           className="p-3 rounded bg-[#222] border border-[#444]"
                         >
                           <p className="text-white font-bold">
-                            {firstName} {lastName}
+                            {profile.firstName || "Unnamed"} {profile.lastName || ""}
                           </p>
-                          <p className="text-sm text-gray-400">{profession}</p>
-                          <p className="text-sm text-gray-400">{email}</p>
+                          <p className="text-sm text-gray-400">
+                            {profile.profession || "Unknown Profession"}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {profile.email || "No email"}
+                          </p>
 
                           <button
                             className={`primary-btn mt-2 ${
