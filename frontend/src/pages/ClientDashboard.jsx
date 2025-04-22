@@ -1,5 +1,6 @@
 import DashboardLayout from "../components/DashboardLayout";
 import PostJobForm from "./PostJobForm";
+import ViewApplicationsSection from "../components/ViewApplicationsSection";
 
 const menuItems = [
   "Account Settings",
@@ -8,6 +9,7 @@ const menuItems = [
   "Payments",
   "Projects",
   "Post a Job",
+  "Applications"
 ];
 
 const contentMap = {
@@ -42,6 +44,7 @@ const contentMap = {
     </>
   ),
   "Post a Job": <PostJobForm embed />,
+  "Applications": <ViewApplicationsSection />
 };
 
 export default function ClientDashboard() {
