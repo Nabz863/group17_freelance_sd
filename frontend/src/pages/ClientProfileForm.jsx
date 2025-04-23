@@ -92,6 +92,7 @@ export default function ClientProfileForm() {
       subtitle="Help us match you with the best freelancers for your needs"
       onSubmit={handleSubmit}
     >
+      {/* Client Type Selection */}
       <div className="form-label form-full-width">
         I am a:
         <div className="flex gap-4 mt-2">
@@ -120,7 +121,7 @@ export default function ClientProfileForm() {
         </div>
       </div>
 
-      <div className="form-label">
+      <label className="form-label">
         First Name
         <input
           required
@@ -130,9 +131,9 @@ export default function ClientProfileForm() {
           className="form-input"
           placeholder="Your first name"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Last Name
         <input
           required
@@ -142,10 +143,10 @@ export default function ClientProfileForm() {
           className="form-input"
           placeholder="Your last name"
         />
-      </div>
+      </label>
 
       {formData.clientType === "business" && (
-        <div className="form-label form-full-width">
+        <label className="form-label form-full-width">
           Company/Organization Name
           <input
             required
@@ -155,10 +156,10 @@ export default function ClientProfileForm() {
             className="form-input"
             placeholder="Your company or organization name"
           />
-        </div>
+        </label>
       )}
 
-      <div className="form-label">
+      <label className="form-label">
         Industry/Sector
         <input
           required
@@ -166,10 +167,11 @@ export default function ClientProfileForm() {
           value={formData.industry}
           onChange={handleChange}
           className="form-input"
+          placeholder="Your industry or sector"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Location
         <input
           required
@@ -177,10 +179,11 @@ export default function ClientProfileForm() {
           value={formData.location}
           onChange={handleChange}
           className="form-input"
+          placeholder="City, Province"
         />
-      </div>
+      </label>
 
-      <div className="form-label form-full-width">
+      <label className="form-label form-full-width">
         Project Needs
         <textarea
           required
@@ -189,10 +192,11 @@ export default function ClientProfileForm() {
           onChange={handleChange}
           className="form-textarea"
           rows="4"
+          placeholder="Describe what you need"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Budget Range
         <select
           required
@@ -210,9 +214,9 @@ export default function ClientProfileForm() {
           <option value="over-100000">Over R100,000</option>
           <option value="hourly">Hourly rate</option>
         </select>
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Project Timeline
         <select
           required
@@ -230,9 +234,9 @@ export default function ClientProfileForm() {
           <option value="flexible">Flexible</option>
           <option value="ongoing">Ongoing</option>
         </select>
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Contact Phone
         <input
           type="tel"
@@ -241,10 +245,11 @@ export default function ClientProfileForm() {
           value={formData.contactPhone}
           onChange={handleChange}
           className="form-input"
+          placeholder="Your phone number"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label className="form-label">
         Contact Email
         <input
           type="email"
@@ -253,10 +258,11 @@ export default function ClientProfileForm() {
           value={formData.contactEmail}
           onChange={handleChange}
           className="form-input"
+          placeholder="Your email address"
         />
-      </div>
+      </label>
 
-      <div className="form-label form-full-width">
+      <label className="form-label form-full-width">
         Preferred Contact Method
         <div className="flex gap-4 mt-2">
           <label className="flex items-center">
@@ -293,7 +299,7 @@ export default function ClientProfileForm() {
             WhatsApp
           </label>
         </div>
-      </div>
+      </label>
 
       <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
