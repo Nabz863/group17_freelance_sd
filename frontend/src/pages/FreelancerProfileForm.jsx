@@ -84,90 +84,98 @@ export default function FreelancerProfileForm() {
       subtitle="Tell us about your skills and experience to connect with clients"
       onSubmit={handleSubmit}
     >
-      <div className="form-label">
+      <label htmlFor="firstName" className="form-label">
         First Name
         <input
+          id="firstName"
           required
           name="firstName"
           value={formData.firstName}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="lastName" className="form-label">
         Last Name
         <input
+          id="lastName"
           required
           name="lastName"
           value={formData.lastName}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="profession" className="form-label">
         Profession
         <input
+          id="profession"
           required
           name="profession"
           value={formData.profession}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="specialization" className="form-label">
         Specialization
         <input
+          id="specialization"
           required
           name="specialization"
           value={formData.specialization}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="experience" className="form-label">
         Years of Experience
         <input
+          id="experience"
           type="number"
           required
           name="experience"
+          min="0"
           value={formData.experience}
           onChange={handleChange}
           className="form-input"
-          min="0"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="hourly_rate" className="form-label">
         Hourly Rate (ZAR)
         <input
+          id="hourly_rate"
           type="number"
           required
           name="hourly_rate"
+          min="0"
           value={formData.hourly_rate}
           onChange={handleChange}
           className="form-input"
-          min="0"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="location" className="form-label">
         Location
         <input
+          id="location"
           required
           name="location"
           value={formData.location}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="availability" className="form-label">
         Availability
         <select
+          id="availability"
           required
           name="availability"
           value={formData.availability}
@@ -181,11 +189,12 @@ export default function FreelancerProfileForm() {
           <option value="evenings">Evenings only</option>
           <option value="custom">Custom schedule</option>
         </select>
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="phone" className="form-label">
         Phone Number
         <input
+          id="phone"
           type="tel"
           required
           name="phone"
@@ -193,11 +202,12 @@ export default function FreelancerProfileForm() {
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="email" className="form-label">
         Email
         <input
+          id="email"
           type="email"
           required
           name="email"
@@ -205,41 +215,44 @@ export default function FreelancerProfileForm() {
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label">
+      <label htmlFor="portfolio_url" className="form-label">
         Portfolio URL
         <input
+          id="portfolio_url"
           type="url"
           name="portfolio_url"
           value={formData.portfolio_url}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label form-full-width">
+      <label htmlFor="skills" className="form-label form-full-width">
         Skills (comma-separated)
         <input
+          id="skills"
           required
           name="skills"
           value={formData.skills}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
+      </label>
 
-      <div className="form-label form-full-width">
+      <label htmlFor="description" className="form-label form-full-width">
         Bio / Work Description
         <textarea
+          id="description"
           required
           name="description"
+          rows="5"
           value={formData.description}
           onChange={handleChange}
           className="form-textarea"
-          rows="5"
         />
-      </div>
+      </label>
 
       <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">

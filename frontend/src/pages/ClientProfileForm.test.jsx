@@ -1,8 +1,6 @@
-// src/pages/ClientProfileForm.test.jsx
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
-// 1) Declare react-router-dom as a virtual mock
 jest.mock(
   "react-router-dom",
   () => ({
@@ -12,7 +10,6 @@ jest.mock(
   { virtual: true }
 );
 
-// 2) Stub out Auth0
 jest.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({
     user: { sub: "test-user-id" },
@@ -20,7 +17,6 @@ jest.mock("@auth0/auth0-react", () => ({
   }),
 }));
 
-// 3) Stub out your Supabase client
 jest.mock("../utils/supabaseClient", () => ({
   from: () => ({
     select: () => ({
@@ -40,10 +36,8 @@ describe("ClientProfileForm", () => {
   it("shows loading then renders the form title", async () => {
     render(<ClientProfileForm />);
 
-    // initial loading message
     expect(screen.getByText(/Loading your profile form/i)).toBeInTheDocument();
 
-    // after the mock supabase check, the form title appears
     await waitFor(() => {
       expect(
         screen.getByRole("heading", { name: /Client Profile/i })
