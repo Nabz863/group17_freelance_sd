@@ -1,4 +1,3 @@
-// PendingApproval.test.jsx
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import PendingApproval from "./PendingApproval";
