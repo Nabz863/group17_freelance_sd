@@ -1,119 +1,90 @@
-// This file will be completed when database is set up
+const supabase = require('../utils/supabaseClient');
+const { sendEmail } = require('../services/emailService');
 
-// Import database connection (uncomment when ready)
-const { supabase } = require("../config/db");
-
-const createFreelancer = async (req, res) => {
-  const { auth0_id } = req.auth.payload; // From Auth0 JWT
-  const { profile_picture_url, credentials_urls } = req.body; // Non-PII only
-  
+async function signInHandler(req, res) {
   try {
-    const { data, error } = await supabase
-      .from("freelancers")
-      .insert([{
-        auth0_id, // Reference only
-        profile_picture_url, // URL to storage (no image data)
-        credentials_urls // Array of storage URLs
-      }])
-      .select()
-      .single();
+    const { email, name, sub: userId } = req.auth;
+    const io = req.app.get('io');
+
+    io.emit('notification', {
+      type: 'NEW_USER_SIGNIN',
+      message: `New sign-in: ${email}`
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+}
+
+async function updateUserStatusHandler(req, res) {
+  try {
+    const { userId } = req.params;
+    const { role, status } = req.body;
+    const io = req.app.get('io');
+
+    const table = role === 'freelancer' ? 'freelancers' : 'clients';
+    const { error } = await supabase
+      .from(table)
+      .update({ status })
+      .eq('user_id', userId);
 
     if (error) throw error;
-    res.status(201).json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: `Error creating freelancer: ${err.message}`
+
+    io.to(userId).emit('notification', {
+      type: 'PROFILE_STATUS',
+      message: `Your ${role} profile was ${status}.`
     });
-  }
-};
 
-const createClient = async (req, res) => {
-  const { auth0_id } = req.auth.payload; // From Auth0 JWT
-  const { profile_picture_url, credentials_urls } = req.body; // Non-PII only
-  try {
-    const { data, error } = await supabase
-      .from("clients")
-      .insert([{
-        auth0_id, // Reference only
-        profile_picture_url, // URL to storage (no image data)
-        credentials_urls // Array of storage URLs
-      }])
-      .select()
+    const { data: users } = await supabase
+      .from('users')
+      .select('email')
+      .eq('id', userId)
       .single();
+    const userEmail = users?.email;
 
-    if (error) throw error;
-    res.status(201).json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Error creating client: ${err.message}",
-    });
-  }
-};
-
-const getUserById = async (req, res) => {
-  const { user_id } = req.params;
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", user_id)
-      .single();
-
-    if (error || !data) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not Found" });
+    if (userEmail) {
+      await sendEmail({
+        to: userEmail,
+        subject: `Your profile has been ${status}`,
+        html: `<p>Hi there,</p>
+               <p>Your ${role} profile has been <strong>${status}</strong> by an admin.</p>`
+      });
     }
 
-    res.status(200).json({ success: true, data });
+    res.json({ success: true });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching user: ${err.message}" });
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
   }
-};
+}
 
-const updateUserStatus = async (req, res) => {
-  const { userId } = req.params;
-  const { userType, ...updates } = req.body;
-
-  const allowedTables = {
-    freelancer: "freelancers",
-    client: "clients",
-    admin: "admins",
-  };
-
-  const table = allowedTables[userType];
-
-  if (!table) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid user type provided" });
-  }
-
+async function downloadUserProfilePdfHandler(req, res) {
   try {
-    const { data, error } = await supabase
+    const { userId } = req.params;
+    const role = req.user.role;
+    if (role !== 'admin') return res.status(403).end();
+
+    const table = req.query.type === 'client' ? 'clients' : 'freelancers';
+    const { data } = await supabase
       .from(table)
-      .update(updates)
-      .eq("user_id", userId)
-      .select()
+      .select('profile')
+      .eq('user_id', userId)
       .single();
 
-    if (error) throw error;
+    const url = data?.profile?.fileUrls?.cv;
+    if (!url) return res.status(404).send('No CV found');
 
-    res.status(200).json({ success: true, data });
+    res.redirect(url);
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Error updating user: ${err.message}" });
+    console.error(err);
+    res.status(500).send(err.message);
   }
-};
+}
 
 module.exports = {
-  createFreelancer,
-  createClient,
-  getUserById,
-  updateUserStatus
+  signInHandler,
+  updateUserStatusHandler,
+  downloadUserProfilePdfHandler
 };

@@ -1,37 +1,50 @@
-const express = require("express");
-const session = require("express-session");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
 require("dotenv").config();
+const express       = require("express");
+const http          = require("http");
+const session       = require("express-session");
+const cors          = require("cors");
+const helmet        = require("helmet");
+const morgan        = require("morgan");
+const cookieParser  = require("cookie-parser");
+const bodyParser    = require("body-parser");
+const { Server }    = require("socket.io");
 
-// Import routes
-const authRoutes = require("./src/routes/auth.routes");
-const userRoutes = require("./src/routes/user.routes");
-const contractRoutes = require("./src/routes/contract.routes");
+const authRoutes          = require("./src/routes/auth.routes");
+const userRoutes          = require("./src/routes/user.routes");
+const contractRoutes      = require("./src/routes/contract.routes");
 const contractTermsRoutes = require("./src/routes/contractTerms.routes");
+const uploadRoutes        = require("./src/routes/upload.routes");
 
-// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true
+  }
+});
 
-// Middleware
-app.use(helmet()); // Security headers
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("⚡️ Socket.IO client connected:", socket.id);
+  socket.on("disconnect", () => {
+    console.log("⚡️ Socket.IO client disconnected:", socket.id);
+  });
+});
+
+app.use(helmet());
 app.use(
   cors({
-    // origin: 'https://blue-cliff-0aca0f410.6.azurestaticapps.net', // our frontend URL goes here
-    origin: "http://localhost:3000", // Development - run locally to reflect/test UI changes
-    credentials: true,
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true
   })
 );
-app.use(morgan("dev")); // Logging
+app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Session configuration
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -40,39 +53,36 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
+      maxAge: 24 * 60 * 60 * 1000
+    }
   })
 );
 
-// Initialize Passport
 require("./src/middleware/auth.middleware");
 
-// Basic route
 app.get("/", (req, res) => {
-  res.send("Freelancer Management Platform API");
+  res.send("Freelancer Management Platform API is up");
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/contracts", contractRoutes);
 app.use("/api/contract-terms", contractTermsRoutes);
+app.use("/api/upload", uploadRoutes);
 
-// Error handling middleware
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
+  console.error(err);
+  const status = err.statusCode || 500;
+  res.status(status).json({
     status: "error",
     message: err.message || "Internal Server Error",
-    stack: process.env.NODE_ENV === "development" ? err.stack : {},
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
 });
 
 module.exports = app;
-//Just checking whether backend-ci works or not
