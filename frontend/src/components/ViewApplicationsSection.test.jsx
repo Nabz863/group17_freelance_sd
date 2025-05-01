@@ -1,69 +1,109 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ViewApplicationsSection from './ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
-jest.mock('../utils/supabaseClient');
+// stub supabaseClient globally
+jest.mock('../utils/supabaseClient', () => ({
+  __esModule: true,
+  default: { from: jest.fn() },
+}));
 
 describe('ViewApplicationsSection', () => {
-  const mockApps = [
+  const mockApplications = [
     {
-      id: '1',
+      applicationid: 'a1',
       job_title: 'Job A',
-      job_location: 'Location A',
-      applicant: {
+      freelancer: {
         user_id: 'alice-id',
         firstName: 'Alice',
         lastName: 'Smith',
         profession: 'Developer',
-        email: 'alice@example.com'
-      }
+        email: 'alice@example.com',
+        name: 'Alice Smith',
+      },
     },
     {
-      id: '2',
+      applicationid: 'a2',
       job_title: 'Job A',
-      job_location: 'Location A',
-      applicant: {
+      freelancer: {
         user_id: 'bob-id',
         firstName: 'Bob',
         lastName: 'Jones',
         profession: 'Designer',
-        email: 'bob@example.com'
-      }
-    }
+        email: 'bob@example.com',
+        name: 'Bob Jones',
+      },
+    },
   ];
 
   beforeEach(() => {
-    supabase.from.mockReturnValue({
-      select: () => ({
-        eq: () => Promise.resolve({ data: mockApps, error: null })
-      })
-    });
+    jest.clearAllMocks();
   });
 
-  it('renders applicants and handles assign action', async () => {
-    const handleAssign = jest.fn();
-    render(<ViewApplicationsSection projectId="proj1" onAssign={handleAssign} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/alice@example\.com/i)).toBeInTheDocument();
-      expect(screen.getByText(/bob@example\.com/i)).toBeInTheDocument();
+  it('renders "No applications yet." when there are none', async () => {
+    supabase.from.mockReturnValue({
+      select: () => ({
+        eq: () => Promise.resolve({ data: [], error: null }),
+      }),
     });
 
-    const assignButtons = screen.getAllByRole('button', { name: /Assign Freelancer/i });
-    expect(assignButtons).toHaveLength(2);
+    render(<ViewApplicationsSection projectId="pj1" onAssign={() => {}} />);
+    await waitFor(() =>
+      expect(screen.getByText(/No applications yet\./i)).toBeInTheDocument()
+    );
+  });
 
+  it('renders applications and calls onAssign', async () => {
+    supabase.from.mockReturnValue({
+      select: () => ({
+        eq: () => Promise.resolve({ data: mockApplications, error: null }),
+      }),
+    });
+
+    const handleAssign = jest.fn();
+    render(
+      <ViewApplicationsSection projectId="pj1" onAssign={handleAssign} />
+    );
+
+    // wait for the unique email to appear
+    await waitFor(() =>
+      expect(screen.getByText(/alice@example\.com/i)).toBeInTheDocument()
+    );
+
+    // check both applicants
+    expect(screen.getByText(/Developer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Bob Jones/i)).toBeInTheDocument();
+    expect(screen.getByText(/Designer/i)).toBeInTheDocument();
+
+    // click the first "Assign Freelancer" button
+    const assignButtons = screen.getAllByRole('button', {
+      name: /Assign Freelancer/i,
+    });
     fireEvent.click(assignButtons[0]);
     expect(handleAssign).toHaveBeenCalledWith('alice-id');
   });
 
   it('hides the list when "Hide Applicants" is clicked', async () => {
-    render(<ViewApplicationsSection projectId="proj1" onAssign={() => {}} />);
+    // *** critical: stub in data again so the Hide button actually renders ***
+    supabase.from.mockReturnValue({
+      select: () => ({
+        eq: () => Promise.resolve({ data: mockApplications, error: null }),
+      }),
+    });
 
-    const hideBtn = await screen.findByRole('button', { name: /Hide Applicants/i });
+    render(
+      <ViewApplicationsSection projectId="pj1" onAssign={() => {}} />
+    );
+
+    // wait for heading and first email
+    await waitFor(() => screen.getByText(/alice@example\.com/i));
+
+    // now the Hide button should exist
+    const hideBtn = screen.getByRole('button', { name: /Hide Applicants/i });
     fireEvent.click(hideBtn);
 
-    expect(screen.queryByText(/Alice Smith/i)).toBeNull();
-    expect(screen.queryByText(/Bob Jones/i)).toBeNull();
+    // the entire section should unmount
+    expect(screen.queryByText(/Job Applications/i)).toBeNull();
   });
 });

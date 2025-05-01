@@ -1,3 +1,4 @@
+// src/components/ViewApplicationsSection.jsx
 import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 
@@ -7,19 +8,20 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
 
   useEffect(() => {
     const fetchApps = async () => {
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*, applicant(*)')
-        .eq('projectid', projectId);
+      try {
+        const { data, error } = await supabase
+          .from('applications')
+          .select('*, freelancer(*)')
+          .eq('projectid', projectId);
 
-      if (error) {
-        console.error('Error fetching applications:', error);
-        setApplications([]);
-      } else {
+        if (error) throw error;
         setApplications(data || []);
+      } catch (err) {
+        console.error('Error fetching applications:', err);
       }
     };
-    fetchApps();
+
+    if (projectId) fetchApps();
   }, [projectId]);
 
   if (!visible) return null;
@@ -34,11 +36,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
         <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
           <header className="flex justify-between items-center">
             <div>
+              {/* show the job title from the first application */}
               <h2 className="text-lg text-accent font-semibold">
                 {applications[0].job_title}
               </h2>
               <p className="text-gray-400 text-sm">
-                {applications[0].job_location}
+                {applications[0].freelancer.name}
               </p>
             </div>
             <button
@@ -50,20 +53,23 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
           </header>
 
           <ul className="mt-4 space-y-4">
-            {applications.map((u) => (
-              <li key={u.id} className="p-3 rounded bg-[#222]">
+            {applications.map((app) => (
+              <li
+                key={app.applicationid}
+                className="p-3 rounded bg-[#222]"
+              >
                 <p className="text-white font-bold">
-                  {u.applicant.firstName} {u.applicant.lastName}
+                  {app.freelancer.firstName} {app.freelancer.lastName}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {u.applicant.profession}
+                  {app.freelancer.profession}
                 </p>
                 <p className="text-sm text-gray-400">
-                  {u.applicant.email}
+                  {app.freelancer.email}
                 </p>
                 <button
                   className="primary-btn mt-2"
-                  onClick={() => onAssign(u.applicant.user_id)}
+                  onClick={() => onAssign(app.freelancer.user_id)}
                 >
                   Assign Freelancer
                 </button>
