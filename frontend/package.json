@@ -33,6 +33,9 @@
     "coverageReporters": [
       "html",
       "text"
+    ],
+    "transformIgnorePatterns": [
+    "node_modules/(?!(axios)/)"
     ]
   },
   "eslintConfig": {

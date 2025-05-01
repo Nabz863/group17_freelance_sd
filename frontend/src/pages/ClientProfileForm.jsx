@@ -1,23 +1,22 @@
-import { useState, useEffect } from "react";
-import { useAuth0 }      from "@auth0/auth0-react";
-import { useNavigate }   from "react-router-dom";
-import axios             from "axios";
-
-import supabase          from "../utils/supabaseClient";
+import React, { useState, useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
+import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
-import FileUpload        from "../components/FileUpload";
+import FileUpload from "../components/FileUpload";
 import "../styles/theme.css";
 
 export default function ClientProfileForm() {
   const { user } = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [profileFile, setProfileFile] = useState(null);
+
   const [formData, setFormData] = useState({
-    companyName: "",
-    website: "",
-    description: ""
+    firstName: "",
+    lastName: "",
+    industry: "",
   });
+  const [pdfFile, setPdfFile] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -27,50 +26,50 @@ export default function ClientProfileForm() {
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) navigate("/create-profile");
-        else setLoading(false);
+        if (!data) {
+          navigate("/create-profile");
+        } else {
+          setLoading(false);
+        }
       });
   }, [user, navigate]);
 
-  const handleChange = e =>
-    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
-  const handleFileChange = files => setProfileFile(files[0]);
+  const handleChange = (e) =>
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleFileChange = (files) => setPdfFile(files[0]);
 
-  const uploadProfile = async file => {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("fileType", "profile");
-    form.append("userId", user.sub);
-    const { data } = await axios.post("/api/upload", form, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
-    return data.url;
-  };
-
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!profileFile) return alert("Please upload your company profile PDF");
-    setLoading(true);
 
-    try {
-      const profileUrl = await uploadProfile(profileFile);
-      const { error } = await supabase
-        .from("clients")
-        .update({ profile: profileUrl, status: "pending" })
-        .eq("user_id", user.sub);
-      if (error) throw error;
-      navigate("/pending");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit profile");
-      setLoading(false);
+    await supabase
+      .from("clients")
+      .update({ profileData: formData, status: "pending" })
+      .eq("user_id", user.sub);
+
+    if (pdfFile) {
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
+        .upload(`profiles/${user.sub}.pdf`, pdfFile);
+      if (!uploadErr) {
+        const url = supabase.storage
+          .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
+          .getPublicUrl(uploadData.path).publicUrl;
+        await supabase
+          .from("clients")
+          .update({ profile: url })
+          .eq("user_id", user.sub);
+      }
     }
+
+    navigate("/pending");
   };
 
   if (loading) {
-    return <main className="min-h-screen flex items-center justify-center text-white">
-      <p className="animate-pulse">Loading form…</p>
-    </main>;
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0c0c0c] to-[#1a1a1a] text-white text-xl tracking-wide">
+        <p className="animate-pulse">Loading your profile form...</p>
+      </main>
+    );
   }
 
   return (
@@ -79,47 +78,54 @@ export default function ClientProfileForm() {
       subtitle="Tell us about your company and upload your profile PDF"
       onSubmit={handleSubmit}
     >
-      <div className="form-label">
-        Company Name
+      <label className="form-label">
+        First Name
         <input
-          required name="companyName"
-          value={formData.companyName}
+          id="firstName"
+          name="firstName"
+          required
+          value={formData.firstName}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
-      <div className="form-label">
-        Website
+      </label>
+
+      <label className="form-label">
+        Last Name
         <input
-          name="website"
-          value={formData.website}
+          id="lastName"
+          name="lastName"
+          required
+          value={formData.lastName}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
-      <div className="form-label form-full-width">
-        Description
-        <textarea
-          required name="description"
-          value={formData.description}
+      </label>
+
+      <label className="form-label">
+        Industry/Sector
+        <input
+          id="industry"
+          name="industry"
+          required
+          value={formData.industry}
           onChange={handleChange}
-          className="form-textarea"
+          className="form-input"
+        />
+      </label>
+
+      <div className="form-full-width">
+        <label className="form-label">Upload Profile PDF</label>
+        <FileUpload
+          accept=".pdf"
+          required
+          onChange={handleFileChange}
+          fileType="profilePdf"
         />
       </div>
-      
-      <FileUpload
-        label="Upload Profile PDF"
-        required
-        accept=".pdf"
-        onChange={handleFileChange}
-      />
 
       <div className="form-footer form-full-width">
-        <button
-          type="submit"
-          className="primary-btn"
-          disabled={!profileFile}
-        >
+        <button type="submit" className="primary-btn">
           Submit Profile
         </button>
       </div>

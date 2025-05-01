@@ -1,26 +1,23 @@
-import { useState, useEffect } from "react";
-import { useAuth0 }      from "@auth0/auth0-react";
-import { useNavigate }   from "react-router-dom";
-import axios             from "axios";
-
-import supabase          from "../utils/supabaseClient";
+import React, { useState, useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
+import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
-import FileUpload        from "../components/FileUpload";
+import FileUpload from "../components/FileUpload";
 import "../styles/theme.css";
 
 export default function FreelancerProfileForm() {
   const { user } = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [cvFile, setCvFile] = useState(null);
-  const [formData, setFormData] = useState({
-    firstName: "", lastName: "", profession: "", specialization: "",
-    experience: "", skills: "", hourly_rate: "", location: "",
-    availability: "", phone: "", email: "", portfolio_url: "",
-    description: ""
-  });
 
-  // 1) Ensure row exists
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    profession: "",
+  });
+  const [cvFile, setCvFile] = useState(null);
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -29,51 +26,50 @@ export default function FreelancerProfileForm() {
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) navigate("/create-profile");
-        else setLoading(false);
+        if (!data) {
+          navigate("/create-profile");
+        } else {
+          setLoading(false);
+        }
       });
   }, [user, navigate]);
 
-  const handleChange = e =>
-    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
-  const handleFileChange = files => setCvFile(files[0]);
+  const handleChange = (e) =>
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleFileChange = (files) => setCvFile(files[0]);
 
-  // 2) Upload to Azure via our /api/upload route
-  const uploadCv = async file => {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("fileType", "profile");
-    form.append("userId", user.sub);
-    const { data } = await axios.post("/api/upload", form, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
-    return data.url;
-  };
-
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!cvFile) return alert("Please upload your CV");
-    setLoading(true);
 
-    try {
-      const profileUrl = await uploadCv(cvFile);
-      const { error } = await supabase
-        .from("freelancers")
-        .update({ profile: profileUrl, status: "pending" })
-        .eq("user_id", user.sub);
-      if (error) throw error;
-      navigate("/pending");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit profile");
-      setLoading(false);
+    await supabase
+      .from("freelancers")
+      .update({ profileData: formData, status: "pending" })
+      .eq("user_id", user.sub);
+
+    if (cvFile) {
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
+        .upload(`cvs/${user.sub}.pdf`, cvFile);
+      if (!uploadErr) {
+        const url = supabase.storage
+          .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
+          .getPublicUrl(uploadData.path).publicUrl;
+        await supabase
+          .from("freelancers")
+          .update({ profile: url })
+          .eq("user_id", user.sub);
+      }
     }
+
+    navigate("/pending");
   };
 
   if (loading) {
-    return <main className="min-h-screen flex items-center justify-center text-white">
-      <p className="animate-pulse">Loading form…</p>
-    </main>;
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0c0c0c] to-[#1a1a1a] text-white text-xl tracking-wide">
+        <p className="animate-pulse">Loading your profile form...</p>
+      </main>
+    );
   }
 
   return (
@@ -82,32 +78,54 @@ export default function FreelancerProfileForm() {
       subtitle="Tell us about you and upload your CV"
       onSubmit={handleSubmit}
     >
-      {/* personal info inputs, e.g.: */}
-      <div className="form-label">
+      <label className="form-label">
         First Name
         <input
-          required name="firstName"
+          id="firstName"
+          name="firstName"
+          required
           value={formData.firstName}
           onChange={handleChange}
           className="form-input"
         />
-      </div>
-      {/* …repeat for the rest of your formData fields… */}
+      </label>
 
-      {/* CV Upload */}
-      <FileUpload
-        label="Upload Your CV (PDF)"
-        required
-        accept=".pdf"
-        onChange={handleFileChange}
-      />
+      <label className="form-label">
+        Last Name
+        <input
+          id="lastName"
+          name="lastName"
+          required
+          value={formData.lastName}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label className="form-label">
+        Profession
+        <input
+          id="profession"
+          name="profession"
+          required
+          value={formData.profession}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label className="form-label form-full-width">
+        Upload Your CV (PDF)
+        <FileUpload
+          accept=".pdf"
+          required
+          onChange={handleFileChange}
+          fileType="cv"
+        />
+      </label>
 
       <div className="form-footer form-full-width">
-        <button
-          type="submit"
-          className="primary-btn"
-          disabled={!cvFile}
-        >
+        <button type="submit" className="primary-btn">
           Submit Profile
         </button>
       </div>
