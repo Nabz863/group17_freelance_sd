@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
+import { Routes, Route, useParams, useLocation } from "react-router-dom";
 
 import Landing from "./pages/Landing";
 import PendingApproval from "./pages/PendingApproval";
@@ -28,26 +28,21 @@ export default function RoutesComponent() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route path="/pending"      element={<PendingApproval />} />
+      <Route path="/pending" element={<PendingApproval />} />
       <Route path="/unauthorized" element={<Unauthorised />} />
-
       <Route path="/register-role"             element={<RegisterRole />} />
       <Route path="/create-freelancer-profile" element={<FreelancerProfileForm />} />
       <Route path="/create-client-profile"     element={<ClientProfileForm />} />
       <Route path="/create-profile"            element={<CreateProfile />} />
-
       <Route path="/admin"      element={<AdminDashboard />} />
       <Route path="/client"     element={<ClientDashboard />} />
       <Route path="/freelancer" element={<FreelancerDashboard />} />
-
       <Route path="/client/contracts"     element={<ClientContracts />} />
       <Route path="/freelancer/contracts" element={<FreelancerContracts />} />
-
       <Route
         path="/admin/users/:userId/profile/pdf"
         element={<PDFViewer />}
       />
-
       <Route
         path="*"
         element={
