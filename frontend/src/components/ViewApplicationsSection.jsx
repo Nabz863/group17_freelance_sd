@@ -13,6 +13,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
         setLoading(false);
         return;
       }
+      console.log('fetchApps for projectId=', projectId);
       setLoading(true);
       try {
         const { data, error: err } = await supabase
