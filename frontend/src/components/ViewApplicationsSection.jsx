@@ -9,13 +9,11 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
 
   useEffect(() => {
     console.log('🕵️ projectId=', projectId);
-console.log('🕵️ supabase response:', { data, error });
     const fetchApps = async () => {
       if (!projectId) {
         setLoading(false);
         return;
       }
-      console.log('fetchApps for projectId=', projectId);
       setLoading(true);
       try {
         const { data, error: err } = await supabase
@@ -31,6 +29,7 @@ console.log('🕵️ supabase response:', { data, error });
       } finally {
         setLoading(false);
       }
+      console.log('🕵️ supabase response:', { data, error });
     };
     fetchApps();
   }, [projectId]);
