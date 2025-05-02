@@ -8,6 +8,8 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
   const [error, setError]         = useState(null);
 
   useEffect(() => {
+    console.log('🕵️ projectId=', projectId);
+console.log('🕵️ supabase response:', { data, error });
     const fetchApps = async () => {
       if (!projectId) {
         setLoading(false);
