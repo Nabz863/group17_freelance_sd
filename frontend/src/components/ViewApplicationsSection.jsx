@@ -1,4 +1,3 @@
-// src/components/ViewApplicationsSection.jsx
 import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 
@@ -16,7 +15,6 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       }
       try {
         setLoading(true);
-        // Make sure to destructure both data and error
         const { data, error: fetchError } = await supabase
           .from('applications')
           .select('*, freelancer(*)')
@@ -50,7 +48,6 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
         <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
           <header className="flex justify-between items-center">
             <div>
-              {/* If you have a title field to show */}
               <h2 className="text-lg text-accent font-semibold">
                 {applications[0].job_title || 'Applications'}
               </h2>
