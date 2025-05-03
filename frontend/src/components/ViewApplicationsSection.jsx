@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 
-export default function ViewApplicationsSection({ onAssign }) {
+export default function ViewApplicationsSection({ clientId, onAssign }) {
   const [jobs, setJobs] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [assigning, setAssigning] = useState(null);
@@ -11,12 +11,12 @@ export default function ViewApplicationsSection({ onAssign }) {
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
+      if (!clientId) {
+        setError('Not signed in');
+        setLoading(false);
+        return;
+      }
       try {
-        const user = supabase.auth.user();
-        if (!user?.id) {
-          setError('Not signed in');
-          return;
-        }
         const { data, error } = await supabase
           .from('projects')
           .select(`
@@ -24,14 +24,14 @@ export default function ViewApplicationsSection({ onAssign }) {
             description,
             applications (
               applicationid,
-              status,
               freelancerid,
+              status,
               freelancer:freelancerid (
                 profile
               )
             )
           `)
-          .eq('client_id', user.id);
+          .eq('client_id', clientId);
 
         if (error) throw error;
         setJobs(data || []);
@@ -43,26 +43,22 @@ export default function ViewApplicationsSection({ onAssign }) {
         setLoading(false);
       }
     };
-    fetchJobs();
-  }, []);
 
-  const toggleExpanded = (projectId) => {
-    setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+    fetchJobs();
+  }, [clientId]);
+
+  const toggle = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleAssignLocal = async (projectId, freelancerId) => {
+  const assign = async (projectId, freelancerId) => {
     setAssigning(projectId);
-    try {
-      await onAssign(projectId, freelancerId);
-    } catch (err) {
-      console.error('Assignment error:', err);
-    } finally {
-      setAssigning(null);
-    }
+    await onAssign(projectId, freelancerId);
+    setAssigning(null);
   };
 
   if (loading) return <p>Loading applications...</p>;
-  if (error)   return <p className="text-red-500">{error}</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <section className="dashboard-content">
@@ -91,12 +87,12 @@ export default function ViewApplicationsSection({ onAssign }) {
                     {desc.title || 'Untitled Job'}
                   </h2>
                   <p className="text-gray-400 text-sm">
-                    {desc.details || 'No job description provided.'}
+                    {desc.details || 'No description provided.'}
                   </p>
                 </div>
                 <button
                   className="primary-btn"
-                  onClick={() => toggleExpanded(job.id)}
+                  onClick={() => toggle(job.id)}
                 >
                   {expanded[job.id] ? 'Hide Applicants' : 'View Applicants'}
                 </button>
@@ -105,21 +101,22 @@ export default function ViewApplicationsSection({ onAssign }) {
               {expanded[job.id] && (
                 <ul className="mt-4 space-y-4">
                   {job.applications.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No applicants yet.</p>
+                    <p className="text-gray-500 text-sm">
+                      No applicants yet.
+                    </p>
                   ) : (
                     job.applications.map((app) => {
                       let profile = {};
                       if (app.freelancer?.profile) {
                         try {
                           profile = JSON.parse(app.freelancer.profile);
-                        } catch {
-                          profile = {};
-                        }
+                        } catch { profile = {}; }
                       }
+
                       const name = profile.full_name || 'Anonymous';
                       const title = profile.title || 'No title listed';
 
-                      const isBusy = assigning === job.id;
+                      const busy = assigning === job.id;
                       return (
                         <li
                           key={app.applicationid}
@@ -129,14 +126,14 @@ export default function ViewApplicationsSection({ onAssign }) {
                           <p className="text-sm text-gray-400">{title}</p>
                           <button
                             className={`primary-btn mt-2 ${
-                              isBusy ? 'opacity-50 cursor-not-allowed' : ''
+                              busy ? 'opacity-50 cursor-not-allowed' : ''
                             }`}
-                            disabled={isBusy}
+                            disabled={busy}
                             onClick={() =>
-                              handleAssignLocal(job.id, app.freelancerid)
+                              assign(job.id, app.freelancerid)
                             }
                           >
-                            {isBusy ? 'Assigning…' : 'Assign Freelancer'}
+                            {busy ? 'Assigning…' : 'Assign Freelancer'}
                           </button>
                         </li>
                       );

@@ -1,27 +1,32 @@
-// src/pages/ClientDashboard.jsx
 import React from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  // When a freelancer is chosen, insert a contract
+  const { user: auth0User } = useAuth0();
+  const clientId = auth0User?.sub;
+
   const handleAssign = async (projectId, freelancerId) => {
+    if (!clientId) {
+      console.error('No client ID');
+      return;
+    }
     try {
-      const user = supabase.auth.user();
-      if (!user?.id) throw new Error('No authenticated client');
-      const { error } = await supabase.from('contracts').insert({
-        project_id: projectId,
-        client_id: user.id,
-        freelancer_id: freelancerId,
-        title: `Contract for project ${projectId}`,
-        status: 'pending',
-        // contract_sections can be set here if you have them
-      });
+      const { error } = await supabase
+        .from('contracts')
+        .insert({
+          project_id: projectId,
+          client_id: clientId,
+          freelancer_id: freelancerId,
+          title: `Contract for project ${projectId}`,
+          status: 'pending',
+        });
       if (error) throw error;
-      // TODO: generate PDF, send notifications…
-      console.log('Created contract for', projectId, freelancerId);
+      console.log('Contract created for', projectId, freelancerId);
+      // TODO: trigger PDF generation & notifications…
     } catch (err) {
       console.error('Error creating contract:', err);
     }
@@ -69,7 +74,12 @@ export default function ClientDashboard() {
       </>
     ),
     'Post a Job': <PostJobForm embed />,
-    Applications: <ViewApplicationsSection onAssign={handleAssign} />,
+    Applications: (
+      <ViewApplicationsSection
+        clientId={clientId}
+        onAssign={handleAssign}
+      />
+    ),
   };
 
   return (
