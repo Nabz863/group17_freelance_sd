@@ -7,7 +7,6 @@ import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
   const { user } = useAuth0();
-  const [projects, setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
@@ -18,7 +17,6 @@ export default function ClientDashboard() {
         .eq('client_id', user.sub);
 
       if (!error && data?.length) {
-        setProjects(data);
         setCurrentProjectId(data[0].id);
       }
     }
