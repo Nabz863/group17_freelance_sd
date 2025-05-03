@@ -1,37 +1,30 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/ClientDashboard.jsx
+import React from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const [currentProjectId, setCurrentProjectId] = useState(null);
-
-  useEffect(() => {
-    async function loadFirstProject() {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id')
-        .limit(1);
-
-      if (!error && data?.length) {
-        setCurrentProjectId(data[0].id);
-      }
+  // When a freelancer is chosen, insert a contract
+  const handleAssign = async (projectId, freelancerId) => {
+    try {
+      const user = supabase.auth.user();
+      if (!user?.id) throw new Error('No authenticated client');
+      const { error } = await supabase.from('contracts').insert({
+        project_id: projectId,
+        client_id: user.id,
+        freelancer_id: freelancerId,
+        title: `Contract for project ${projectId}`,
+        status: 'pending',
+        // contract_sections can be set here if you have them
+      });
+      if (error) throw error;
+      // TODO: generate PDF, send notifications…
+      console.log('Created contract for', projectId, freelancerId);
+    } catch (err) {
+      console.error('Error creating contract:', err);
     }
-    loadFirstProject();
-  }, []);
-
-  const handleAssign = async (freelancerId) => {
-    if (!currentProjectId) return;
-    const { error } = await supabase.from('contracts').insert({
-      project_id: currentProjectId,
-      freelancer_id: freelancerId,
-      client_id: '',
-      title: `Contract for project ${currentProjectId}`,
-      status: 'pending'
-    });
-    if (error) console.error('Error creating contract:', error);
-    // TODO: call your PDF‐generation / notification logic here
   };
 
   const menuItems = [
@@ -76,14 +69,7 @@ export default function ClientDashboard() {
       </>
     ),
     'Post a Job': <PostJobForm embed />,
-    Applications: currentProjectId ? (
-      <ViewApplicationsSection
-        projectId={currentProjectId}
-        onAssign={handleAssign}
-      />
-    ) : (
-      <p className="text-gray-400">Loading applications…</p>
-    ),
+    Applications: <ViewApplicationsSection onAssign={handleAssign} />,
   };
 
   return (
