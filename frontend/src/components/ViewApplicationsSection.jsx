@@ -8,20 +8,19 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchApps = async () => {
+    async function fetchApps() {
       if (!projectId) {
         setLoading(false);
         return;
       }
+      setLoading(true);
       try {
-        setLoading(true);
         const { data, error: fetchError } = await supabase
           .from('applications')
-          .select('*, freelancer(*)')
+          .select('*, freelancer:freelancerid(*)')
           .eq('projectid', projectId);
 
         if (fetchError) throw fetchError;
-
         setApplications(data || []);
         setError(null);
       } catch (err) {
@@ -30,13 +29,13 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       } finally {
         setLoading(false);
       }
-    };
+    }
     fetchApps();
   }, [projectId]);
 
   if (!visible) return null;
-  if (loading) return <p>Loading applications...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (loading)   return <p>Loading applications...</p>;
+  if (error)     return <p className="text-red-500">{error}</p>;
 
   return (
     <section className="dashboard-content">
@@ -52,48 +51,39 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
                 {applications[0].job_title || 'Applications'}
               </h2>
             </div>
-            <button className="primary-btn" onClick={() => setVisible(false)}>
+            <button
+              className="primary-btn"
+              onClick={() => setVisible(false)}
+            >
               Hide Applicants
             </button>
           </header>
 
           <ul className="mt-4 space-y-4">
-            {applications.map((app) => (
-              <li
-                key={app.applicationid || `app-${app.id || Math.random()}`}
-                className="p-3 rounded bg-[#222]"
-              >
-                {app.freelancer && (
-                  <>
-                    <p className="text-white font-bold">
-                      {[app.freelancer.firstName, app.freelancer.lastName]
-                        .filter(Boolean)
-                        .join(' ') || 'Anonymous'}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {app.freelancer.profession || 'No profession listed'}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {app.freelancer.email || 'No email provided'}
-                    </p>
-                    <button
-                      className="primary-btn mt-2"
-                      onClick={() => {
-                        if (app.freelancer.user_id) {
-                          onAssign(app.freelancer.user_id);
-                        } else {
-                          console.error(
-                            'No user ID available for this freelancer'
-                          );
-                        }
-                      }}
-                    >
-                      Assign Freelancer
-                    </button>
-                  </>
-                )}
-              </li>
-            ))}
+            {applications.map((app) => {
+              const freelancer = app.freelancer;
+              return (
+                <li key={app.applicationid} className="p-3 rounded bg-[#222]">
+                  <p className="text-white font-bold">
+                    {[freelancer.firstName, freelancer.lastName]
+                      .filter(Boolean)
+                      .join(' ') || 'Anonymous'}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {freelancer.profession || 'No profession listed'}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {freelancer.email || 'No email provided'}
+                  </p>
+                  <button
+                    className="primary-btn mt-2"
+                    onClick={() => onAssign(freelancer.user_id)}
+                  >
+                    Assign Freelancer
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

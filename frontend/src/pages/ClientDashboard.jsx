@@ -1,34 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const { user } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
-    async function loadProjects() {
+    async function loadFirstProject() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title')
-        .eq('client_id', user.sub);
+        .select('id')
+        .limit(1);
 
       if (!error && data?.length) {
         setCurrentProjectId(data[0].id);
       }
     }
-    if (user) loadProjects();
-  }, [user]);
+    loadFirstProject();
+  }, []);
 
   const handleAssign = async (freelancerId) => {
-    await supabase.from('contracts').insert({
-      projectid: currentProjectId,
-      freelancerid: freelancerId,
+    if (!currentProjectId) return;
+    const { error } = await supabase.from('contracts').insert({
+      project_id: currentProjectId,
+      freelancer_id: freelancerId,
+      client_id: '',
+      title: `Contract for project ${currentProjectId}`,
+      status: 'pending'
     });
-    // TODO: generate PDF, send notifications…
+    if (error) console.error('Error creating contract:', error);
+    // TODO: call your PDF‐generation / notification logic here
   };
 
   const menuItems = [
@@ -79,7 +82,7 @@ export default function ClientDashboard() {
         onAssign={handleAssign}
       />
     ) : (
-      <p>Loading applications…</p>
+      <p className="text-gray-400">Loading applications…</p>
     ),
   };
 
