@@ -4,12 +4,12 @@ import supabase from '../utils/supabaseClient';
 export default function ViewApplicationsSection({ clientId, onAssign }) {
   const [jobs, setJobs] = useState([]);
   const [expanded, setExpanded] = useState({});
-  const [assigning, setAssigning] = useState(null);
+  const [assigningJob, setAssigningJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const load = async () => {
       setLoading(true);
       if (!clientId) {
         setError('Not signed in');
@@ -43,22 +43,20 @@ export default function ViewApplicationsSection({ clientId, onAssign }) {
         setLoading(false);
       }
     };
-
-    fetchJobs();
+    load();
   }, [clientId]);
 
-  const toggle = (id) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  if (loading) return <p>Loading applications…</p>;
+  if (error)   return <p className="text-red-500">{error}</p>;
 
-  const assign = async (projectId, freelancerId) => {
-    setAssigning(projectId);
-    await onAssign(projectId, freelancerId);
-    setAssigning(null);
-  };
+  const toggle = (jobId) =>
+    setExpanded((prev) => ({ ...prev, [jobId]: !prev[jobId] }));
 
-  if (loading) return <p>Loading applications...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  const assign = async (jobId, freelancerId) => {
+    setAssigningJob(jobId);
+    await onAssign(jobId, freelancerId);
+    setAssigningJob(null);
+  };
 
   return (
     <section className="dashboard-content">
@@ -106,24 +104,29 @@ export default function ViewApplicationsSection({ clientId, onAssign }) {
                     </p>
                   ) : (
                     job.applications.map((app) => {
-                      let profile = {};
+                      let prof = {};
                       if (app.freelancer?.profile) {
                         try {
-                          profile = JSON.parse(app.freelancer.profile);
-                        } catch { profile = {}; }
+                          prof = JSON.parse(app.freelancer.profile);
+                        } catch {
+                          prof = {};
+                        }
                       }
 
-                      const name = profile.full_name || 'Anonymous';
-                      const title = profile.title || 'No title listed';
+                      const name       = `${prof.firstName || ''} ${prof.lastName || ''}`.trim() || 'Anonymous';
+                      const profession = prof.profession || 'No profession listed';
 
-                      const busy = assigning === job.id;
+                      const busy = assigningJob === job.id;
+
                       return (
                         <li
                           key={app.applicationid}
                           className="p-3 rounded bg-[#222]"
                         >
                           <p className="text-white font-bold">{name}</p>
-                          <p className="text-sm text-gray-400">{title}</p>
+                          <p className="text-sm text-gray-400">
+                            {profession}
+                          </p>
                           <button
                             className={`primary-btn mt-2 ${
                               busy ? 'opacity-50 cursor-not-allowed' : ''
