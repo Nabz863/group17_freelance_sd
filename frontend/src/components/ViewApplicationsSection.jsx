@@ -35,8 +35,8 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
   }, [projectId]);
 
   if (!visible) return null;
-  if (loading)   return <p>Loading applications...</p>;
-  if (error)     return <p className="text-red-500">{error}</p>;
+  if (loading) return <p>Loading applications...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <section className="dashboard-content">
@@ -63,13 +63,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
                 key={app.applicationid || `app-${app.id || Math.random()}`}
                 className="p-3 rounded bg-[#222]"
               >
-                {app.freelancer ? (
+                {app.freelancer && (
                   <>
                     <p className="text-white font-bold">
-                      {[
-                        app.freelancer.firstName,
-                        app.freelancer.lastName
-                      ].filter(Boolean).join(' ') || 'Anonymous'}
+                      {[app.freelancer.firstName, app.freelancer.lastName]
+                        .filter(Boolean)
+                        .join(' ') || 'Anonymous'}
                     </p>
                     <p className="text-sm text-gray-400">
                       {app.freelancer.profession || 'No profession listed'}
@@ -83,14 +82,16 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
                         if (app.freelancer.user_id) {
                           onAssign(app.freelancer.user_id);
                         } else {
-                          console.error('No user ID for this freelancer');
+                          console.error(
+                            'No user ID available for this freelancer'
+                          );
                         }
                       }}
                     >
                       Assign Freelancer
                     </button>
                   </>
-                ) : null}
+                )}
               </li>
             ))}
           </ul>
