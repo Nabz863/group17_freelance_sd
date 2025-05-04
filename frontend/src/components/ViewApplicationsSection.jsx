@@ -1,107 +1,175 @@
-import React, { useState, useEffect } from "react";
+// src/components/ViewApplicationsSection.jsx
+import React, { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 
-export default function ViewApplicationsSection({ projectId, onAssign }) {
-  const [applications, setApplications] = useState([]);
-  const [profiles, setProfiles] = useState({});
+export default function ViewApplicationsSection() {
+  const { user } = useAuth0();
+  const [jobs, setJobs] = useState([]);
+  const [expanded, setExpanded] = useState({});
+  const [assigning, setAssigning] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      if (!projectId) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        // note: columns lowercased
-        const { data: apps, error: appErr } = await supabase
-          .from("applications")
-          .select("applicationid, freelancerid, status, coverletter")
-          .eq("projectid", projectId);
-        if (appErr) throw appErr;
-        setApplications(apps || []);
+    const fetchApplications = async () => {
+      setLoading(true);
 
-        // fetch freelancer profiles
-        const ids = [...new Set(apps.map((a) => a.freelancerid))];
-        if (ids.length) {
-          const { data: frees, error: freeErr } = await supabase
-            .from("freelancers")
-            .select("user_id, profile")
-            .in("user_id", ids);
-          if (freeErr) throw freeErr;
-          const map = {};
-          frees.forEach((f) => {
-            try {
-              map[f.user_id] = JSON.parse(f.profile);
-            } catch {
-              map[f.user_id] = {};
-            }
-          });
-          setProfiles(map);
-        }
-      } catch (err) {
-        console.error("Error loading applications:", err);
-        setError("Failed to load applications");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [projectId]);
+      const { data, error } = await supabase
+        .from("projects")
+        .select(`
+          id,
+          description,
+          freelancer_id,
+          applications (
+            freelancerid,
+            status,
+            freelancer:freelancerid (
+              profile
+            )
+          )
+        `)
+        .eq("client_id", user?.sub);
 
-  if (!visible) return null;
-  if (loading) return <p>Loading applications…</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+      if (error) {
+        console.error("Error loading job applications:", error);
+      } else {
+        setJobs(data);
+      }
+
+      setLoading(false);
+    };
+
+    if (user) fetchApplications();
+  }, [user]);
+
+  const handleAssign = async (projectId, freelancerID) => {
+    setAssigning(projectId);
+
+    const { error } = await supabase
+      .from("projects")
+      .update({ freelancer_id: freelancerID })
+      .eq("id", projectId);
+
+    if (error) {
+      console.error("Error assigning freelancer:", error);
+    } else {
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === projectId
+            ? { ...job, freelancer_id: freelancerID }
+            : job
+        )
+      );
+    }
+
+    setAssigning(null);
+  };
+
+  const toggleExpanded = (projectId) => {
+    setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+  };
 
   return (
     <section className="dashboard-content">
       <h1>Job Applications</h1>
-      {applications.length === 0 ? (
-        <p className="text-gray-400">No applications yet.</p>
+
+      {loading ? (
+        <p className="mt-4 text-gray-400">Loading applications...</p>
+      ) : jobs.length === 0 ? (
+        <p className="mt-4 text-gray-400">No jobs found.</p>
       ) : (
-        <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
-          <header className="flex justify-between items-center">
-            <h2 className="text-lg text-accent font-semibold">Applicants</h2>
-            <button
-              className="primary-btn"
-              onClick={() => setVisible(false)}
+        jobs.map((job) => {
+          // description was JSON-stringified when posting
+          const desc =
+            typeof job.description === "string"
+              ? JSON.parse(job.description || "{}")
+              : job.description;
+
+          return (
+            <div
+              key={job.id}
+              className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]"
             >
-              Hide Applicants
-            </button>
-          </header>
-          <ul className="mt-4 space-y-4">
-            {applications.map((app) => {
-              const prof = profiles[app.freelancerid] || {};
-              const name =
-                [prof.firstName, prof.lastName].filter(Boolean).join(" ") ||
-                "Anonymous";
-              return (
-                <li
-                  key={app.applicationid}
-                  className="p-3 rounded bg-[#222]"
+              <header className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg text-accent font-semibold">
+                    {desc?.title || "Untitled Job"}
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    {desc?.details || "No job description provided."}
+                  </p>
+                </div>
+                <button
+                  className="primary-btn"
+                  onClick={() => toggleExpanded(job.id)}
                 >
-                  <p className="text-white font-bold">{name}</p>
-                  <p className="text-sm text-gray-400">
-                    {prof.profession || "No profession listed"}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {prof.email || "No email provided"}
-                  </p>
-                  <button
-                    className="primary-btn mt-2"
-                    onClick={() => onAssign(app.freelancerid)}
-                  >
-                    Assign Freelancer
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                  {expanded[job.id] ? "Hide Applicants" : "View Applicants"}
+                </button>
+              </header>
+
+              {expanded[job.id] && (
+                <ul className="mt-4 space-y-4">
+                  {job.applications.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No applicants yet.</p>
+                  ) : (
+                    job.applications.map((app) => {
+                      // parse stored JSON profile
+                      let profile = app.freelancer?.profile;
+                      if (typeof profile === "string") {
+                        try {
+                          profile = JSON.parse(profile);
+                        } catch {
+                          profile = {};
+                        }
+                      }
+
+                      return (
+                        <li
+                          key={app.freelancerid}
+                          className="p-3 rounded bg-[#222]"
+                        >
+                          <p className="text-white font-bold">
+                            {profile?.firstName || "Unnamed"}{" "}
+                            {profile?.lastName || ""}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {profile?.profession || "Unknown Profession"}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {profile?.email || "No email"}
+                          </p>
+
+                          <button
+                            className={`primary-btn mt-2 ${
+                              job.freelancer_id === app.freelancerid ||
+                              assigning === job.id
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                            disabled={
+                              job.freelancer_id === app.freelancerid ||
+                              assigning === job.id
+                            }
+                            onClick={() =>
+                              handleAssign(job.id, app.freelancerid)
+                            }
+                          >
+                            {job.freelancer_id === app.freelancerid
+                              ? "Assigned"
+                              : assigning === job.id
+                              ? "Assigning..."
+                              : "Assign Freelancer"}
+                          </button>
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              )}
+            </div>
+          );
+        })
       )}
     </section>
   );
 }
-
