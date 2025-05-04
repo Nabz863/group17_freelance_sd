@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
+
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
@@ -16,7 +17,7 @@ export default function ClientDashboard() {
       if (!user?.sub) return;
       const { data, error } = await supabase
         .from('projects')
-        .select('id, description')
+        .select('id')
         .eq('client_id', user.sub);
       if (!error && data?.length) {
         setCurrentProjectId(data[0].id);
@@ -34,13 +35,13 @@ export default function ClientDashboard() {
         title:            `Contract for project ${currentProjectId}`,
         freelancerId,
         contractSections: []
-      })
+      }),
     });
     if (res.ok) {
       toast.success('Contract created and sent for review');
     } else {
-      const err = await res.json();
-      toast.error('Failed to create contract: ' + (err.message || res.statusText));
+      const err = await res.json().catch(() => null);
+      toast.error('Failed to create contract: ' + (err?.message || res.statusText));
     }
   };
 
