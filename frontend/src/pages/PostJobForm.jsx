@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { toast } from 'react-toastify'
 import supabase from '../utils/supabaseClient'
-import axios from 'axios'
+//import axios from 'axios'
 
 export default function PostJobForm({ embed }) {
   const navigate = useNavigate()
-  const { user, getAccessTokenSilently } = useAuth0()
+  const { user } = useAuth0()//getAccessTokenSilently
   const [isLoading, setIsLoading] = useState(false)
 
   const [title, setTitle] = useState('')
