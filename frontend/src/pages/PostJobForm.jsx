@@ -29,7 +29,7 @@ export default function PostJobForm({ embed = false }) {
     (async () => {
       try {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`${process.env.REACT_APP_SOCKET_URL}/api/contracts/template`, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/contracts/template`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const json = await res.json();
