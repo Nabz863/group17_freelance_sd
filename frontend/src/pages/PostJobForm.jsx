@@ -22,10 +22,7 @@ export default function PostJobForm({ embed = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // your real Auth0 user.sub goes here
     const clientId = user.sub;
-
-    // we pack everything into the one TEXT column "description"
     const payload = {
       title:        formData.title,
       details:      formData.description,
@@ -34,10 +31,11 @@ export default function PostJobForm({ embed = false }) {
       deadline:     formData.deadline
     };
 
-    const { data, error } = await supabase
+    // insert only client_id, description (as JSON), and completed
+    const { error } = await supabase
       .from('projects')
       .insert({
-        client_id:  clientId,
+        client_id:   clientId,
         description: JSON.stringify(payload),
         completed:   false
       })
