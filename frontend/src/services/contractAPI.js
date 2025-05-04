@@ -1,32 +1,24 @@
-import api from '../utils/api';
+import API from '../utils/api';
 
 export async function fetchContractTemplate() {
-  try {
-    const { data } = await api.get('/contracts/template');
-    // template comes back as { success: true, template: { sections: [...] } }
+  const { data } = await API.get('/contracts/template');
+  if (data?.template?.sections) {
     return data.template.sections;
-  } catch (err) {
-    console.error('Error fetching contract template:', err);
-    throw err;
+  } else {
+    console.error('Invalid contract template response:', data);
+    return [];
   }
 }
 
 export async function createContract({ projectId, title, freelancerId, contractSections }) {
   const payload = { projectId, title, freelancerId };
-  if (contractSections && contractSections.length) {
-    payload.contractSections = contractSections;
-  }
-  const { data } = await api.post('/contracts', payload);
+  if (contractSections?.length) payload.contractSections = contractSections;
+  const { data } = await API.post('/contracts', payload);
   return data.contract;
 }
 
-export async function listContracts() {
-  const { data } = await api.get('/contracts');
-  return data.contracts;
-}
-
 export async function updateContractStatus(contractId, status) {
-  const { data } = await api.patch(`/contracts/${contractId}/status`, { status });
+  const { data } = await API.patch(`/contracts/${contractId}/status`, { status });
   return data.contract;
 }
 
