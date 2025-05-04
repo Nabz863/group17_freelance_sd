@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
@@ -13,35 +12,41 @@ export default function ClientDashboard() {
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
-    async function loadProjects() {
+    (async () => {
       if (!user?.sub) return;
       const { data, error } = await supabase
         .from('projects')
         .select('id')
         .eq('client_id', user.sub);
-      if (!error && data?.length) {
-        setCurrentProjectId(data[0].id);
-      }
-    }
-    loadProjects();
+      if (!error && data?.length) setCurrentProjectId(data[0].id);
+    })();
   }, [user]);
 
-  const handleAssign = async (freelancerId) => {
-    const res = await fetch('/api/contracts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        projectId:        currentProjectId,
-        title:            `Contract for project ${currentProjectId}`,
-        freelancerId,
-        contractSections: []
-      }),
-    });
-    if (res.ok) {
-      toast.success('Contract created and sent for review');
-    } else {
-      const err = await res.json().catch(() => null);
-      toast.error('Failed to create contract: ' + (err?.message || res.statusText));
+  const handleAssign = async freelancerId => {
+    try {
+      const token = await (await import('@auth0/auth0-react')).getAccessTokenSilently();
+      const res = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId:        currentProjectId,
+          title:            `Contract for project ${currentProjectId}`,
+          freelancerId,
+          contractSections: [] // server will apply default
+        })
+      });
+      const body = await res.json();
+      if (res.ok && body.success) {
+        toast.success('Contract created – freelancer notified');
+      } else {
+        throw new Error(body.message || res.statusText);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create contract');
     }
   };
 
@@ -52,7 +57,7 @@ export default function ClientDashboard() {
     'Payments',
     'Projects',
     'Post a Job',
-    'Applications',
+    'Applications'
   ];
 
   const contentMap = {
@@ -94,7 +99,7 @@ export default function ClientDashboard() {
       />
     ) : (
       <p>Loading applications…</p>
-    ),
+    )
   };
 
   return (

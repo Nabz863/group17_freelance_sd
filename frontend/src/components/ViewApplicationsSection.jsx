@@ -3,19 +3,20 @@ import supabase from '../utils/supabaseClient';
 
 export default function ViewApplicationsSection({ projectId, onAssign }) {
   const [applications, setApplications] = useState([]);
-  const [freelancers, setFreelancers] = useState({});
+  const [profiles, setProfiles] = useState({});
   const [visible, setVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       if (!projectId) {
         setLoading(false);
         return;
       }
       try {
         setLoading(true);
+        // 1) get all applications for this project
         const { data: apps, error: appErr } = await supabase
           .from('applications')
           .select('applicationID, freelancerID, status, coverLetter')
@@ -23,7 +24,8 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
         if (appErr) throw appErr;
         setApplications(apps || []);
 
-        const ids = Array.from(new Set(apps.map(a => a.freelancerID)));
+        // 2) fetch each freelancer's profile
+        const ids = [...new Set((apps || []).map(a => a.freelancerID))];
         if (ids.length) {
           const { data: frees, error: freeErr } = await supabase
             .from('freelancers')
@@ -38,7 +40,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
               map[f.user_id] = {};
             }
           });
-          setFreelancers(map);
+          setProfiles(map);
         }
       } catch (err) {
         console.error('Error loading applications:', err);
@@ -46,12 +48,11 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    })();
   }, [projectId]);
 
   if (!visible) return null;
-  if (loading)   return <p>Loading applications...</p>;
+  if (loading)   return <p>Loading applications…</p>;
   if (error)     return <p className="text-red-500">{error}</p>;
 
   return (
@@ -59,13 +60,11 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       <h1>Job Applications</h1>
 
       {applications.length === 0 ? (
-        <p className="text-gray-400 text-sm">No applications yet.</p>
+        <p className="text-gray-400">No applications yet.</p>
       ) : (
         <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
           <header className="flex justify-between items-center">
-            <div>
-              <h2 className="text-lg text-accent font-semibold">Applications</h2>
-            </div>
+            <h2 className="text-lg text-accent font-semibold">Applicants</h2>
             <button
               className="primary-btn"
               onClick={() => setVisible(false)}
@@ -76,7 +75,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
 
           <ul className="mt-4 space-y-4">
             {applications.map(app => {
-              const prof = freelancers[app.freelancerID] || {};
+              const prof = profiles[app.freelancerID] || {};
               const name = [prof.firstName, prof.lastName].filter(Boolean).join(' ') || 'Anonymous';
               return (
                 <li key={app.applicationID} className="p-3 rounded bg-[#222]">
