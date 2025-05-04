@@ -6,6 +6,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
+import { createContract } from '../services/contractAPI';
 
 export default function ClientDashboard() {
   const { user } = useAuth0();
@@ -18,32 +19,20 @@ export default function ClientDashboard() {
         .from('projects')
         .select('id')
         .eq('client_id', user.sub);
-      if (!error && data?.length) setCurrentProjectId(data[0].id);
+      if (!error && data.length) {
+        setCurrentProjectId(data[0].id);
+      }
     })();
   }, [user]);
 
   const handleAssign = async freelancerId => {
     try {
-      const token = await (await import('@auth0/auth0-react')).getAccessTokenSilently();
-      const res = await fetch('/api/contracts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          projectId:        currentProjectId,
-          title:            `Contract for project ${currentProjectId}`,
-          freelancerId,
-          contractSections: [] // server will apply default
-        })
+      await createContract({
+        projectId: currentProjectId,
+        title: `Contract for project ${currentProjectId}`,
+        freelancerId
       });
-      const body = await res.json();
-      if (res.ok && body.success) {
-        toast.success('Contract created – freelancer notified');
-      } else {
-        throw new Error(body.message || res.statusText);
-      }
+      toast.success('Contract created – freelancer notified');
     } catch (err) {
       console.error(err);
       toast.error('Failed to create contract');

@@ -1,44 +1,40 @@
-// src/pages/PostJobForm.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate }      from "react-router-dom";
-import { useAuth0 }         from "@auth0/auth0-react";
-import supabase             from "../utils/supabaseClient";
-import "../styles/theme.css";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import supabase from '../utils/supabaseClient';
+import '../styles/theme.css';
+import { fetchContractTemplate, createContract } from '../services/contractAPI';
 
 export default function PostJobForm({ embed = false }) {
-  const { user, getAccessTokenSilently } = useAuth0();
+  const { user } = useAuth0();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    requirements: "",
-    budget: "",
-    deadline: ""
+    title: '',
+    description: '',
+    requirements: '',
+    budget: '',
+    deadline: ''
   });
   const [milestones, setMilestones] = useState([
-    { title: "", dueDate: "", amount: "" }
+    { title: '', dueDate: '', amount: '' }
   ]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [error,      setError]      = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
   const [contractTemplate, setContractTemplate] = useState(null);
 
-  // fetch default contract template once
+  // load default contract template once
   useEffect(() => {
     (async () => {
       try {
-        const token = await getAccessTokenSilently();
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/contracts/template`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const json = await res.json();
-        if (json.success) setContractTemplate(json.template.sections);
+        const sections = await fetchContractTemplate();
+        setContractTemplate(sections);
       } catch (e) {
-        console.error("Could not load contract template:", e);
+        console.error('Could not load contract template:', e);
       }
     })();
-  }, [getAccessTokenSilently]);
+  }, []);
 
   const handleChange = e => {
     setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -53,7 +49,7 @@ export default function PostJobForm({ embed = false }) {
   };
 
   const handleAddMilestone = () => {
-    setMilestones(ms => [...ms, { title: "", dueDate: "", amount: "" }]);
+    setMilestones(ms => [...ms, { title: '', dueDate: '', amount: '' }]);
   };
 
   const handleRemoveMilestone = i => {
@@ -67,9 +63,9 @@ export default function PostJobForm({ embed = false }) {
     setError(null);
 
     try {
-      // 1) create project
+      // 1) create the project
       const { data: project, error: pErr } = await supabase
-        .from("projects")
+        .from('projects')
         .insert({
           client_id: user.sub,
           description: JSON.stringify({
@@ -81,11 +77,11 @@ export default function PostJobForm({ embed = false }) {
           }),
           completed: false
         })
-        .select("id")
+        .select('id')
         .single();
       if (pErr) throw pErr;
 
-      // 2) insert milestones
+      // 2) create milestones
       const msToInsert = milestones
         .filter(m => m.title && m.dueDate && m.amount)
         .map(m => ({
@@ -95,36 +91,22 @@ export default function PostJobForm({ embed = false }) {
           amount: parseFloat(m.amount)
         }));
       if (msToInsert.length) {
-        const { error: mErr } = await supabase
-          .from("milestones")
-          .insert(msToInsert);
-        if (mErr) console.error("Milestones error:", mErr);
+        const { error: mErr } = await supabase.from('milestones').insert(msToInsert);
+        if (mErr) console.error('Milestones error:', mErr);
       }
 
-      // 3) create default contract
-      if (!contractTemplate) {
-        console.warn("No contract template loaded; skipping contract creation.");
-      } else {
-        const token = await getAccessTokenSilently();
-        await fetch("/api/contracts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            projectId: project.id,
-            title: formData.title,
-            freelancerId: "",            // will be assigned later
-            contractSections: contractTemplate
-          })
-        });
-      }
+      // 3) create the default contract
+      await createContract({
+        projectId: project.id,
+        title: formData.title,
+        freelancerId: '',                 // blank until a freelancer is assigned
+        contractSections: contractTemplate
+      });
 
       setSubmitted(true);
     } catch (err) {
-      console.error("Job post submission failed:", err);
-      setError(err.message || "Submission failed");
+      console.error('Job post submission failed:', err);
+      setError(err.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +120,7 @@ export default function PostJobForm({ embed = false }) {
         {!embed && (
           <button
             className="primary-btn mt-4"
-            onClick={() => navigate("/client")}
+            onClick={() => navigate('/client')}
           >
             Back to Dashboard
           </button>
@@ -158,7 +140,7 @@ export default function PostJobForm({ embed = false }) {
         </>
       )}
 
-      {/* Basic job fields */}
+      {/* Basic fields */}
       <label className="form-label">
         Job Title:
         <input
@@ -243,7 +225,7 @@ export default function PostJobForm({ embed = false }) {
                 type="text"
                 value={m.title}
                 onChange={e =>
-                  handleMilestoneChange(i, "title", e.target.value)
+                  handleMilestoneChange(i, 'title', e.target.value)
                 }
                 className="form-input"
                 required
@@ -256,7 +238,7 @@ export default function PostJobForm({ embed = false }) {
                 type="number"
                 value={m.amount}
                 onChange={e =>
-                  handleMilestoneChange(i, "amount", e.target.value)
+                  handleMilestoneChange(i, 'amount', e.target.value)
                 }
                 className="form-input"
                 required
@@ -270,7 +252,7 @@ export default function PostJobForm({ embed = false }) {
                 type="date"
                 value={m.dueDate}
                 onChange={e =>
-                  handleMilestoneChange(i, "dueDate", e.target.value)
+                  handleMilestoneChange(i, 'dueDate', e.target.value)
                 }
                 className="form-input"
                 required
@@ -290,12 +272,12 @@ export default function PostJobForm({ embed = false }) {
 
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* Form actions */}
+      {/* Actions */}
       <div className="flex justify-end space-x-4">
         {!embed && (
           <button
             type="button"
-            onClick={() => navigate("/client")}
+            onClick={() => navigate('/client')}
             className="px-6 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-800 transition-colors"
           >
             Cancel
@@ -306,9 +288,10 @@ export default function PostJobForm({ embed = false }) {
           disabled={submitting}
           className="px-6 py-2 bg-[#1abc9c] rounded-md text-white hover:bg-[#16a085] transition-colors disabled:opacity-50"
         >
-          {submitting ? "Posting…" : "Submit Job"}
+          {submitting ? 'Posting…' : 'Submit Job'}
         </button>
       </div>
     </form>
   );
 }
+
