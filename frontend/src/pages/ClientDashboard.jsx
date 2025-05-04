@@ -1,42 +1,46 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { toast } from 'react-toastify';
+
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const [projects, setProjects] = useState([]);
+  const { user } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
     async function loadProjects() {
-      const clientId = window.REACT_APP_AUTH0_USER_ID || null;
+      if (!user?.sub) return;
       const { data, error } = await supabase
         .from('projects')
         .select('id, description')
-        .eq('client_id', clientId);
+        .eq('client_id', user.sub);
       if (!error && data?.length) {
-        setProjects(data);
         setCurrentProjectId(data[0].id);
       }
     }
     loadProjects();
-  }, []);
+  }, [user]);
 
   const handleAssign = async (freelancerId) => {
     const res = await fetch('/api/contracts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        projectId:  currentProjectId,
-        title:      `Contract for project ${currentProjectId}`,
+        projectId:        currentProjectId,
+        title:            `Contract for project ${currentProjectId}`,
         freelancerId,
         contractSections: []
       })
     });
-    if (!res.ok) console.error('Failed to create contract', await res.json());
-    else {
-      console.log('Contract created');
+    if (res.ok) {
+      toast.success('Contract created and sent for review');
+    } else {
+      const err = await res.json();
+      toast.error('Failed to create contract: ' + (err.message || res.statusText));
     }
   };
 
