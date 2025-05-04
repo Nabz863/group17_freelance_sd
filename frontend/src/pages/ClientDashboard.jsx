@@ -1,47 +1,45 @@
+// src/pages/ClientDashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import { useAuth0 } from '@auth0/auth0-react';
-import axios from 'axios';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const { getAccessTokenSilently } = useAuth0();
-  const [setProjects] = useState([]);
+  const { user, isAuthenticated } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
+
   useEffect(() => {
-    const loadProjects = async () => {
-      const userId = user.sub;
+    if (!isAuthenticated || !user) return;
+
+    async function loadProjects() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, …')
-        .eq('client_id', userId);
+        .select('id, title')
+        .eq('client_id', user.sub);
 
-      if (!error && data.length > 0) {
-        setProjects(data);
+      if (!error && data?.length) {
         setCurrentProjectId(data[0].id);
       }
-    };
+    }
+
     loadProjects();
-  }, []);
+  }, [isAuthenticated, user]);
 
   const handleAssign = async (freelancerId) => {
-    try {
-      const token = await getAccessTokenSilently();
-      await axios.post(
-        '/api/contracts',
-        {
-          projectId: currentProjectId,
-          freelancerId,
-          title: `Contract for project ${currentProjectId}`,
-          contractSections: [],
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      console.error('Error creating contract:', err);
-    }
+    if (!currentProjectId) return;
+
+    await supabase
+      .from('contracts')
+      .insert({
+        project_id: currentProjectId,
+        client_id: user.sub,
+        freelancer_id: freelancerId,
+        title: `Contract for project ${currentProjectId}`,
+        status: 'pending',
+        contract_sections: []
+      });
   };
 
   const menuItems = [
