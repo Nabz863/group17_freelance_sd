@@ -247,7 +247,7 @@ export default function PostJobForm({ embed = false }) {
                 type="button"
                 disabled={milestones.length === 1}
                 onClick={() => handleRemoveMilestone(idx)}
-                className="px-2 py-1 bg-[#1abc9c] rounded text-white hover:bg-[#16a085] disabled:opacity-50"
+                className="text-red-500 hover:text-red-400"
               >
                 Remove
               </button>
@@ -299,7 +299,7 @@ export default function PostJobForm({ embed = false }) {
         <button
           type="button"
           onClick={handleAddMilestone}
-          className="px-4 py-1 bg-[#1abc9c] rounded text-white hover:bg-[#16a085]"
+          className="px-4 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-800"
         >
           + Add Milestone
         </button>
