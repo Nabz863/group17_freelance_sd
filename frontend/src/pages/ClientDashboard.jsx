@@ -1,59 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import supabase from '../utils/supabaseClient';
+import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const { user, getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
   const [projects, setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
+  // fetch the client's projects so we know which one to view applications for
   useEffect(() => {
-    async function load() {
+    const loadProjects = async () => {
       const { data, error } = await supabase
         .from('projects')
         .select('id')
-        .eq('client_id', user.sub);
-      if (!error && data.length) {
+        .eq('client_id', /* your Auth0 user ID filter if needed */ null);
+
+      // if you store user ID, do .eq('client_id', user.sub) instead of null above
+      if (!error && data.length > 0) {
         setProjects(data);
         setCurrentProjectId(data[0].id);
       }
-    }
-    load();
-  }, [user.sub]);
+    };
+    loadProjects();
+  }, []);
 
+  // when client clicks "Assign Freelancer", hit backend to create the contract + PDF
   const handleAssign = async (freelancerId) => {
-    setCurrentProjectId((pid) => {
-      if (!pid) return pid;
-      return pid;
-    });
-
     try {
       const token = await getAccessTokenSilently();
-      const { data: contract } = await axios.post(
+      await axios.post(
         '/api/contracts',
         {
           projectId: currentProjectId,
-          clientId: user.sub,
           freelancerId,
           title: `Contract for project ${currentProjectId}`,
-          contractSections: []
+          contractSections: [], // or fetch your template sections here
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      await supabase
-        .from('projects')
-        .update({ freelancer_id: freelancerId })
-        .eq('id', currentProjectId);
-
-      toast.success('Contract sent to freelancer for review!');
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to assign freelancer/contract.');
+      console.error('Error creating contract:', err);
     }
   };
 
@@ -64,13 +54,14 @@ export default function ClientDashboard() {
     'Payments',
     'Projects',
     'Post a Job',
-    'Applications'
+    'Applications',
   ];
+
   const contentMap = {
     'Account Settings': (
       <>
         <h1>Account Settings</h1>
-        <p>Edit your profile, password and more.</p>
+        <p>Edit profile, password and more.</p>
       </>
     ),
     Freelancers: (
@@ -97,7 +88,7 @@ export default function ClientDashboard() {
         <p>See current and past projects with freelancers.</p>
       </>
     ),
-    'Post a Job': <PostJobForm />,
+    'Post a Job': <PostJobForm embed />,
     Applications: currentProjectId ? (
       <ViewApplicationsSection
         projectId={currentProjectId}
@@ -105,7 +96,7 @@ export default function ClientDashboard() {
       />
     ) : (
       <p>Loading applications…</p>
-    )
+    ),
   };
 
   return (

@@ -17,19 +17,18 @@ async function createContract({ projectId, title, clientId, freelancerId, contra
     .single();
   if (insertErr) throw insertErr;
 
-  const template = getContractTemplate();
   const formal = {
     id: inserted.id,
     title: inserted.title,
-    parties: { client: clientId, freelancer: freelancerId },
-    sections: inserted.contract_sections.map(sec => {
-      const fmt = sec.parameters
+    parties: { client: inserted.client_id, freelancer: inserted.freelancer_id },
+    sections: inserted.contract_sections.map((sec) => {
+      const formatted = sec.parameters
         ? Object.entries(sec.parameters).reduce(
-            (c, [k, v]) => c.replace(`{${k}}`, v),
+            (acc, [k, v]) => acc.replace(`{${k}}`, v),
             sec.content
           )
         : sec.content;
-      return { title: sec.title, content: sec.content, formattedContent: fmt };
+      return { title: sec.title, content: sec.content, formattedContent: formatted };
     }),
     createdAt: inserted.created_at
   };
@@ -38,7 +37,7 @@ async function createContract({ projectId, title, clientId, freelancerId, contra
 
   const { data: updated, error: updateErr } = await supabase
     .from('contracts')
-    .update({ pdf_url: pdfUrl, updated_at: new Date() })
+    .update({ pdf_url: pdfUrl, updated_at: new Date().toISOString() })
     .eq('id', inserted.id)
     .select()
     .single();
@@ -60,7 +59,7 @@ async function getContractById(contractId) {
 async function updateContractStatus(contractId, status) {
   const { data, error } = await supabase
     .from('contracts')
-    .update({ status, updated_at: new Date() })
+    .update({ status, updated_at: new Date().toISOString() })
     .eq('id', contractId)
     .select()
     .single();
@@ -76,18 +75,19 @@ async function generateFormalContract(contractId) {
     id: contract.id,
     title: contract.title,
     parties: { client: contract.client_id, freelancer: contract.freelancer_id },
-    sections: contract.contract_sections.map(sec => {
-      const fmt = sec.parameters
+    sections: contract.contract_sections.map((sec) => {
+      const formatted = sec.parameters
         ? Object.entries(sec.parameters).reduce(
-            (c, [k, v]) => c.replace(`{${k}}`, v),
+            (acc, [k, v]) => acc.replace(`{${k}}`, v),
             sec.content
           )
         : sec.content;
-      return { title: sec.title, content: sec.content, formattedContent: fmt };
+      return { title: sec.title, content: sec.content, formattedContent: formatted };
     }),
     createdAt: contract.created_at,
     updatedAt: contract.updated_at
   };
+
   return formal;
 }
 
