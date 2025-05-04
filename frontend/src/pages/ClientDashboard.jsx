@@ -1,45 +1,43 @@
-// src/pages/ClientDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
-  const { user, isAuthenticated } = useAuth0();
+  const [projects, setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
     async function loadProjects() {
+      const clientId = window.REACT_APP_AUTH0_USER_ID || null;
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title')
-        .eq('client_id', user.sub);
-
+        .select('id, description')
+        .eq('client_id', clientId);
       if (!error && data?.length) {
+        setProjects(data);
         setCurrentProjectId(data[0].id);
       }
     }
-
     loadProjects();
-  }, [isAuthenticated, user]);
+  }, []);
 
   const handleAssign = async (freelancerId) => {
-    if (!currentProjectId) return;
-
-    await supabase
-      .from('contracts')
-      .insert({
-        project_id: currentProjectId,
-        client_id: user.sub,
-        freelancer_id: freelancerId,
-        title: `Contract for project ${currentProjectId}`,
-        status: 'pending',
-        contract_sections: []
-      });
+    const res = await fetch('/api/contracts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        projectId:  currentProjectId,
+        title:      `Contract for project ${currentProjectId}`,
+        freelancerId,
+        contractSections: []
+      })
+    });
+    if (!res.ok) console.error('Failed to create contract', await res.json());
+    else {
+      console.log('Contract created');
+    }
   };
 
   const menuItems = [
@@ -83,7 +81,7 @@ export default function ClientDashboard() {
         <p>See current and past projects with freelancers.</p>
       </>
     ),
-    'Post a Job': <PostJobForm embed />,
+    'Post a Job': <PostJobForm embed={false} />,
     Applications: currentProjectId ? (
       <ViewApplicationsSection
         projectId={currentProjectId}

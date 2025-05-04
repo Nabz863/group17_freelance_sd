@@ -1,279 +1,272 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import axios from 'axios';
 import supabase from '../utils/supabaseClient';
+import '../styles/theme.css';
 
 export default function PostJobForm({ embed = false }) {
+  const navigate = useNavigate();
   const { user, getAccessTokenSilently } = useAuth0();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [skills, setSkills] = useState('');
-  const [budget, setBudget] = useState('');
-  const [duration, setDuration] = useState('');
-  const [milestones, setMilestones] = useState([
-    { title: '', description: '', dueDate: '', amount: '' }
-  ]);
-  const [contractSections, setContractSections] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [title, setTitle]             = useState('');
+  const [description, setDescription] = useState('');
+  const [requirements, setRequirements] = useState('');
+  const [budget, setBudget]           = useState('');
+  const [deadline, setDeadline]       = useState('');
+  const [milestones, setMilestones]   = useState([
+    { title: '', amount: '', dueDate: '' }
+  ]);
+  const [loading, setLoading] = useState(false);
 
+  const [templateSections, setTemplateSections] = useState([]);
   useEffect(() => {
     (async () => {
       try {
         const token = await getAccessTokenSilently();
-        const res = await axios.get('/api/contracts/template', {
+        const res = await fetch('/api/contracts/template', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.data.success) {
-          setContractSections(res.data.template.sections);
-        }
+        const body = await res.json();
+        if (body.success) setTemplateSections(body.template.sections);
       } catch (err) {
-        console.error('Failed to load contract template:', err);
+        console.error('Could not load contract template', err);
       }
     })();
   }, [getAccessTokenSilently]);
 
-  const addMilestone = () =>
-    setMilestones([
-      ...milestones,
-      { title: '', description: '', dueDate: '', amount: '' }
-    ]);
-  const removeMilestone = (i) =>
-    setMilestones(milestones.filter((_, idx) => idx !== i));
-  const updateMilestone = (i, field, value) => {
-    const copy = [...milestones];
-    copy[i][field] = value;
-    setMilestones(copy);
+  const handleAddMilestone = () => {
+    setMilestones([...milestones, { title: '', amount: '', dueDate: '' }]);
+  };
+
+  const handleRemoveMilestone = (i) => {
+    if (milestones.length > 1) {
+      setMilestones(milestones.filter((_, idx) => idx !== i));
+    }
+  };
+
+  const handleMilestoneChange = (i, field, val) => {
+    const updated = [...milestones];
+    updated[i][field] = val;
+    setMilestones(updated);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      const skillsArray = skills
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-
-      const { data: project, error: projectError } = await supabase
+      const { data: proj, error: projErr } = await supabase
         .from('projects')
         .insert({
           client_id: user.sub,
-          title,
-          description,
-          skills: skillsArray,
-          budget: parseFloat(budget),
-          duration,
-          status: 'open'
+          description: JSON.stringify({
+            title, details: description, requirements, budget, deadline
+          }),
+          completed: false
         })
         .select('id')
         .single();
-      if (projectError) throw projectError;
+      if (projErr) throw projErr;
 
-      const projectId = project.id;
-
-      const msToInsert = milestones.map((m) => ({
-        project_id: projectId,
-        title: m.title,
-        description: m.description,
-        due_date: m.dueDate,
-        amount: parseFloat(m.amount)
-      }));
-      const { error: msError } = await supabase
-        .from('milestones')
-        .insert(msToInsert);
-      if (msError) throw msError;
+      const msPayload = milestones
+        .filter(m => m.title)
+        .map(m => ({
+          project_id: proj.id,
+          title: m.title,
+          due_date: m.dueDate,
+          amount: parseFloat(m.amount)
+        }));
+      if (msPayload.length) {
+        const { error: msErr } = await supabase
+          .from('milestones')
+          .insert(msPayload);
+        if (msErr) throw msErr;
+      }
 
       const token = await getAccessTokenSilently();
-      await axios.post(
-        '/api/contracts',
-        {
-          projectId,
-          freelancerId: null,
-          title: `Contract for "${title}"`,
-          contractSections
+      const contractRes = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        body: JSON.stringify({
+          projectId: proj.id,
+          title: `Contract for ${title}`,
+          freelancerId: null,
+          contractSections: templateSections
+        })
+      });
+      if (!contractRes.ok) {
+        console.error('Error creating contract', await contractRes.json());
+      }
 
       setSubmitted(true);
     } catch (err) {
-      console.error('Error posting job + creating contract:', err);
-      // you can toast.error here if you like
+      console.error('Job post submission failed:', err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   if (submitted) {
     return (
-      <section className="text-center">
-        <h1 className="text-accent text-2xl mb-4">
-          Job & Contract Created!
-        </h1>
-        <p>Your job is live and the contract has been generated.</p>
+      <section className="text-center p-8">
+        <h1 className="text-accent text-2xl mb-4">Job &amp; Contract Created</h1>
+        <p>Your job is live and a contract has been sent for review.</p>
+        {!embed && (
+          <button
+            className="primary-btn mt-6"
+            onClick={() => navigate('/client')}
+          >
+            Back to Dashboard
+          </button>
+        )}
       </section>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-w-4xl mx-auto p-6 bg-[#1a1a1a] rounded-lg"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl mx-auto p-4">
       {!embed && (
         <>
           <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
           <p className="text-gray-400 mb-6">
-            Fill out the details and set your milestones.
+            Describe your project and define milestones + budget.
           </p>
         </>
       )}
 
-      <label className="block">
-        <span className="text-gray-300">Job Title</span>
+      <label className="form-label">
+        Job Title*
         <input
-          type="text"
+          name="title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={e => setTitle(e.target.value)}
           required
-          className="form-input mt-1"
+          className="form-input"
         />
       </label>
 
-      <label className="block">
-        <span className="text-gray-300">Description</span>
+      <label className="form-label">
+        Description*
         <textarea
+          name="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={4}
+          onChange={e => setDescription(e.target.value)}
+          rows="4"
           required
-          className="form-textarea mt-1"
+          className="form-textarea"
         />
       </label>
 
-      <label className="block">
-        <span className="text-gray-300">Skills (comma-separated)</span>
-        <input
-          type="text"
-          value={skills}
-          onChange={(e) => setSkills(e.target.value)}
-          className="form-input mt-1"
+      <label className="form-label">
+        Requirements
+        <textarea
+          name="requirements"
+          value={requirements}
+          onChange={e => setRequirements(e.target.value)}
+          rows="3"
+          className="form-textarea"
         />
       </label>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label className="block">
-          <span className="text-gray-300">Budget (ZAR)</span>
+      <div className="grid md:grid-cols-2 gap-4">
+        <label className="form-label">
+          Budget (ZAR)*
           <input
             type="number"
+            name="budget"
             value={budget}
-            onChange={(e) => setBudget(e.target.value)}
+            onChange={e => setBudget(e.target.value)}
             required
-            className="form-input mt-1"
+            className="form-input"
           />
         </label>
-        <label className="block">
-          <span className="text-gray-300">Duration (days)</span>
+        <label className="form-label">
+          Deadline*
           <input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
+            type="date"
+            name="deadline"
+            value={deadline}
+            onChange={e => setDeadline(e.target.value)}
             required
-            className="form-input mt-1"
+            className="form-input"
           />
         </label>
       </div>
 
-      <div className="border border-gray-700 p-4 rounded-lg">
-        <h2 className="text-lg text-accent font-semibold mb-3">Milestones</h2>
-        {milestones.map((m, i) => (
-          <div key={i} className="mb-4 p-3 bg-[#222] rounded">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium text-white">
-                Milestone {i + 1}
-              </span>
-              <button
-                type="button"
-                onClick={() => removeMilestone(i)}
-                className="text-red-500 hover:text-red-400"
-                disabled={milestones.length === 1}
-              >
-                Remove
-              </button>
-            </div>
-            <label className="block mb-2">
-              <span className="text-gray-300 text-sm">Title</span>
+      <fieldset className="border p-4 rounded">
+        <legend className="font-semibold">Milestones &amp; Payout</legend>
+        {milestones.map((m, idx) => (
+          <div key={idx} className="grid md:grid-cols-3 gap-4 mb-4 items-end">
+            <label className="form-label">
+              Title*
               <input
-                type="text"
                 value={m.title}
-                onChange={(e) =>
-                  updateMilestone(i, 'title', e.target.value)
-                }
-                className="form-input mt-1 text-sm"
+                onChange={e => handleMilestoneChange(idx, 'title', e.target.value)}
+                required
+                className="form-input"
               />
             </label>
-            <label className="block mb-2">
-              <span className="text-gray-300 text-sm">Amount (ZAR)</span>
+            <label className="form-label">
+              Amount (ZAR)*
               <input
                 type="number"
                 value={m.amount}
-                onChange={(e) =>
-                  updateMilestone(i, 'amount', e.target.value)
-                }
-                className="form-input mt-1 text-sm"
+                onChange={e => handleMilestoneChange(idx, 'amount', e.target.value)}
+                required
+                className="form-input"
               />
             </label>
-            <label className="block mb-2">
-              <span className="text-gray-300 text-sm">Due Date</span>
-              <input
-                type="date"
-                value={m.dueDate}
-                onChange={(e) =>
-                  updateMilestone(i, 'dueDate', e.target.value)
-                }
-                className="form-input mt-1 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-gray-300 text-sm">Description</span>
-              <textarea
-                value={m.description}
-                onChange={(e) =>
-                  updateMilestone(i, 'description', e.target.value)
-                }
-                rows={2}
-                className="form-textarea mt-1 text-sm"
-              />
-            </label>
+            <div className="flex items-center space-x-2">
+              <label className="form-label mb-0">
+                Due Date*
+                <input
+                  type="date"
+                  value={m.dueDate}
+                  onChange={e => handleMilestoneChange(idx, 'dueDate', e.target.value)}
+                  required
+                  className="form-input"
+                />
+              </label>
+              {milestones.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMilestone(idx)}
+                  className="text-red-500 hover:text-red-400"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
         ))}
         <button
           type="button"
-          onClick={addMilestone}
-          className="mt-2 primary-btn"
+          onClick={handleAddMilestone}
+          className="primary-btn mt-2"
         >
           + Add Milestone
         </button>
-      </div>
+      </fieldset>
 
-      <footer className="flex justify-end">
+      <footer className="form-footer">
         {!embed && (
           <button
             type="button"
-            onClick={() => (window.location.href = '/client')}
-            className="mr-4 border border-gray-600 rounded px-4 py-2 text-gray-300"
+            onClick={() => navigate('/client')}
+            className="secondary-btn mr-4"
           >
             Cancel
           </button>
         )}
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={loading}
           className="primary-btn"
         >
-          {isLoading ? 'Posting…' : 'Post Job & Generate Contract'}
+          {loading ? 'Posting…' : 'Submit Job'}
         </button>
       </footer>
     </form>

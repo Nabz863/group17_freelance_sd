@@ -12,14 +12,14 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       setLoading(false);
       return;
     }
-    const fetchApps = async () => {
-      setLoading(true);
+
+    (async () => {
       try {
+        setLoading(true);
         const { data, error: fetchError } = await supabase
           .from('applications')
           .select('*, freelancer(*)')
           .eq('projectid', projectId);
-
         if (fetchError) throw fetchError;
         setApplications(data || []);
         setError(null);
@@ -29,13 +29,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       } finally {
         setLoading(false);
       }
-    };
-    fetchApps();
+    })();
   }, [projectId]);
 
   if (!visible) return null;
-  if (loading)    return <p>Loading applications...</p>;
-  if (error)      return <p className="text-red-500">{error}</p>;
+  if (loading)   return <p>Loading applications…</p>;
+  if (error)     return <p className="text-red-500">{error}</p>;
 
   return (
     <section className="dashboard-content">
@@ -58,47 +57,36 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
           </header>
 
           <ul className="mt-4 space-y-4">
-            {applications.map((app) => {
-              let profile = {};
-              try {
-                profile =
-                  typeof app.freelancer.profile === 'string'
-                    ? JSON.parse(app.freelancer.profile)
-                    : app.freelancer.profile || {};
-              } catch {
-                profile = {};
-              }
-
-              return (
-                <li
-                  key={app.applicationid}
-                  className="p-3 rounded bg-[#222]"
+            {applications.map((app) => (
+              <li
+                key={app.applicationid}
+                className="p-3 rounded bg-[#222]"
+              >
+                <p className="text-white font-bold">
+                  {[
+                    app.freelancer.firstName,
+                    app.freelancer.lastName
+                  ].filter(Boolean).join(' ') || 'Anonymous'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  {app.freelancer.profession || 'No profession listed'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  {app.freelancer.email || 'No email provided'}
+                </p>
+                <button
+                  className="primary-btn mt-2"
+                  onClick={() => {
+                    if (!app.freelancer.user_id) {
+                      return console.error('No user ID for this freelancer');
+                    }
+                    onAssign(app.freelancer.user_id);
+                  }}
                 >
-                  <p className="text-white font-bold">
-                    {profile.firstName || profile.fullName || 'Anonymous'}{' '}
-                    {profile.lastName || ''}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {profile.profession || 'No profession listed'}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {profile.email || 'No email provided'}
-                  </p>
-                  <button
-                    className="primary-btn mt-2"
-                    onClick={() => {
-                      if (app.freelancerid) {
-                        onAssign(app.freelancerid);
-                      } else {
-                        console.error('No user ID for this freelancer');
-                      }
-                    }}
-                  >
-                    Assign Freelancer
-                  </button>
-                </li>
-              );
-            })}
+                  Assign Freelancer
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
       )}
