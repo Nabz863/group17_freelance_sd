@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import supabase from '../utils/supabaseClient';
+import React, { useState, useEffect } from "react";
+import supabase from "../utils/supabaseClient";
 
 export default function ViewApplicationsSection({ projectId, onAssign }) {
   const [applications, setApplications] = useState([]);
   const [profiles, setProfiles] = useState({});
-  const [visible, setVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -16,24 +16,24 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       }
       try {
         setLoading(true);
-        // 1) get all applications for this project
+        // note: columns lowercased
         const { data: apps, error: appErr } = await supabase
-          .from('applications')
-          .select('applicationID, freelancerID, status, coverLetter')
-          .eq('projectID', projectId);
+          .from("applications")
+          .select("applicationid, freelancerid, status, coverletter")
+          .eq("projectid", projectId);
         if (appErr) throw appErr;
         setApplications(apps || []);
 
-        // 2) fetch each freelancer's profile
-        const ids = [...new Set((apps || []).map(a => a.freelancerID))];
+        // fetch freelancer profiles
+        const ids = [...new Set(apps.map((a) => a.freelancerid))];
         if (ids.length) {
           const { data: frees, error: freeErr } = await supabase
-            .from('freelancers')
-            .select('user_id, profile')
-            .in('user_id', ids);
+            .from("freelancers")
+            .select("user_id, profile")
+            .in("user_id", ids);
           if (freeErr) throw freeErr;
           const map = {};
-          frees.forEach(f => {
+          frees.forEach((f) => {
             try {
               map[f.user_id] = JSON.parse(f.profile);
             } catch {
@@ -43,8 +43,8 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
           setProfiles(map);
         }
       } catch (err) {
-        console.error('Error loading applications:', err);
-        setError('Failed to load applications');
+        console.error("Error loading applications:", err);
+        setError("Failed to load applications");
       } finally {
         setLoading(false);
       }
@@ -52,13 +52,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
   }, [projectId]);
 
   if (!visible) return null;
-  if (loading)   return <p>Loading applications…</p>;
-  if (error)     return <p className="text-red-500">{error}</p>;
+  if (loading) return <p>Loading applications…</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <section className="dashboard-content">
       <h1>Job Applications</h1>
-
       {applications.length === 0 ? (
         <p className="text-gray-400">No applications yet.</p>
       ) : (
@@ -72,23 +71,27 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
               Hide Applicants
             </button>
           </header>
-
           <ul className="mt-4 space-y-4">
-            {applications.map(app => {
-              const prof = profiles[app.freelancerID] || {};
-              const name = [prof.firstName, prof.lastName].filter(Boolean).join(' ') || 'Anonymous';
+            {applications.map((app) => {
+              const prof = profiles[app.freelancerid] || {};
+              const name =
+                [prof.firstName, prof.lastName].filter(Boolean).join(" ") ||
+                "Anonymous";
               return (
-                <li key={app.applicationID} className="p-3 rounded bg-[#222]">
+                <li
+                  key={app.applicationid}
+                  className="p-3 rounded bg-[#222]"
+                >
                   <p className="text-white font-bold">{name}</p>
                   <p className="text-sm text-gray-400">
-                    {prof.profession || 'No profession listed'}
+                    {prof.profession || "No profession listed"}
                   </p>
                   <p className="text-sm text-gray-400">
-                    {prof.email || 'No email provided'}
+                    {prof.email || "No email provided"}
                   </p>
                   <button
                     className="primary-btn mt-2"
-                    onClick={() => onAssign(app.freelancerID)}
+                    onClick={() => onAssign(app.freelancerid)}
                   >
                     Assign Freelancer
                   </button>
@@ -101,3 +104,4 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
     </section>
   );
 }
+
