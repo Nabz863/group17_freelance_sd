@@ -1,156 +1,314 @@
 // src/pages/PostJobForm.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth0 }    from '@auth0/auth0-react';
-import supabase        from '../utils/supabaseClient';
-import '../styles/theme.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate }      from "react-router-dom";
+import { useAuth0 }         from "@auth0/auth0-react";
+import supabase             from "../utils/supabaseClient";
+import "../styles/theme.css";
 
 export default function PostJobForm({ embed = false }) {
-  const { user } = useAuth0();
-  const navigate  = useNavigate();
-  const [submitted, setSubmitted] = useState(false);
-  const [title, setTitle]         = useState('');
-  const [details, setDetails]     = useState('');
-  const [requirements, setReqs]   = useState('');
-  const [milestones, setMilestones] = useState([
-    { title: '', dueDate: '', amount: '' }
-  ]);
+  const { user, getAccessTokenSilently } = useAuth0();
+  const navigate = useNavigate();
 
-  const handleAddMilestone    = () => setMilestones(m => [...m, { title: '', dueDate: '', amount: '' }]);
-  const handleRemoveMilestone = i => setMilestones(m => m.length > 1 ? m.filter((_,idx) => idx !== i) : m);
-  const handleMSChange        = (i, f, v) => {
-    const copy = [...milestones];
-    copy[i][f] = v;
-    setMilestones(copy);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    requirements: "",
+    budget: "",
+    deadline: ""
+  });
+  const [milestones, setMilestones] = useState([
+    { title: "", dueDate: "", amount: "" }
+  ]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [error,      setError]      = useState(null);
+  const [contractTemplate, setContractTemplate] = useState(null);
+
+  // fetch default contract template once
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        const res = await fetch("/api/contracts/template", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+        if (json.success) setContractTemplate(json.template.sections);
+      } catch (e) {
+        console.error("Could not load contract template:", e);
+      }
+    })();
+  }, [getAccessTokenSilently]);
+
+  const handleChange = e => {
+    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const handleMilestoneChange = (i, field, val) => {
+    setMilestones(ms => {
+      const copy = [...ms];
+      copy[i][field] = val;
+      return copy;
+    });
+  };
+
+  const handleAddMilestone = () => {
+    setMilestones(ms => [...ms, { title: "", dueDate: "", amount: "" }]);
+  };
+
+  const handleRemoveMilestone = i => {
+    if (milestones.length === 1) return;
+    setMilestones(ms => ms.filter((_, idx) => idx !== i));
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
+    setSubmitting(true);
+    setError(null);
 
-    // Build a single JSON blob with everything
-    const payload = {
-      title,
-      details,
-      requirements,
-      milestones: milestones.filter(m => m.title.trim()),
-    };
+    try {
+      // 1) create project
+      const { data: project, error: pErr } = await supabase
+        .from("projects")
+        .insert({
+          client_id: user.sub,
+          description: JSON.stringify({
+            title: formData.title,
+            details: formData.description,
+            requirements: formData.requirements,
+            budget: formData.budget,
+            deadline: formData.deadline
+          }),
+          completed: false
+        })
+        .select("id")
+        .single();
+      if (pErr) throw pErr;
 
-    const { error } = await supabase
-      .from('projects')
-      .insert({
-        client_id:   user.sub,
-        description: JSON.stringify(payload),
-        completed:   false,
-      });
+      // 2) insert milestones
+      const msToInsert = milestones
+        .filter(m => m.title && m.dueDate && m.amount)
+        .map(m => ({
+          project_id: project.id,
+          title: m.title,
+          due_date: m.dueDate,
+          amount: parseFloat(m.amount)
+        }));
+      if (msToInsert.length) {
+        const { error: mErr } = await supabase
+          .from("milestones")
+          .insert(msToInsert);
+        if (mErr) console.error("Milestones error:", mErr);
+      }
 
-    if (error) {
-      console.error('Job post submission failed:', error);
-      return;
+      // 3) create default contract
+      if (!contractTemplate) {
+        console.warn("No contract template loaded; skipping contract creation.");
+      } else {
+        const token = await getAccessTokenSilently();
+        await fetch("/api/contracts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            title: formData.title,
+            freelancerId: "",            // will be assigned later
+            contractSections: contractTemplate
+          })
+        });
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Job post submission failed:", err);
+      setError(err.message || "Submission failed");
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitted(true);
   };
 
   if (submitted) {
     return (
-      <section className="text-center my-16">
-        <h1 className="text-accent text-2xl mb-4">Job Posted!</h1>
+      <section className="text-center">
+        <h1 className="text-accent text-2xl mb-4">Job Posted Successfully</h1>
         <p>Your job is now live for freelancers to apply.</p>
+        {!embed && (
+          <button
+            className="primary-btn mt-4"
+            onClick={() => navigate("/client")}
+          >
+            Back to Dashboard
+          </button>
+        )}
       </section>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-4">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       {!embed && (
         <>
           <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
-          <p className="text-gray-400">Describe it below and your milestones will be captured.</p>
+          <p className="text-gray-400 mb-6">
+            Describe your project and attract the right freelancers
+          </p>
         </>
       )}
 
-      <label className="block">
-        <span className="text-gray-300">Job Title</span>
+      {/* Basic job fields */}
+      <label className="form-label">
+        Job Title:
         <input
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          required
           className="form-input"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
+        />
+      </label>
+
+      <label className="form-label">
+        Project Description:
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          rows="4"
+          required
+          className="form-textarea"
+        />
+      </label>
+
+      <label className="form-label">
+        Requirements:
+        <textarea
+          name="requirements"
+          value={formData.requirements}
+          onChange={handleChange}
+          rows="3"
+          className="form-textarea"
+        />
+      </label>
+
+      <label className="form-label">
+        Budget (ZAR):
+        <input
+          type="number"
+          name="budget"
+          value={formData.budget}
+          onChange={handleChange}
+          className="form-input"
           required
         />
       </label>
 
-      <label className="block">
-        <span className="text-gray-300">Description & Details</span>
-        <textarea
-          className="form-textarea"
-          rows={4}
-          value={details}
-          onChange={e => setDetails(e.target.value)}
+      <label className="form-label">
+        Deadline:
+        <input
+          type="date"
+          name="deadline"
+          value={formData.deadline}
+          onChange={handleChange}
+          className="form-input"
           required
         />
       </label>
 
-      <label className="block">
-        <span className="text-gray-300">Requirements (optional)</span>
-        <textarea
-          className="form-textarea"
-          rows={3}
-          value={requirements}
-          onChange={e => setReqs(e.target.value)}
-        />
-      </label>
-
-      <div className="border border-gray-700 rounded p-4">
-        <h3 className="text-white mb-2">Milestones</h3>
+      {/* Milestones */}
+      <div className="border border-gray-700 rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-semibold text-white mb-3">Milestones</h3>
         {milestones.map((m, i) => (
-          <div key={i} className="mb-3 p-3 bg-[#1a1a1a] rounded">
-            <div className="flex justify-between">
-              <strong className="text-white">Milestone {i+1}</strong>
+          <div
+            key={i}
+            className="mb-4 p-4 border border-gray-700 rounded bg-[#1a1a1a]"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-white font-medium">Milestone {i + 1}</h4>
               <button
                 type="button"
-                className="text-red-500 hover:text-red-400"
                 onClick={() => handleRemoveMilestone(i)}
-                disabled={milestones.length===1}
+                className="text-red-500 hover:text-red-400"
+                disabled={milestones.length === 1}
               >
                 Remove
               </button>
             </div>
-            <input
-              className="form-input mt-2"
-              placeholder="Title"
-              value={m.title}
-              onChange={e => handleMSChange(i, 'title', e.target.value)}
-              required
-            />
-            <input
-              type="date"
-              className="form-input mt-2"
-              value={m.dueDate}
-              onChange={e => handleMSChange(i, 'dueDate', e.target.value)}
-              required
-            />
-            <input
-              type="number"
-              className="form-input mt-2"
-              placeholder="Amount (ZAR)"
-              value={m.amount}
-              onChange={e => handleMSChange(i, 'amount', e.target.value)}
-              required
-            />
+
+            <label className="form-label text-sm">
+              Title
+              <input
+                type="text"
+                value={m.title}
+                onChange={e =>
+                  handleMilestoneChange(i, "title", e.target.value)
+                }
+                className="form-input"
+                required
+              />
+            </label>
+
+            <label className="form-label text-sm mt-2">
+              Amount (ZAR)
+              <input
+                type="number"
+                value={m.amount}
+                onChange={e =>
+                  handleMilestoneChange(i, "amount", e.target.value)
+                }
+                className="form-input"
+                required
+                min="1"
+              />
+            </label>
+
+            <label className="form-label text-sm mt-2">
+              Due Date
+              <input
+                type="date"
+                value={m.dueDate}
+                onChange={e =>
+                  handleMilestoneChange(i, "dueDate", e.target.value)
+                }
+                className="form-input"
+                required
+              />
+            </label>
           </div>
         ))}
+
         <button
           type="button"
-          className="primary-btn"
           onClick={handleAddMilestone}
+          className="mt-2 px-4 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-800 transition-colors"
         >
           + Add Milestone
         </button>
       </div>
 
-      <button type="submit" className="primary-btn w-full">
-        Submit Job
-      </button>
+      {error && <p className="text-red-500">{error}</p>}
+
+      {/* Form actions */}
+      <div className="flex justify-end space-x-4">
+        {!embed && (
+          <button
+            type="button"
+            onClick={() => navigate("/client")}
+            className="px-6 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-800 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-6 py-2 bg-[#1abc9c] rounded-md text-white hover:bg-[#16a085] transition-colors disabled:opacity-50"
+        >
+          {submitting ? "Posting…" : "Submit Job"}
+        </button>
+      </div>
     </form>
   );
 }
