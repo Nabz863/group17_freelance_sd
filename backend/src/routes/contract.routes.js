@@ -17,7 +17,7 @@ router.get(
   jwtCheck,
   checkRole(['client']),
   (req, res) => {
-    const { defaultContractTemplate } = require('../models/contractTemplate');
+    const { defaultContractTemplate } = require('../models/contractTemplate.model');
     res.json({ success: true, template: defaultContractTemplate });
   }
 );
