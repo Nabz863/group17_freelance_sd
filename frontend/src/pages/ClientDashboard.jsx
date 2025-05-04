@@ -8,18 +8,16 @@ import supabase from '../utils/supabaseClient';
 
 export default function ClientDashboard() {
   const { getAccessTokenSilently } = useAuth0();
-  const [projects, setProjects] = useState([]);
+  const [setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
-
-  // fetch the client's projects so we know which one to view applications for
   useEffect(() => {
     const loadProjects = async () => {
+      const userId = user.sub;
       const { data, error } = await supabase
         .from('projects')
-        .select('id')
-        .eq('client_id', /* your Auth0 user ID filter if needed */ null);
+        .select('id, title, …')
+        .eq('client_id', userId);
 
-      // if you store user ID, do .eq('client_id', user.sub) instead of null above
       if (!error && data.length > 0) {
         setProjects(data);
         setCurrentProjectId(data[0].id);
@@ -28,7 +26,6 @@ export default function ClientDashboard() {
     loadProjects();
   }, []);
 
-  // when client clicks "Assign Freelancer", hit backend to create the contract + PDF
   const handleAssign = async (freelancerId) => {
     try {
       const token = await getAccessTokenSilently();
@@ -38,7 +35,7 @@ export default function ClientDashboard() {
           projectId: currentProjectId,
           freelancerId,
           title: `Contract for project ${currentProjectId}`,
-          contractSections: [], // or fetch your template sections here
+          contractSections: [],
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
