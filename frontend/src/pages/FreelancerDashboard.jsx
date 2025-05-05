@@ -1,38 +1,25 @@
+// src/pages/FreelancerDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-
-import DashboardLayout from '../components/DashboardLayout';
-import ApplyJobSection from '../components/ApplyJobSection';
-import ChatList from '../components/ChatList';
-import ChatSection from '../components/ChatSection';
-import supabase from '../utils/supabaseClient';
+import { useAuth0 }               from '@auth0/auth0-react';
+import DashboardLayout            from '../components/DashboardLayout';
+import ApplyJobSection            from '../components/ApplyJobSection';
+import ChatList                   from '../components/ChatList';
+import ChatSection                from '../components/ChatSection';
 
 export default function FreelancerDashboard() {
   const { user } = useAuth0();
-  const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [activeChat, setActiveChat] = useState(null);
+
   const menuItems = [
     'Account Settings',
     'Clients',
-    'Inbox',
+    'Inbox',            // ← here’s our single messaging entry
     'Payments',
     'Documents',
-    'Available Jobs',
-    'Chat',
+    'Available Jobs'
   ];
 
-  useEffect(() => {
-    (async () => {
-      if (!user?.sub) return;
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, description')
-        .or(`client_id.eq.${user.sub},freelancer_id.eq.${user.sub}`);
-      if (!error && data?.length) {
-        setCurrentProjectId(data[0].id);
-      }
-    })();
-  }, [user]);
-
+  // This maps the active sidebar label to its content
   const contentMap = {
     'Account Settings': (
       <>
@@ -47,10 +34,14 @@ export default function FreelancerDashboard() {
       </>
     ),
     Inbox: (
-      <>
-        <h1>Inbox</h1>
-        <p>Chat with clients or view messages.</p>
-      </>
+      <div className="flex h-full">
+        <ChatList onSelect={setActiveChat} />
+        <div className="flex-1 p-4">
+          {activeChat
+            ? <ChatSection projectId={activeChat} />
+            : <p className="text-gray-500">Select a chat to begin messaging.</p>}
+        </div>
+      </div>
     ),
     Payments: (
       <>
@@ -64,13 +55,7 @@ export default function FreelancerDashboard() {
         <p>Manage project documents and uploads.</p>
       </>
     ),
-    'Available Jobs': <ApplyJobSection />,
-    Chat: (
-      <div className="flex h-full">
-        <ChatList onSelect={setCurrentProjectId} />
-        <ChatSection projectId={currentProjectId} />
-      </div>
-    ),
+    'Available Jobs': <ApplyJobSection />
   };
 
   return (
