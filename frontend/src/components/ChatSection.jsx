@@ -116,3 +116,4 @@ export default function ChatSection({ projectId, currentUserId }) {
     </section>
   );
 }
+
