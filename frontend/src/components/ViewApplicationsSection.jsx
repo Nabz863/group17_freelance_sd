@@ -10,7 +10,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       try {
         const { data, error } = await supabase
           .from('applications')
-          .select('*, freelancer(*)')
+          .select('*, freelancers(*)')
           .eq('projectid', projectId);
 
         if (error) throw error;
