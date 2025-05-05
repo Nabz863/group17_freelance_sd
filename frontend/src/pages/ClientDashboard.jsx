@@ -1,44 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { toast } from 'react-toastify';
-
+import React from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import supabase from '../utils/supabaseClient';
-import { createContract } from '../services/contractAPI';
 
 export default function ClientDashboard() {
-  const { user } = useAuth0();
-  const [currentProjectId, setCurrentProjectId] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      if (!user?.sub) return;
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('client_id', user.sub);
-      if (!error && data.length) {
-        setCurrentProjectId(data[0].id);
-      }
-    })();
-  }, [user]);
-
-  const handleAssign = async freelancerId => {
-    try {
-      await createContract({
-        projectId: currentProjectId,
-        title: `Contract for project ${currentProjectId}`,
-        freelancerId
-      });
-      toast.success('Contract created – freelancer notified');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to create contract');
-    }
-  };
-
   const menuItems = [
     'Account Settings',
     'Freelancers',
@@ -81,14 +46,7 @@ export default function ClientDashboard() {
       </>
     ),
     'Post a Job': <PostJobForm embed={false} />,
-    Applications: currentProjectId ? (
-      <ViewApplicationsSection
-        projectId={currentProjectId}
-        onAssign={handleAssign}
-      />
-    ) : (
-      <p>Loading applications…</p>
-    )
+    Applications: <ViewApplicationsSection />
   };
 
   return (
