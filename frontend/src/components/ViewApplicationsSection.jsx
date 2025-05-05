@@ -47,7 +47,7 @@ export default function ViewApplicationsSection() {
     return <p className="text-red-500">Error: {error}</p>;
   }
 
-  if (applications.length === 0) {
+  if (!applications.length) {
     return <p className="text-white">You haven’t applied to any jobs yet.</p>;
   }
 
@@ -58,7 +58,7 @@ export default function ViewApplicationsSection() {
           Your Applications
         </h2>
       </header>
-      <ul role="list" className="space-y-4">
+      <ul className="space-y-4">
         {applications.map(({ applicationid, status, projects }) => (
           <li key={applicationid}>
             <article className="p-4 bg-gray-800 rounded-lg border border-green-600">
@@ -76,3 +76,4 @@ export default function ViewApplicationsSection() {
     </section>
   );
 }
+
