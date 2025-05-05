@@ -1,146 +1,79 @@
-import { useEffect, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import supabase from "../utils/supabaseClient";
+// src/components/ViewApplicationsSection.jsx
+
+import React, { useEffect, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import supabase from '../utils/supabaseClient';
 
 export default function ViewApplicationsSection() {
-  const { user } = useAuth0();
-  const [jobs, setJobs] = useState([]);
-  const [expanded, setExpanded] = useState({});
-  const [assigning, setAssigning] = useState(null);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth0();
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
     const fetchApplications = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("projects")
+      const { data, error: fetchError } = await supabase
+        .from('applications')
         .select(`
-          id,
-          description,
-          freelancer_id,
-          applications (
-            freelancerid,
-            status,
-            freelancer:freelancerid (
-              profile
-            )
+          applicationid,
+          status,
+          projects (
+            projectid,
+            description,
+            completed
           )
         `)
-        .eq("client_id", user?.sub);
+        .eq('freelancerid', user.sub);
 
-      if (error) {
-        console.error("Error loading job applications:", error);
+      if (fetchError) {
+        setError(fetchError.message);
       } else {
-        console.log("Fetched jobs with applications:", data);
-        setJobs(data);
+        setApplications(data);
       }
-
       setLoading(false);
     };
 
-    if (user) fetchApplications();
-  }, [user]);
+    fetchApplications();
+  }, [authLoading, isAuthenticated, user.sub]);
 
-  const handleAssign = async (projectId, freelancerID) => {
-    setAssigning(projectId);
-    const { error } = await supabase
-      .from("projects")
-      .update({ freelancer_id: freelancerID })
-      .eq("id", projectId);
+  if (authLoading || loading) {
+    return <p className="text-white">Loading your applications…</p>;
+  }
 
-    if (error) {
-      console.error("Error assigning freelancer:", error);
-    } else {
-      setJobs((prev) =>
-        prev.map((job) =>
-          job.id === projectId
-            ? { ...job, freelancer_id: freelancerID }
-            : job
-        )
-      );
-    }
+  if (error) {
+    return <p className="text-red-500">Error: {error}</p>;
+  }
 
-    setAssigning(null);
-  };
-
-  const toggleExpanded = (projectId) => {
-    setExpanded((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
-  };
+  if (!applications.length) {
+    return <p className="text-white">You haven’t applied to any jobs yet.</p>;
+  }
 
   return (
-    <section className="dashboard-content">
-      <h1>Job Applications</h1>
-      {loading ? (
-        <p className="mt-4 text-gray-400">Loading applications...</p>
-      ) : jobs.length === 0 ? (
-        <p className="mt-4 text-gray-400">No jobs found.</p>
-      ) : (
-        jobs.map((job) => {
-          const desc = typeof job.description === "string"
-            ? JSON.parse(job.description || "{}")
-            : job.description;
-
-          return (
-            <div key={job.id} className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
-              <header className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg text-accent font-semibold">
-                    {desc?.title || "Untitled Job"}
-                  </h2>
-                  <p className="text-gray-400 text-sm">{desc?.details || "No job description provided."}</p>
-                </div>
-                <button
-                  className="primary-btn"
-                  onClick={() => toggleExpanded(job.id)}
-                >
-                  {expanded[job.id] ? "Hide Applicants" : "View Applicants"}
-                </button>
-              </header>
-
-              {expanded[job.id] && (
-                <ul className="mt-4 space-y-4">
-                  {job.applications.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No applicants yet.</p>
-                  ) : (
-                    job.applications.map((app) => {
-                      let profile = app.freelancer?.profile;
-                      if (typeof profile === "string") {
-                        try {
-                          profile = JSON.parse(profile);
-                        } catch {
-                          profile = {};
-                        }
-                      }
-
-                      return (
-                        <li key={app.freelancerid} className="p-3 rounded bg-[#222]">
-                          <p className="text-white font-bold">
-                            {profile?.firstName || "Unnamed"} {profile?.lastName || ""}
-                          </p>
-                          <p className="text-sm text-gray-400">{profile?.profession || "Unknown Profession"}</p>
-                          <p className="text-sm text-gray-400">{profile?.email || "No email"}</p>
-
-                          <button
-                            className={`primary-btn mt-2 ${job.freelancer_id === app.freelancerid || assigning === job.id ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={job.freelancer_id === app.freelancerid || assigning === job.id}
-                            onClick={() => handleAssign(job.id, app.freelancerid)}
-                          >
-                            {job.freelancer_id === app.freelancerid
-                              ? "Assigned"
-                              : assigning === job.id
-                              ? "Assigning..."
-                              : "Assign Freelancer"}
-                          </button>
-                        </li>
-                      );
-                    })
-                  )}
-                </ul>
+    <section aria-labelledby="applications-heading" className="p-4">
+      <header>
+        <h2 id="applications-heading" className="text-2xl font-semibold text-white mb-4">
+          Your Applications
+        </h2>
+      </header>
+      <ul className="space-y-4">
+        {applications.map(({ applicationid, status, projects }) => (
+          <li key={applicationid}>
+            <article className="p-4 bg-gray-800 rounded-lg border border-green-600">
+              <h3 className="text-xl font-medium text-green-400">
+                {projects.description}
+              </h3>
+              <p className="text-white">Status: {status}</p>
+              {projects.completed && (
+                <p className="text-green-300">Project Completed</p>
               )}
-            </div>
-          );
-        })
-      )}
+            </article>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
+

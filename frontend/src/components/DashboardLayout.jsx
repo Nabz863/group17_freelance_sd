@@ -28,7 +28,6 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
 
   return (
     <main className="flex min-h-screen text-white font-main relative bg-[#0e0e0e]">
-      {/* Sidebar */}
       <nav
         className={`dashboard-sidebar ${sidebarOpen ? "" : " hidden"}`}
         aria-label="Sidebar"
@@ -47,7 +46,6 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
         ))}
       </nav>
 
-      {/* Hamburger */}
       <button
         className="dashboard-hamburger"
         aria-label="Toggle navigation menu"
@@ -59,11 +57,9 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
         <span></span>
       </button>
 
-      {/* Main Content */}
       <section className="dashboard-content animate-fadeInUp">
         {contentMap[activeSection] || <p>No content found.</p>}
       </section>
     </main>
   );
 }
-
