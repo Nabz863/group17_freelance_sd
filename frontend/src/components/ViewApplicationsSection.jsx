@@ -4,12 +4,12 @@ import supabase from '../utils/supabaseClient';
 
 export default function ViewApplicationsSection({ projectId, onAssign }) {
   const [applications, setApplications] = useState([]);
-  const [visible, setVisible]         = useState(true);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+  const [visible, setVisible]           = useState(true);
 
   useEffect(() => {
-    const fetchApps = async () => {
+    async function fetchApps() {
       if (!projectId) {
         setApplications([]);
         setLoading(false);
@@ -19,7 +19,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
       setLoading(true);
 
       try {
-        // NOTE: column names and relationship names must match your schema exactly
+        // Join against your "freelancers" table
         const { data, error: fetchError } = await supabase
           .from('applications')
           .select('*, freelancers(*)')
@@ -28,12 +28,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
         if (fetchError) throw fetchError;
         setApplications(data || []);
       } catch (err) {
-        console.error('Error loading applications:', err);
+        console.error('Error fetching applications:', err);
         setError(err.message || 'Failed to load applications');
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchApps();
   }, [projectId]);
@@ -59,12 +59,14 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
 
           <ul className="mt-4 space-y-4">
             {applications.map(app => {
-              // supabase returns app.freelancers as an array
-              const profStr = app.freelancers?.[0]?.profile;
-              let profile   = {};
-              if (profStr) {
+              // supabase returns `freelancers` as an array
+              const fl = app.freelancers?.[0] || {};
+              let profile = {};
+              if (fl.profile) {
                 try {
-                  profile = typeof profStr === 'string' ? JSON.parse(profStr) : profStr;
+                  profile = typeof fl.profile === 'string'
+                    ? JSON.parse(fl.profile)
+                    : fl.profile;
                 } catch {
                   profile = {};
                 }
@@ -73,17 +75,12 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
               return (
                 <li key={app.applicationid} className="p-3 rounded bg-[#222]">
                   <p className="text-white font-bold">
-                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Anonymous'}
+                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
                   </p>
-                  <p className="text-sm text-gray-400">
-                    {profile.profession || 'No profession listed'}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {profile.email      || 'No email provided'}
-                  </p>
+                  <p className="text-sm text-gray-400">{profile.profession || 'No profession listed'}</p>
+                  <p className="text-sm text-gray-400">{profile.email      || 'No email provided'}</p>
                   <button
                     className="primary-btn mt-2"
-                    disabled={!app.freelancerid}
                     onClick={() => onAssign(app.freelancerid)}
                   >
                     Assign Freelancer
