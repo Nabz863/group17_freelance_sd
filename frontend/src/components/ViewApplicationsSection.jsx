@@ -3,41 +3,38 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 
 export default function ViewApplicationsSection({ projectId, onAssign }) {
-  const [apps, setApps]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
-  const [visible, setVisible]   = useState(true);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+  const [visible, setVisible]       = useState(true);
 
   useEffect(() => {
-    if (!projectId) {
-      setApps([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
+    const fetchApps = async () => {
+      if (!projectId) {
+        setApplications([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
 
-    supabase
-      .from('applications')
-      .select(`
-        applicationID,
-        coverLetter,
-        status,
-        freelancers:user_id (
-          user_id,
-          profile
-        )
-      `)
-      .eq('projectID', projectId)
-      .then(({ data, error: fetchError }) => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('applications')
+          .select('*, freelancers(*)')
+          .eq('projectid', projectId);
+
         if (fetchError) throw fetchError;
-        setApps(data || []);
-      })
-      .catch(err => {
+        setApplications(data || []);
+      } catch (err) {
         console.error('Error fetching applications:', err);
-        setError(err.message || 'Failed to load applications');
-      })
-      .finally(() => setLoading(false));
+        setError('Failed to load applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApps();
   }, [projectId]);
 
   if (!visible) return null;
@@ -48,7 +45,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
     <section className="dashboard-content">
       <h1>Job Applications</h1>
 
-      {apps.length === 0 ? (
+      {applications.length === 0 ? (
         <p className="text-gray-400">No applications yet.</p>
       ) : (
         <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
@@ -60,9 +57,13 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
           </header>
 
           <ul className="mt-4 space-y-4">
-            {apps.map(app => {
-              const fl = app.freelancers?.[0] || {};
+            {applications.map(app => {
+              // supabase embeds an array named "freelancers"
+              const arr = app.freelancers || [];
+              const fl  = arr[0] || {};
               let profile = {};
+
+              // profile stored as JSON string or object
               if (fl.profile) {
                 try {
                   profile = typeof fl.profile === 'string'
@@ -74,10 +75,10 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
               }
 
               return (
-                <li key={app.applicationID} className="p-3 rounded bg-[#222]">
+                <li key={app.applicationid} className="p-3 rounded bg-[#222]">
                   <p className="text-white font-bold">
                     {[
-                      profile.firstName,
+                      profile.firstName || profile.fullName,
                       profile.lastName
                     ].filter(Boolean).join(' ') || 'Anonymous'}
                   </p>
