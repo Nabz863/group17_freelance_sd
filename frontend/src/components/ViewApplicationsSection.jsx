@@ -17,7 +17,15 @@ export default function ViewApplicationsSection() {
       setLoading(true);
       const { data, error: fetchError } = await supabase
         .from('applications')
-        .select('applicationid, status, projects ( projectid, description, completed )')
+        .select(`
+          applicationid,
+          status,
+          projects (
+            projectid,
+            description,
+            completed
+          )
+        `)
         .eq('freelancerid', user.sub);
 
       if (fetchError) {
@@ -29,18 +37,18 @@ export default function ViewApplicationsSection() {
     };
 
     fetchApplications();
-  }, [authLoading, isAuthenticated, user]);
+  }, [authLoading, isAuthenticated, user.sub]);
 
   if (authLoading || loading) {
-    return <p className="text-white">Loading your applications...</p>;
+    return <p className="text-white">Loading your applications…</p>;
   }
 
   if (error) {
-    return <p className="text-red-500">Error loading applications: {error}</p>;
+    return <p className="text-red-500">Error: {error}</p>;
   }
 
   if (applications.length === 0) {
-    return <p className="text-white">You have no applications.</p>;
+    return <p className="text-white">You haven’t applied to any jobs yet.</p>;
   }
 
   return (
@@ -52,20 +60,17 @@ export default function ViewApplicationsSection() {
       </header>
       <ul role="list" className="space-y-4">
         {applications.map(({ applicationid, status, projects }) => (
-          <article
-            key={applicationid}
-            className="p-4 bg-gray-800 rounded-lg border border-green-600"
-          >
-            <header>
+          <li key={applicationid}>
+            <article className="p-4 bg-gray-800 rounded-lg border border-green-600">
               <h3 className="text-xl font-medium text-green-400">
                 {projects.description}
               </h3>
-            </header>
-            <p className="text-white">Status: {status}</p>
-            {projects.completed && (
-              <p className="text-green-300">Project Completed</p>
-            )}
-          </article>
+              <p className="text-white">Status: {status}</p>
+              {projects.completed && (
+                <p className="text-green-300">Project Completed</p>
+              )}
+            </article>
+          </li>
         ))}
       </ul>
     </section>
