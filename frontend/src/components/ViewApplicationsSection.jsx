@@ -3,39 +3,45 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 
 export default function ViewApplicationsSection({ projectId, onAssign }) {
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [visible, setVisible]           = useState(true);
+  const [apps, setApps]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    async function fetchApps() {
-      if (!projectId) {
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
-      setError(null);
-      setLoading(true);
-
-      try {
-        // Join against your "freelancers" table
-        const { data, error: fetchError } = await supabase
-          .from('applications')
-          .select('*, freelancers(*)')
-          .eq('projectid', projectId);
-
-        if (fetchError) throw fetchError;
-        setApplications(data || []);
-      } catch (err) {
-        console.error('Error fetching applications:', err);
-        setError(err.message || 'Failed to load applications');
-      } finally {
-        setLoading(false);
-      }
+    if (!projectId) {
+      setApps([]);
+      setLoading(false);
+      return;
     }
 
-    fetchApps();
+    setLoading(true);
+    setError(null);
+
+    supabase
+      .from('applications')
+      // join to freelancers table via the foreign key relationship
+      .select(`
+        applicationid,
+        coverLetter,
+        status,
+        freelancers (
+          user_id,
+          profile
+        )
+      `)
+      .eq('projectid', projectId)
+      .then(({ data, error: fetchError }) => {
+        if (fetchError) throw fetchError;
+        setApps(data || []);
+      })
+      .catch(err => {
+        console.error('Error fetching applications:', err);
+        setError(err.message || 'Failed to load applications');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [projectId]);
 
   if (!visible) return null;
@@ -46,7 +52,7 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
     <section className="dashboard-content">
       <h1>Job Applications</h1>
 
-      {applications.length === 0 ? (
+      {apps.length === 0 ? (
         <p className="text-gray-400">No applications yet.</p>
       ) : (
         <div className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]">
@@ -58,8 +64,8 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
           </header>
 
           <ul className="mt-4 space-y-4">
-            {applications.map(app => {
-              // supabase returns `freelancers` as an array
+            {apps.map(app => {
+              // supabase returns an array under "freelancers"
               const fl = app.freelancers?.[0] || {};
               let profile = {};
               if (fl.profile) {
@@ -75,13 +81,60 @@ export default function ViewApplicationsSection({ projectId, onAssign }) {
               return (
                 <li key={app.applicationid} className="p-3 rounded bg-[#222]">
                   <p className="text-white font-bold">
-                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                    {[
+                      profile.firstName,
+                      profile.lastName
+                    ].filter(Boolean).join(' ') || 'Anonymous'}
                   </p>
-                  <p className="text-sm text-gray-400">{profile.profession || 'No profession listed'}</p>
-                  <p className="text-sm text-gray-400">{profile.email      || 'No email provided'}</p>
+                  <p className="text-sm text-gray-400">
+                    {profile.profession || 'No profession listed'}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.specialization
+                      ? `Specialization: ${profile.specialization}`
+                      : ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.experience
+                      ? `Experience: ${profile.experience} yrs`
+                      : ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.hourly_rate
+                      ? `Rate: ${profile.hourly_rate}`
+                      : ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.location || ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.availability || ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.phone || ''}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {profile.email || 'No email provided'}
+                  </p>
+                  {profile.portfolio_url && (
+                    <p className="text-sm text-accent underline">
+                      <a href={profile.portfolio_url} target="_blank" rel="noreferrer">
+                        Portfolio
+                      </a>
+                    </p>
+                  )}
+                  {/* CV/download link if you store it under profile.cv_url */}
+                  {profile.cv_url && (
+                    <button
+                      className="primary-btn mt-2"
+                      onClick={() => window.open(profile.cv_url, '_blank')}
+                    >
+                      View CV
+                    </button>
+                  )}
                   <button
                     className="primary-btn mt-2"
-                    onClick={() => onAssign(app.freelancerid)}
+                    onClick={() => onAssign(fl.user_id)}
                   >
                     Assign Freelancer
                   </button>
