@@ -23,7 +23,7 @@ export default function ViewApplicationsSection() {
             freelancerid,
             status,
             coverLetter,
-            freelancers:freelancerid (
+            freelancer:freelancerid (
               profile
             )
           )
