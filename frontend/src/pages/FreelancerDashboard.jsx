@@ -1,5 +1,5 @@
 // src/pages/FreelancerDashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth0 }               from '@auth0/auth0-react';
 import DashboardLayout            from '../components/DashboardLayout';
 import ApplyJobSection            from '../components/ApplyJobSection';
@@ -7,7 +7,6 @@ import ChatList                   from '../components/ChatList';
 import ChatSection                from '../components/ChatSection';
 
 export default function FreelancerDashboard() {
-  const { user } = useAuth0();
   const [activeChat, setActiveChat] = useState(null);
 
   const menuItems = [
