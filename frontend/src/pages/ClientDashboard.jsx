@@ -1,24 +1,30 @@
 // src/pages/ClientDashboard.jsx
-import React, { useState, useEffect } from 'react';
-import { useAuth0 }          from '@auth0/auth0-react';
-import { toast }             from 'react-toastify';
 
-import DashboardLayout       from '../components/DashboardLayout';
-import PostJobForm           from './PostJobForm';
+import React, { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { toast } from 'react-toastify';
+import DashboardLayout from '../components/DashboardLayout';
+import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import ChatList              from '../components/ChatList';
-import ChatSection           from '../components/ChatSection';
-import supabase              from '../utils/supabaseClient';
-import { createContract }    from '../services/contractAPI';
+import ChatList from '../components/ChatList';
+import ChatSection from '../components/ChatSection';
+import supabase from '../utils/supabaseClient';
+import { createContract } from '../services/contractAPI';
 
 export default function ClientDashboard() {
-  const { user } = useAuth0();
+  const { user, isLoading, isAuthenticated } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
 
-  // load your first project for Applications tab
+  if (isLoading) {
+    return <p className="mt-4 text-gray-400">Loading auth…</p>;
+  }
+  if (!isAuthenticated) {
+    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
+  }
+
   useEffect(() => {
-    if (!user?.sub) return;
+    if (!user.sub) return;
     (async () => {
       const { data, error } = await supabase
         .from('projects')
@@ -29,9 +35,9 @@ export default function ClientDashboard() {
         setCurrentProjectId(data[0].id);
       }
     })();
-  }, [user]);
+  }, [user.sub]);
 
-  const handleAssign = async (freelancerId) => {
+  const handleAssign = async freelancerId => {
     try {
       await createContract({
         projectId: currentProjectId,
@@ -68,16 +74,17 @@ export default function ClientDashboard() {
         <p>View or manage freelancers you’ve worked with.</p>
       </>
     ),
-    // ← NEW inbox combination
     Inbox: (
       <div className="flex h-full">
-        <ChatList onSelect={setActiveChat} />
+        <ChatList
+          userId={user.sub}
+          isClient={true}
+          onSelect={setActiveChat}
+        />
         <div className="flex-1 p-4">
-          {activeChat ? (
-            <ChatSection projectId={activeChat} />
-          ) : (
-            <p className="text-gray-500">Select a chat to begin messaging.</p>
-          )}
+          {activeChat
+            ? <ChatSection projectId={activeChat} currentUserId={user.sub} />
+            : <p className="text-gray-500">Select a chat to begin messaging.</p>}
         </div>
       </div>
     ),
@@ -106,7 +113,7 @@ export default function ClientDashboard() {
 
   return (
     <DashboardLayout
-      role="Clients"
+      role="Client"
       menuItems={menuItems}
       contentMap={contentMap}
     />
