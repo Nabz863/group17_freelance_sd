@@ -14,21 +14,21 @@ export default function ViewApplicationsSection() {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from('projects')
-        .select(`
-            id,
-            description,
-            freelancer_id,
-            applications (
-              freelancerid,
-              status,
-              coverletter,      ← CORRECT
-              freelancer:freelancerid (
-                profile
-              )
-            )
-          `)
-        .eq('client_id', user?.sub);
+      .from('projects')
+      .select(`
+        id,
+        description,
+        freelancer_id,
+        applications (
+          freelancerid,
+          status,
+          coverletter,
+          freelancer:freelancerid (
+            profile
+          )
+        )
+      `)
+      .eq('client_id', user.sub);
 
       if (error) {
         console.error('Error loading job applications:', error);
