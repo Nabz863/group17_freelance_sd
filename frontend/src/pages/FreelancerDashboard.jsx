@@ -1,68 +1,39 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+
 import DashboardLayout from '../components/DashboardLayout';
 import ApplyJobSection from '../components/ApplyJobSection';
+import ChatList from '../components/ChatList';
 import ChatSection from '../components/ChatSection';
-import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
 
 export default function FreelancerDashboard() {
   const { user } = useAuth0();
-  const [setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      if (!user?.sub) return;
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, title, created_at')
-        .eq('freelancer_id', user.sub)
-        .order('created_at', { ascending: false });
-      if (!error) {
-        setProjects(data);
-        if (data.length) setCurrentProjectId(data[0].id);
-      }
-    })();
-  }, [user]);
-
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
-  const [activeSection, setActiveSection] = useState('Account Settings');
-
-  const toggleSidebar = () => setSidebarOpen(v => !v);
-  const handleSectionClick = (e, label) => {
-    setActiveSection(label);
-    const btn = e.currentTarget;
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    const rect = btn.getBoundingClientRect();
-    const size = Math.max(btn.offsetWidth, btn.offsetHeight) * 0.8;
-    const x =
-      (e.touches ? e.touches[0].clientX : e.clientX) -
-      rect.left -
-      size / 2;
-    const y =
-      (e.touches ? e.touches[0].clientY : e.clientY) -
-      rect.top -
-      size / 2;
-    ripple.style.width = ripple.style.height = `${size}px`;
-    ripple.style.left = `${x}px`;
-    ripple.style.top = `${y}px`;
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 520);
-
-    if (window.innerWidth < 900) setSidebarOpen(false);
-  };
-
-  const freelancerSections = [
+  const menuItems = [
     'Account Settings',
     'Clients',
     'Inbox',
     'Payments',
     'Documents',
     'Available Jobs',
+    'Chat',
   ];
 
-  const sectionContent = {
+  useEffect(() => {
+    (async () => {
+      if (!user?.sub) return;
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, description')
+        .or(`client_id.eq.${user.sub},freelancer_id.eq.${user.sub}`);
+      if (!error && data?.length) {
+        setCurrentProjectId(data[0].id);
+      }
+    })();
+  }, [user]);
+
+  const contentMap = {
     'Account Settings': (
       <>
         <h1>Account Settings</h1>
@@ -72,13 +43,14 @@ export default function FreelancerDashboard() {
     Clients: (
       <>
         <h1>Clients</h1>
-        <p>View your past clients.</p>
+        <p>View clients and manage communications.</p>
       </>
     ),
-    Inbox: currentProjectId ? (
-      <ChatSection projectId={currentProjectId} />
-    ) : (
-      <p>Select a project to open its chat.</p>
+    Inbox: (
+      <>
+        <h1>Inbox</h1>
+        <p>Chat with clients or view messages.</p>
+      </>
     ),
     Payments: (
       <>
@@ -89,48 +61,23 @@ export default function FreelancerDashboard() {
     Documents: (
       <>
         <h1>Documents</h1>
-        <p>Manage your uploads.</p>
+        <p>Manage project documents and uploads.</p>
       </>
     ),
     'Available Jobs': <ApplyJobSection />,
+    Chat: (
+      <div className="flex h-full">
+        <ChatList onSelect={setCurrentProjectId} />
+        <ChatSection projectId={currentProjectId} />
+      </div>
+    ),
   };
 
   return (
-    <main className="flex h-screen w-full bg-[#0e0e0e] text-white font-main relative">
-      <button
-        className="dashboard-hamburger"
-        aria-label="Toggle navigation menu"
-        onClick={toggleSidebar}
-        type="button"
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
-      <nav
-        className={`dashboard-sidebar ${sidebarOpen ? '' : ' hidden'}`}
-        aria-label="Sidebar"
-      >
-        <h2>Freelancers</h2>
-        {freelancerSections.map(label => (
-          <button
-            key={label}
-            className={`dashboard-sidebar-btn${
-              activeSection === label ? ' selected' : ''
-            }`}
-            onClick={e => handleSectionClick(e, label)}
-            onTouchStart={e => handleSectionClick(e, label)}
-            type="button"
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-
-      <section className="dashboard-content animate-fadeInUp">
-        {sectionContent[activeSection]}
-      </section>
-    </main>
+    <DashboardLayout
+      role="Freelancers"
+      menuItems={menuItems}
+      contentMap={contentMap}
+    />
   );
 }

@@ -1,37 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { toast } from 'react-toastify';
+
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import ChatSection from '../components/ChatSection';
 import supabase from '../utils/supabaseClient';
+import { createContract } from '../services/contractAPI';
 
 export default function ClientDashboard() {
   const { user } = useAuth0();
-  const [setProjects] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   useEffect(() => {
-    (async () => {
+    async function loadProjects() {
       if (!user?.sub) return;
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, created_at')
-        .eq('client_id', user.sub)
-        .order('created_at', { ascending: false });
-      if (!error) {
+        .select('id, title')
+        .eq('client_id', user.sub);
+      if (!error && data) {
         setProjects(data);
-        if (data.length) setCurrentProjectId(data[0].id);
+        if (!currentProjectId && data.length) {
+          setCurrentProjectId(data[0].id);
+        }
       }
-    })();
-  }, [user]);
+    }
+    loadProjects();
+  }, [user, setProjects]);
 
   const handleAssign = async (freelancerId) => {
-    const { error } = await supabase
-      .from('projects')
-      .update({ freelancer_id: freelancerId })
-      .eq('id', currentProjectId);
-    if (error) console.error('Error assigning freelancer:', error);
+    try {
+      await createContract({
+        projectId: currentProjectId,
+        title: `Contract for project ${currentProjectId}`,
+        freelancerId
+      });
+      toast.success('Contract created – freelancer notified');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create contract');
+    }
   };
 
   const menuItems = [
@@ -57,10 +67,11 @@ export default function ClientDashboard() {
         <p>View or manage freelancers you’ve worked with.</p>
       </>
     ),
-    Inbox: currentProjectId ? (
-      <ChatSection projectId={currentProjectId} />
-    ) : (
-      <p>Loading chats…</p>
+    Inbox: (
+      <>
+        <h1>Inbox</h1>
+        <p>Your messages with freelancers.</p>
+      </>
     ),
     Payments: (
       <>
