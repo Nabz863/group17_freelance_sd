@@ -20,7 +20,7 @@ export default function ViewApplicationsSection() {
           description,
           freelancer_id,
           applications (
-            freelancerID,
+            freelancerid,
             status,
             coverLetter,
             freelancer:freelancerID (
