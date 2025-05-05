@@ -8,35 +8,37 @@ export default function ChatSection({ projectId, currentUserId }) {
   const [newText, setNewText] = useState('');
   const bottomRef = useRef(null);
 
-  // 1) Load existing messages
-  useEffect(() => {
+  // Helper to load all messages for this project
+  const loadMessages = async () => {
     if (!projectId) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('id, sender_id, receiver_id, text, timestamp')
-        .eq('project_id', projectId)
-        .order('timestamp', { ascending: true });
-      if (error) console.error('Load messages error:', error);
-      else setMessages(data);
-    })();
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, sender_id, receiver_id, text, timestamp')
+      .eq('project_id', projectId)
+      .order('timestamp', { ascending: true });
+    if (error) {
+      console.error('Load messages error:', error);
+    } else {
+      console.log('Fetched messages:', data);
+      setMessages(data);
+    }
+  };
+
+  // Initial fetch when project changes
+  useEffect(() => {
+    loadMessages();
   }, [projectId]);
 
-  // 2) Subscribe to new messages
+  // Subscribe to new inserts
   useEffect(() => {
     if (!projectId) return;
-
     const channel = supabase
-      .channel('public:messages')                                // any unique name
+      .channel('public:messages')
       .on(
-        'postgres_changes',                                      // Realtime Postgres changes
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `project_id=eq.${projectId}`
-        },
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `project_id=eq.${projectId}` },
         ({ new: inserted }) => {
+          console.log('Realtime insert:', inserted);
           setMessages(msgs => [...msgs, inserted]);
         }
       )
@@ -47,27 +49,33 @@ export default function ChatSection({ projectId, currentUserId }) {
     };
   }, [projectId]);
 
-  // 3) Auto-scroll on new messages
+  // Scroll down on every message update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 4) Sending
+  // Send and immediately display the new message
   const sendMessage = async () => {
     const text = newText.trim();
-    if (!text) return;
+    if (!text || !projectId) return;
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
       .from('messages')
       .insert({
         project_id: projectId,
         sender_id: currentUserId,
         receiver_id: null,
         text
-      });
+      })
+      .select('id, sender_id, receiver_id, text, timestamp');
 
-    if (error) console.error('Send message error:', error);
-    else setNewText('');
+    if (error) {
+      console.error('Send message error:', error);
+    } else if (inserted && inserted.length) {
+      console.log('Inserted message:', inserted[0]);
+      setMessages(prev => [...prev, inserted[0]]);
+      setNewText('');
+    }
   };
 
   return (
