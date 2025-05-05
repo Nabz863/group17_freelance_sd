@@ -21,7 +21,7 @@ export default function ViewApplicationsSection() {
           applicationid,
           status,
           projects (
-            projectid,
+            id,
             description,
             completed
           )
@@ -47,7 +47,7 @@ export default function ViewApplicationsSection() {
     return <p className="text-red-500">Error: {error}</p>;
   }
 
-  if (!applications.length) {
+  if (applications.length === 0) {
     return <p className="text-white">You haven’t applied to any jobs yet.</p>;
   }
 
@@ -76,4 +76,3 @@ export default function ViewApplicationsSection() {
     </section>
   );
 }
-
