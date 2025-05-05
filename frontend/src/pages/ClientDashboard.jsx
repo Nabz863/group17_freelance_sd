@@ -12,19 +12,13 @@ import supabase from '../utils/supabaseClient';
 import { createContract } from '../services/contractAPI';
 
 export default function ClientDashboard() {
-  const { user, isLoading, isAuthenticated } = useAuth0();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
 
-  if (isLoading) {
-    return <p className="mt-4 text-gray-400">Loading auth…</p>;
-  }
-  if (!isAuthenticated) {
-    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
-  }
-
+  // ⚓ Always call hooks at the top level
   useEffect(() => {
-    if (!user.sub) return;
+    if (!user?.sub) return;
     (async () => {
       const { data, error } = await supabase
         .from('projects')
@@ -35,9 +29,9 @@ export default function ClientDashboard() {
         setCurrentProjectId(data[0].id);
       }
     })();
-  }, [user.sub]);
+  }, [user?.sub]);
 
-  const handleAssign = async freelancerId => {
+  const handleAssign = async (freelancerId) => {
     try {
       await createContract({
         projectId: currentProjectId,
@@ -50,6 +44,14 @@ export default function ClientDashboard() {
       toast.error('Failed to create contract');
     }
   };
+
+  // Early returns for loading/auth
+  if (authLoading) {
+    return <p className="mt-4 text-gray-400">Loading auth…</p>;
+  }
+  if (!isAuthenticated) {
+    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
+  }
 
   const menuItems = [
     'Account Settings',
@@ -82,9 +84,11 @@ export default function ClientDashboard() {
           onSelect={setActiveChat}
         />
         <div className="flex-1 p-4">
-          {activeChat
-            ? <ChatSection projectId={activeChat} currentUserId={user.sub} />
-            : <p className="text-gray-500">Select a chat to begin messaging.</p>}
+          {activeChat ? (
+            <ChatSection projectId={activeChat} currentUserId={user.sub} />
+          ) : (
+            <p className="text-gray-500">Select a chat to begin messaging.</p>
+          )}
         </div>
       </div>
     ),
