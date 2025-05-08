@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>0/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
@@ -89,7 +89,38 @@
 <a name='L24'></a><a href='#L24'>24</a>
 <a name='L25'></a><a href='#L25'>25</a>
 <a name='L26'></a><a href='#L26'>26</a>
-<a name='L27'></a><a href='#L27'>27</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -97,58 +128,60 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import axios from 'axios';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import API from '../utils/api';
 &nbsp;
+// Fetch the default contract template
 export async function <span class="fstat-no" title="function not covered" >fetchContractTemplate(</span>) {
-  const { data } = <span class="cstat-no" title="statement not covered" >await axios.get('/api/contracts/template');</span>
-<span class="cstat-no" title="statement not covered" >  return data.template;</span>
+  const { data } = <span class="cstat-no" title="statement not covered" >await API.get('/contracts/template');</span>
+<span class="cstat-no" title="statement not covered" >  if (data?.template?.sections) {</span>
+<span class="cstat-no" title="statement not covered" >    return data.template.sections;</span>
+  } else {
+<span class="cstat-no" title="statement not covered" >    console.error('Invalid contract template response:', data);</span>
+<span class="cstat-no" title="statement not covered" >    return [];</span>
+  }
 }
 &nbsp;
+// Create a new contract
+export async function <span class="fstat-no" title="function not covered" >createContract(</span>{ projectId, title, freelancerId, contractSections }) {
+  const payload = <span class="cstat-no" title="statement not covered" >{ projectId, title, freelancerId };</span>
+<span class="cstat-no" title="statement not covered" >  if (contractSections?.length) <span class="cstat-no" title="statement not covered" >payload.contractSections = contractSections;</span></span>
+  const { data } = <span class="cstat-no" title="statement not covered" >await API.post('/contracts', payload);</span>
+<span class="cstat-no" title="statement not covered" >  return data.contract;</span>
+}
+&nbsp;
+// **NEW**: List all contracts (for client/freelancer dashboard)
 export async function <span class="fstat-no" title="function not covered" >listContracts(</span>) {
-  const { data } = <span class="cstat-no" title="statement not covered" >await axios.get('/api/contracts');</span>
+  const { data } = <span class="cstat-no" title="statement not covered" >await API.get('/contracts');</span>
 <span class="cstat-no" title="statement not covered" >  return data.contracts;</span>
 }
 &nbsp;
-export async function <span class="fstat-no" title="function not covered" >createContract(</span>{ projectId, title, freelancerId, contractSections }) {
-  const { data } = <span class="cstat-no" title="statement not covered" >await axios.post('/api/contracts', {</span>
-    projectId, title, freelancerId, contractSections
-  });
-<span class="cstat-no" title="statement not covered" >  return data.contract;</span>
-}
-&nbsp;
+// Update a contract’s status (accept/reject)
 export async function <span class="fstat-no" title="function not covered" >updateContractStatus(</span>contractId, status) {
-  const { data } = <span class="cstat-no" title="statement not covered" >await axios.patch(`/api/contracts/${contractId}/status`, { status });</span>
+  const { data } = <span class="cstat-no" title="statement not covered" >await API.patch(`/contracts/${contractId}/status`, { status });</span>
 <span class="cstat-no" title="statement not covered" >  return data.contract;</span>
 }
 &nbsp;
+// Download the PDF for a given contract
 export function <span class="fstat-no" title="function not covered" >downloadContractPdf(</span>contractId) {
-<span class="cstat-no" title="statement not covered" >  window.open(`/api/contracts/${contractId}/pdf`, '_blank');</span>
-}</pre></td></tr></table></pre>
+<span class="cstat-no" title="statement not covered" >  window.open(`${process.env.REACT_APP_API_URL}/api/contracts/${contractId}/pdf`, '_blank');</span>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-01T15:45:42.601Z
+                at 2025-05-05T12:44:36.009Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
