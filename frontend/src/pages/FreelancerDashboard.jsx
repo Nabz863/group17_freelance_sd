@@ -1,24 +1,32 @@
 // src/pages/FreelancerDashboard.jsx
+
 import React, { useState } from 'react';
-//import { useAuth0 }               from '@auth0/auth0-react';
-import DashboardLayout            from '../components/DashboardLayout';
-import ApplyJobSection            from '../components/ApplyJobSection';
-import ChatList                   from '../components/ChatList';
-import ChatSection                from '../components/ChatSection';
+import { useAuth0 } from '@auth0/auth0-react';
+import DashboardLayout from '../components/DashboardLayout';
+import ApplyJobSection from '../components/ApplyJobSection';
+import ChatList from '../components/ChatList';
+import ChatSection from '../components/ChatSection';
 
 export default function FreelancerDashboard() {
+  const { user, isLoading, isAuthenticated } = useAuth0();
   const [activeChat, setActiveChat] = useState(null);
+
+  if (isLoading) {
+    return <p className="mt-4 text-gray-400">Loading auth…</p>;
+  }
+  if (!isAuthenticated) {
+    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
+  }
 
   const menuItems = [
     'Account Settings',
     'Clients',
-    'Inbox',            // ← here’s our single messaging entry
+    'Inbox',
     'Payments',
     'Documents',
     'Available Jobs'
   ];
 
-  // This maps the active sidebar label to its content
   const contentMap = {
     'Account Settings': (
       <>
@@ -34,10 +42,14 @@ export default function FreelancerDashboard() {
     ),
     Inbox: (
       <div className="flex h-full">
-        <ChatList onSelect={setActiveChat} />
+        <ChatList
+          userId={user.sub}
+          isClient={false}
+          onSelect={setActiveChat}
+        />
         <div className="flex-1 p-4">
           {activeChat
-            ? <ChatSection projectId={activeChat} />
+            ? <ChatSection projectId={activeChat} currentUserId={user.sub} />
             : <p className="text-gray-500">Select a chat to begin messaging.</p>}
         </div>
       </div>
@@ -59,7 +71,7 @@ export default function FreelancerDashboard() {
 
   return (
     <DashboardLayout
-      role="Freelancers"
+      role="Freelancer"
       menuItems={menuItems}
       contentMap={contentMap}
     />
