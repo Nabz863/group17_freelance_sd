@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ChatList from "../components/ChatList";
 import ChatSection from "../components/ChatSection";
+import ClientProfile from "../components/ClientProfile";
 import DashboardLayout from "../components/DashboardLayout";
 import ViewApplicationsSection from "../components/ViewApplicationsSection";
 import { createContract } from "../services/contractAPI";
@@ -61,7 +62,7 @@ export default function ClientDashboard() {
   };
 
   const menuItems = [
-    "Account Settings",
+    "My Profile",
     "Freelancers",
     "Inbox",
     "Payments",
@@ -106,12 +107,7 @@ export default function ClientDashboard() {
   }
 
   const contentMap = {
-    "Account Settings": (
-      <>
-        <h1>Account Settings</h1>
-        <p>Edit profile, password and more.</p>
-      </>
-    ),
+    "My Profile": <ClientProfile />,
     Freelancers: (
       <>
         <h1>Freelancers</h1>
