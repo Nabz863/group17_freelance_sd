@@ -119,16 +119,16 @@ export default function ClientDashboard() {
       </>
     ),
     Inbox: (
-      <div className="flex h-full">
+      <section className="flex h-full">
         <ChatList onSelect={setActiveChat} />
-        <div className="flex-1 p-4">
+        <section className="flex-1 p-4">
           {activeChat ? (
             <ChatSection projectId={activeChat} currentUserId={user.sub} />
           ) : (
             <p className="text-gray-500">Select a chat to begin messaging.</p>
           )}
-        </div>
-      </div>
+        </section>
+      </section>
     ),
     Payments: (
       <>
