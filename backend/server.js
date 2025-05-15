@@ -71,6 +71,7 @@ app.use("/api/contracts", contractRoutes);
 app.use("/api/contract-terms", contractTermsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/projects", projectsRoutes);
+app.use("/api/deliverables", require("./src/routes/deliverable.routes"));
 
 app.use((err, req, res, next) => {
   console.error(err);

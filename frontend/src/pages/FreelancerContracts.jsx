@@ -4,6 +4,7 @@ import {
   updateContractStatus,
   downloadContractPdf
 } from '../services/contractAPI';
+import DeliverablesList from '../components/DeliverablesList';
 
 export default function FreelancerContracts() {
   const [contracts, setContracts] = useState([]);
@@ -35,6 +36,7 @@ export default function FreelancerContracts() {
               <button onClick={() => respond(c.id, 'rejected')}>
                 Reject
               </button>
+              <DeliverablesList contractId={c.id} role="freelancer" />
             </li>
           ))}
       </ul>
