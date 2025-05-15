@@ -157,14 +157,14 @@ export default function PostJobForm({ embed = false }) {
         />
       </label>
 
-      <div className="border border-gray-700 rounded-lg p-4 mb-6">
-        <h3 className="text-lg font-semibold text-white mb-3">Milestones</h3>
+      <fieldset className="border border-gray-700 rounded-lg p-4 mb-6">
+        <legend className="text-lg font-semibold text-white mb-3">Milestones</legend>
         {milestones.map((m, i) => (
-          <div
+          <section
             key={i}
             className="mb-4 p-4 border border-gray-700 rounded bg-[#1a1a1a]"
           >
-            <div className="flex justify-between items-center mb-2">
+            <header className="flex justify-between items-center mb-2">
               <h4 className="text-white font-medium">Milestone {i + 1}</h4>
               <button
                 type="button"
@@ -174,7 +174,7 @@ export default function PostJobForm({ embed = false }) {
               >
                 Remove
               </button>
-            </div>
+            </header>
 
             <label className="form-label text-sm">
               Title
@@ -215,7 +215,7 @@ export default function PostJobForm({ embed = false }) {
                 required
               />
             </label>
-          </div>
+          </section>
         ))}
 
         <button
@@ -225,11 +225,11 @@ export default function PostJobForm({ embed = false }) {
         >
           + Add Milestone
         </button>
-      </div>
+      </fieldset>
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <div className="flex justify-end space-x-4">
+      <footer className="flex justify-end space-x-4">
         {!embed && (
           <button
             type="button"
@@ -246,7 +246,7 @@ export default function PostJobForm({ embed = false }) {
         >
           {submitting ? "Posting…" : "Submit Job"}
         </button>
-      </div>
+      </footer>
     </form>
   );
 }
