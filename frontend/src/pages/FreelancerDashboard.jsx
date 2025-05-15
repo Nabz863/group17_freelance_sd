@@ -6,6 +6,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import ApplyJobSection from '../components/ApplyJobSection';
 import ChatList from '../components/ChatList';
 import ChatSection from '../components/ChatSection';
+import FreelancerProfile from '../components/FreelancerProfile';
 
 export default function FreelancerDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth0();
@@ -29,10 +30,9 @@ export default function FreelancerDashboard() {
 
   const contentMap = {
     'Account Settings': (
-      <>
-        <h1>Account Settings</h1>
-        <p>Edit your freelancer profile and more.</p>
-      </>
+      <div className="p-6">
+        <FreelancerProfile />
+      </div>
     ),
     Clients: (
       <>
