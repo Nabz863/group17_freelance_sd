@@ -72,15 +72,15 @@ export default function ChatSection({ projectId, currentUserId }) {
 
   return (
     <section className="chat-section p-4 bg-[#1a1a1a] rounded-lg flex flex-col h-full">
-      <div className="messages overflow-y-auto flex-1 mb-4">
-        {messages.map(m => (
-          <div
+      <section className="messages overflow-y-auto flex-1 mb-4">
+        {messages.map((m) => (
+          <article
             key={m.id}
             className={`mb-2 p-2 rounded flex ${
               m.sender_id === currentUserId ? 'justify-end' : 'justify-start'
             }`}
           >
-            <div
+            <section
               className={`${
                 m.sender_id === currentUserId
                   ? 'bg-[#1abc9c] text-black'
@@ -91,19 +91,19 @@ export default function ChatSection({ projectId, currentUserId }) {
               <span className="text-xs text-gray-400">
                 {new Date(m.timestamp).toLocaleTimeString()}
               </span>
-            </div>
-          </div>
+            </section>
+          </article>
         ))}
-        <div ref={bottomRef} />
-      </div>
+        <span ref={bottomRef} />
+      </section>
 
-      <div className="flex space-x-2">
+      <footer className="flex space-x-2">
         <input
           className="flex-1 form-input"
           placeholder="Type a message…"
           value={newText}
-          onChange={e => setNewText(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
+          onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
         />
         <button
           type="button"
@@ -112,7 +112,7 @@ export default function ChatSection({ projectId, currentUserId }) {
         >
           Send
         </button>
-      </div>
+      </footer>
     </section>
   );
 }
