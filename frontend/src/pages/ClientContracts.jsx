@@ -37,7 +37,7 @@ export default function ClientContracts() {
   }
 
   return (
-    <div className="client-contracts">
+    <section className="client-contracts">
       <h1>Your Contracts</h1>
       {contracts.length === 0 ? (
         <p>No contracts found.</p>
@@ -51,6 +51,6 @@ export default function ClientContracts() {
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
