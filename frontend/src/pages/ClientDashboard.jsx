@@ -1,15 +1,15 @@
 // src/pages/ClientDashboard.jsx
-
-import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { toast } from 'react-toastify';
-import DashboardLayout from '../components/DashboardLayout';
-import PostJobForm from './PostJobForm';
-import ViewApplicationsSection from '../components/ViewApplicationsSection';
-import ChatList from '../components/ChatList';
-import ChatSection from '../components/ChatSection';
-import supabase from '../utils/supabaseClient';
-import { createContract } from '../services/contractAPI';
+import { useAuth0 } from "@auth0/auth0-react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import ChatList from "../components/ChatList";
+import ChatSection from "../components/ChatSection";
+import ClientProfile from "../components/ClientProfile";
+import DashboardLayout from "../components/DashboardLayout";
+import ViewApplicationsSection from "../components/ViewApplicationsSection";
+import { createContract } from "../services/contractAPI";
+import supabase from "../utils/supabaseClient";
+import PostJobForm from "./PostJobForm";
 
 export default function ClientDashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
@@ -54,22 +54,17 @@ export default function ClientDashboard() {
   }
 
   const menuItems = [
-    'Account Settings',
-    'Freelancers',
-    'Inbox',
-    'Payments',
-    'Projects',
-    'Post a Job',
-    'Applications'
+    "My Profile",
+    "Freelancers",
+    "Inbox",
+    "Payments",
+    "Projects",
+    "Post a Job",
+    "Applications",
   ];
 
   const contentMap = {
-    'Account Settings': (
-      <>
-        <h1>Account Settings</h1>
-        <p>Edit profile, password and more.</p>
-      </>
-    ),
+    "My Profile": <ClientProfile />,
     Freelancers: (
       <>
         <h1>Freelancers</h1>

@@ -143,7 +143,6 @@
     transition: all 0.7s;
   }
   
-  .dashboard-sidebar-btn:hover::before,
   .dashboard-sidebar-btn.selected::before {
     top: -30px;
     left: -30px;
@@ -152,6 +151,12 @@
   .dashboard-sidebar-btn:active::before {
     background: var(--primary-hover);
     transition: background 0s;
+  }
+  
+  /* Logout Button */
+  .dashboard-sidebar-btn.logout-btn {
+    margin-top: auto;
+    margin-bottom: 2rem;
   }
   
   /* Custom Smoother Ripple for sidebar button */

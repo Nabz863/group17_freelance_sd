@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import "../styles/theme.css";
 import ReportIssue from './ReportIssue';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +9,13 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
-  const [showReportIssue, setShowReportIssue] = useState(false);
+  const { logout } = useAuth0();
+
+
+  const handleLogout = () => {
+    logout({ returnTo: window.location.origin });
+    navigate('/');
+  };
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
@@ -48,6 +56,13 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
             {label}
           </button>
         ))}
+        <button
+          className="dashboard-sidebar-btn logout-btn"
+          type="button"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
       </nav>
 
       <button
