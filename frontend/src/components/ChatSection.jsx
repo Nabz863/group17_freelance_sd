@@ -71,48 +71,78 @@ export default function ChatSection({ projectId, currentUserId }) {
   };
 
   return (
-    <section className="chat-section p-4 bg-[#1a1a1a] rounded-lg flex flex-col h-full">
-      <div className="messages overflow-y-auto flex-1 mb-4">
-        {messages.map(m => (
-          <div
+    <section className="chat-section flex flex-col h-full bg-white rounded-lg shadow-lg">
+      <header className="px-4 py-3 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-600">👤</span>
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-800">Project Chat</h2>
+              <p className="text-sm text-gray-600">Active now</p>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <button className="p-2 text-gray-500 hover:text-gray-700">
+              <span className="text-xl">🔍</span>
+            </button>
+            <button className="p-2 text-gray-500 hover:text-gray-700">
+              <span className="text-xl">⋮</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section className="messages flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((m) => (
+          <article
             key={m.id}
-            className={`mb-2 p-2 rounded flex ${
+            className={`flex ${
               m.sender_id === currentUserId ? 'justify-end' : 'justify-start'
             }`}
           >
-            <div
-              className={`${
+            <section
+              className={`max-w-[70%] ${
                 m.sender_id === currentUserId
-                  ? 'bg-[#1abc9c] text-black'
-                  : 'bg-[#222] text-white'
-              } p-2 rounded`}
+                  ? 'bg-[#128C7E] text-white'
+                  : 'bg-gray-100 text-gray-800'
+              } rounded-lg p-3 relative`}
             >
-              <p className="text-sm">{m.text}</p>
-              <span className="text-xs text-gray-400">
-                {new Date(m.timestamp).toLocaleTimeString()}
+              <p className="text-sm text-gray-800">{m.text}</p>
+              <span className="text-xs absolute bottom-2 right-2 text-gray-600">
+                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
-            </div>
-          </div>
+            </section>
+          </article>
         ))}
-        <div ref={bottomRef} />
-      </div>
+        <span ref={bottomRef} />
+      </section>
 
-      <div className="flex space-x-2">
-        <input
-          className="flex-1 form-input"
-          placeholder="Type a message…"
-          value={newText}
-          onChange={e => setNewText(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-        />
-        <button
-          type="button"
-          className="px-4 py-2 bg-[#1abc9c] rounded text-black"
-          onClick={sendMessage}
-        >
-          Send
-        </button>
-      </div>
+      <footer className="border-t border-gray-200 p-3">
+        <div className="flex items-center space-x-2">
+          <button className="p-2 text-gray-600 hover:text-gray-800">
+            <span className="text-xl">📷</span>
+          </button>
+          <button className="p-2 text-gray-600 hover:text-gray-800">
+            <span className="text-xl">📝</span>
+          </button>
+          <input
+            className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#128C7E] focus:border-transparent"
+            placeholder="Type a message…"
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <button
+            type="button"
+            className="p-2 text-[#128C7E] hover:bg-[#128C7E] hover:text-white rounded-full transition-colors"
+            onClick={sendMessage}
+          >
+            <span className="text-xl">🚀</span>
+          </button>
+        </div>
+      </footer>
     </section>
   );
 }

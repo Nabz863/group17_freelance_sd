@@ -1,9 +1,14 @@
 import React, { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import "../styles/theme.css";
+import ReportIssue from './ReportIssue';
 
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
+  const { logout } = useAuth0();
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
@@ -27,7 +32,7 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
   };
 
   return (
-    <main className="flex min-h-screen text-white font-main relative bg-[#0e0e0e]">
+    <div className="flex min-h-screen bg-[#0e0e0e]">
       <nav
         className={`dashboard-sidebar ${sidebarOpen ? "" : " hidden"}`}
         aria-label="Sidebar"
@@ -36,7 +41,7 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
         {menuItems.map((label) => (
           <button
             key={label}
-            className={`dashboard-sidebar-btn${activeSection === label ? " selected" : ""}`}
+            className={`dashboard-sidebar-btn${activeSection === label ? " selected" : ""} text-center pt-2 pb-1`}
             type="button"
             onClick={(e) => handleSidebarBtnClick(e, label)}
             onTouchStart={(e) => handleSidebarBtnClick(e, label)}
@@ -44,22 +49,36 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
             {label}
           </button>
         ))}
+        <button
+          className="dashboard-sidebar-btn mt-6 w-full text-center px-4 pt-2 pb-1 border border-red-400 text-red-500 hover:bg-red-100 rounded"
+          type="button"
+          onClick={() => {
+            logout({ returnTo: window.location.origin });
+            navigate('/');
+          }}
+        >
+          Logout
+        </button>
       </nav>
 
-      <button
-        className="dashboard-hamburger"
-        aria-label="Toggle navigation menu"
-        onClick={toggleSidebar}
-        type="button"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div className="flex-1 overflow-hidden">
+        <button
+          className="dashboard-hamburger md:hidden fixed top-4 left-4 z-50"
+          aria-label="Toggle navigation menu"
+          onClick={toggleSidebar}
+          type="button"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
 
-      <section className="dashboard-content animate-fadeInUp">
-        {contentMap[activeSection] || <p>No content found.</p>}
-      </section>
-    </main>
+        <div className="dashboard-content-container">
+          <section className="dashboard-content animate-fadeInUp p-6">
+            {contentMap[activeSection] || <p>No content found.</p>}
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }
