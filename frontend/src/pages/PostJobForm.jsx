@@ -74,8 +74,8 @@ export default function PostJobForm({ embed = false }) {
   if (submitted) {
     return (
       <section className="text-center">
-        <h1 className="text-accent text-2xl mb-4">Job Posted Successfully</h1>
-        <p>Your job is now live for freelancers to apply.</p>
+        <h1 className="text-black text-2xl mb-4">Job Posted Successfully</h1>
+        <p className="text-gray-600">Your job is now live for freelancers to apply.</p>
         {!embed && (
           <button
             className="primary-btn mt-4"
@@ -92,15 +92,15 @@ export default function PostJobForm({ embed = false }) {
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       {!embed && (
         <>
-          <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
-          <p className="text-gray-400 mb-6">
+          <h1 className="text-3xl text-black font-bold">Post a New Job</h1>
+          <p className="text-gray-600 mb-6">
             Describe your project and attract the right freelancers
           </p>
         </>
       )}
 
       <label className="form-label">
-        Job Title:
+        <span className="text-black">Job Title:</span>
         <input
           name="title"
           value={formData.title}
@@ -111,7 +111,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        Project Description:
+        <span className="text-black">Project Description:</span>
         <textarea
           name="description"
           value={formData.description}
@@ -123,7 +123,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        Requirements:
+        <span className="text-black">Requirements:</span>
         <textarea
           name="requirements"
           value={formData.requirements}
@@ -134,7 +134,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        Budget (ZAR):
+        <span className="text-black">Budget (ZAR):</span>
         <input
           type="number"
           name="budget"
@@ -146,7 +146,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        Deadline:
+        <span className="text-black">Deadline:</span>
         <input
           type="date"
           name="deadline"

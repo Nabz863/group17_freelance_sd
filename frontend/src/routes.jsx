@@ -14,6 +14,7 @@ import FreelancerProfileForm from "./pages/FreelancerProfileForm";
 import ClientProfileForm from "./pages/ClientProfileForm";
 import CreateProfile from "./pages/CreateProfile";
 import VerifyEmail from "./pages/VerifyEmail";
+import ReportIssue from "./components/ReportIssue";
 
 function PDFViewer() {
   const { userId } = useParams();
@@ -39,6 +40,7 @@ export default function RoutesComponent() {
       <Route path="/freelancer" element={<FreelancerDashboard />} />
       <Route path="/client/contracts"     element={<ClientContracts />} />
       <Route path="/freelancer/contracts" element={<FreelancerContracts />} />
+      <Route path="/report-issue" element={<ReportIssue />} />
       <Route
         path="/admin/users/:userId/profile/pdf"
         element={<PDFViewer />}

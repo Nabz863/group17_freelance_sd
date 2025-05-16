@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import "../styles/theme.css";
+import ReportIssue from './ReportIssue';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
+  const [showReportIssue, setShowReportIssue] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
@@ -59,6 +63,9 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
 
       <section className="dashboard-content animate-fadeInUp">
         {contentMap[activeSection] || <p>No content found.</p>}
+        {activeSection === 'Report Issue' && (
+          <ReportIssue onClose={() => setActiveSection(menuItems[0])} />
+        )}
       </section>
     </main>
   );
