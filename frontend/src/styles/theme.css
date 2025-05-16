@@ -86,11 +86,23 @@
     transition: transform 0.3s ease;
     z-index: 1000;
     height: 100vh;
-    position: relative;
+    position: fixed;
+    left: 0;
+    top: 0;
   }
   
   .dashboard-sidebar.hidden {
     transform: translateX(-100%);
+  }
+  
+  .dashboard-content-container {
+    margin-left: 250px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+  }
+
+  .dashboard-sidebar.hidden ~ .dashboard-content-container {
+    margin-left: 0;
   }
   
   .dashboard-sidebar h2 {
@@ -104,30 +116,35 @@
   
   /* Sidebar Button */
   .dashboard-sidebar-btn {
-    --color: var(--primary-color);
-    font-family: inherit;
-    width: 8em;
-    height: 2.6em;
-    margin: 10px 0;
-    position: relative;
-    cursor: pointer;
-    overflow: hidden;
-    border: 2px solid var(--color);
-    outline: none;
-    transition: color 0.5s;
-    z-index: 1;
-    font-size: 17px;
-    border-radius: 6px;
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--button-radius);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 16px;
     font-weight: 500;
-    color: var(--color);
-    background: none;
-    display: inline-block;
-    line-height: 2.5em;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 18px;
+    padding-bottom: 6px;
   }
-  
-  .dashboard-sidebar-btn.selected,
+
   .dashboard-sidebar-btn:hover {
-    color: #fff;
+    background: rgba(255, 105, 180, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .dashboard-sidebar-btn.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
   }
   
   .dashboard-sidebar-btn::before {

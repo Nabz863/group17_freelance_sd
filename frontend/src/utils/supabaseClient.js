@@ -33,7 +33,7 @@ const testConnection = async () => {
     // Test database access directly
     const { data: testResult, error: dbError } = await supabase
       .from('clients')
-      .select('id')
+      .select('user_id')
       .limit(1);
     
     if (dbError) {
