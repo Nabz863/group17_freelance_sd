@@ -75,17 +75,17 @@ const FileUpload = ({
   };
   
   return (
-    <fieldset className="form-full-width">
-      <legend className="form-label">
+    <div className="form-full-width">
+      <label className="form-label">
         {label}
         {fileTypeLabel && (
           <span className={`file-type-tag ${required ? 'file-type-required' : 'file-type-optional'}`}>
             {fileTypeLabel}
           </span>
         )}
-      </legend>
-
-      <section
+      </label>
+      
+      <div 
         className={`file-upload-container ${isDragging ? 'border-accent' : ''}`}
         onClick={openFileDialog}
         onDragOver={handleDragOver}
@@ -109,16 +109,16 @@ const FileUpload = ({
           className="file-upload-input"
           data-file-type={fileType}
         />
-      </section>
-
+      </div>
+      
       {files.length > 0 && (
-        <section className="attachments-container">
+        <div className="attachments-container">
           {files.map((fileObj) => (
-            <article key={fileObj.id} className="attachment-item">
-              <section className="attachment-icon">
+            <div key={fileObj.id} className="attachment-item">
+              <div className="attachment-icon">
                 <i className="fas fa-file-alt"></i>
-              </section>
-              <section className="attachment-details">
+              </div>
+              <div className="attachment-details">
                 <div className="attachment-name">{fileObj.file.name}</div>
                 <div className="attachment-meta">
                   <span className="attachment-size">{formatBytes(fileObj.file.size)}</span>
@@ -126,15 +126,15 @@ const FileUpload = ({
                 </div>
                 {fileObj.uploading && (
                   <div className="attachment-progress">
-                    <div
-                      className="attachment-progress-bar"
+                    <div 
+                      className="attachment-progress-bar" 
                       style={{ width: `${fileObj.progress}%` }}
                     ></div>
                   </div>
                 )}
-              </section>
-              <section className="attachment-actions">
-                <button
+              </div>
+              <div className="attachment-actions">
+                <button 
                   type="button"
                   className="attachment-action-btn"
                   onClick={(e) => {
@@ -144,12 +144,12 @@ const FileUpload = ({
                 >
                   <i className="fas fa-times"></i>
                 </button>
-              </section>
-            </article>
+              </div>
+            </div>
           ))}
-        </section>
+        </div>
       )}
-    </fieldset>
+    </div>
   );
 };
 

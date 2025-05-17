@@ -4,8 +4,6 @@ jest.mock('../utils/supabaseClient', () => ({
     from: jest.fn(),
   },
 }));
-
-import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import ApplyJobSection from './ApplyJobSection';
 import { useAuth0 } from '@auth0/auth0-react';

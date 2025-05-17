@@ -185,7 +185,7 @@ export default function PostJobForm({ embed = false }) {
             key={i}
             className="mb-4 p-4 border border-gray-700 rounded bg-[#1a1a1a]"
           >
-            <header className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2">
               <h4 className="text-white font-medium">Milestone {i + 1}</h4>
               <button
                 type="button"
@@ -195,7 +195,7 @@ export default function PostJobForm({ embed = false }) {
               >
                 Remove
               </button>
-            </header>
+            </div>
 
             <label className="form-label text-sm">
               Title
@@ -236,6 +236,7 @@ export default function PostJobForm({ embed = false }) {
                 required
               />
             </label>
+
           </article>
         ))}
 
@@ -246,11 +247,11 @@ export default function PostJobForm({ embed = false }) {
         >
           + Add Milestone
         </button>
-      </fieldset>
+      </div>
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <footer className="flex justify-end space-x-4">
+      <div className="flex justify-end space-x-4">
         {!embed && (
           <button
             type="button"
@@ -267,7 +268,7 @@ export default function PostJobForm({ embed = false }) {
         >
           {submitting ? 'Posting…' : 'Submit Job'}
         </button>
-      </footer>
+      </div>
     </form>
   );
 }

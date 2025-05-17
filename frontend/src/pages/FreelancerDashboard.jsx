@@ -1,5 +1,4 @@
 // src/pages/FreelancerDashboard.jsx
-
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +10,6 @@ import FreelancerProfile from "../components/FreelancerProfile";
 
 export default function FreelancerDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth0();
-  const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState(null);
 
   if (isLoading) {

@@ -114,21 +114,21 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <fieldset className="form-full-width">
-        <legend className="form-label">Upload Profile PDF</legend>
+      <div className="form-full-width">
+        <label className="form-label">Upload Profile PDF</label>
         <FileUpload
           accept=".pdf"
           required
           onChange={handleFileChange}
           fileType="profilePdf"
         />
-      </fieldset>
+      </div>
 
-      <footer className="form-footer form-full-width">
+      <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
           Submit Profile
         </button>
-      </footer>
+      </div>
     </ProfileFormLayout>
   );
 }

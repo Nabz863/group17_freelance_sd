@@ -14,65 +14,46 @@ export default function UserSearch({ onSelectUser }) {
 
     const searchUsers = async () => {
       setIsLoading(true);
-      const query = searchQuery.trim().toLowerCase();
-
       try {
-        console.log('Searching for:', query);
-
+        console.log('Searching for:', searchQuery);
+        
+        // Search clients table
         const { data: clients, error: clientError } = await supabase
           .from('clients')
-          .select('profile')
-          .limit(10);
+          .select('user_id, email, profile')
+          .like('email', `%${searchQuery}%`)
+          .or(`profile->>firstName like '%${searchQuery}%'`)
+          .limit(5);
 
+        // Search freelancers table
         const { data: freelancers, error: freelancerError } = await supabase
           .from('freelancers')
-          .select('profile')
-          .limit(10);
-
-        console.log('Raw clients:', clients);
-        console.log('Raw freelancers:', freelancers);
+          .select('user_id, email, profile')
+          .like('email', `%${searchQuery}%`)
+          .or(`profile->>firstName like '%${searchQuery}%'`)
+          .limit(5);
 
         if (clientError || freelancerError) {
-          console.error('Supabase error:', clientError || freelancerError);
+          console.error('Error searching users:', clientError || freelancerError);
+          console.error('Clients error:', clientError);
+          console.error('Freelancers error:', freelancerError);
           throw clientError || freelancerError;
         }
 
-        const parseProfile = (user) => {
-          let profile = user.profile;
-          if (typeof profile === 'string') {
-            try {
-              profile = JSON.parse(profile);
-            } catch (err) {
-              console.error("Failed to parse profile JSON:", user.profile);
-              return null;
-            }
-          }
-          return profile;
-        };
+        console.log('Clients found:', clients);
+        console.log('Freelancers found:', freelancers);
 
-        const filteredClients = (clients || []).filter(client => {
-          const profile = parseProfile(client);
-          const match = profile?.firstName?.toLowerCase().includes(query);
-          console.log(`Client: ${profile?.firstName}, match: ${match}`);
-          return match;
-        });
+        // Combine and format results
+        const results = [...(clients || []), ...(freelancers || [])]
+          .map(user => ({
+            id: user.user_id,
+            email: user.email,
+            name: `${user.profile?.firstName} ${user.profile?.lastName}`.trim() || user.email.split('@')[0],
+            role: 'freelancers' in user ? 'Freelancer' : 'Client'
+          }));
 
-        const filteredFreelancers = (freelancers || []).filter(freelancer => {
-          const profile = parseProfile(freelancer);
-          const match = profile?.firstName?.toLowerCase().includes(query);
-          console.log(`Freelancer: ${profile?.firstName}, match: ${match}`);
-          return match;
-        });
-
-        const combinedResults = [...filteredClients, ...filteredFreelancers].map(user => {
-          const profile = parseProfile(user);
-          return {
-            name: profile.firstName
-          };
-        });
-
-        console.log("Combined search results:", combinedResults);
-        setSearchResults(combinedResults);
+        console.log('Formatted results:', results);
+        setSearchResults(results);
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);
@@ -96,7 +77,7 @@ export default function UserSearch({ onSelectUser }) {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search by name..."
+        placeholder="Search by email or name..."
         className="w-full px-3 py-2 border border-gray-600 rounded focus:outline-none focus:border-blue-500"
       />
       {searchQuery && (
@@ -106,13 +87,15 @@ export default function UserSearch({ onSelectUser }) {
           ) : searchResults.length === 0 ? (
             <div className="p-4 text-center">No users found</div>
           ) : (
-            searchResults.map((user, index) => (
+            searchResults.map((user) => (
               <div
-                key={`${user.name}-${index}`}
+                key={user.id}
                 onClick={() => handleSelectUser(user)}
                 className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
               >
                 <div className="font-semibold">{user.name}</div>
+                <div className="text-sm text-gray-600">{user.email}</div>
+                <div className="text-xs text-gray-500">{user.role}</div>
               </div>
             ))
           )}

@@ -32,19 +32,19 @@ export default function ClientDashboard() {
   }, [user]);
 
   //listing projects for projects tab
+
   useEffect(() => {
-    async function load() {
+    if (!user?.sub) return;
+    (async () => {
       const { data, error } = await supabase
         .from("projects")
         .select("*, milestones(*)")
         .eq("client_id", user.sub);
       if (!error && data.length) {
-        setProjects(data);
         setCurrentProjectId(data[0].id);
       }
-    }
-    load();
-  }, [user.sub]);
+    })();
+  }, [user?.sub]);
 
   const handleAssign = async (freelancerId) => {
     try {
@@ -59,6 +59,14 @@ export default function ClientDashboard() {
       toast.error("Failed to create contract");
     }
   };
+
+  // Early returns for loading/auth
+  if (authLoading) {
+    return <p className="mt-4 text-gray-400">Loading auth…</p>;
+  }
+  if (!isAuthenticated) {
+    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
+  }
 
   const menuItems = [
     "My Profile",
@@ -107,6 +115,7 @@ export default function ClientDashboard() {
 
   const contentMap = {
     "My Profile": <ClientProfile />,
+
     Freelancers: (
       <>
         <h1>Freelancers</h1>
@@ -134,6 +143,7 @@ export default function ClientDashboard() {
     Projects: <ProjectsList projects={projects} />,
 
     "Post a Job": <PostJobForm embed={false} />,
+
     Applications: currentProjectId ? (
       <ViewApplicationsSection
         projectId={currentProjectId}

@@ -1,28 +1,27 @@
 require("dotenv").config();
-const express = require("express");
-const http = require("http");
-const session = require("express-session");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-const { Server } = require("socket.io");
+const express       = require("express");
+const http          = require("http");
+const session       = require("express-session");
+const cors          = require("cors");
+const helmet        = require("helmet");
+const morgan        = require("morgan");
+const cookieParser  = require("cookie-parser");
+const bodyParser    = require("body-parser");
+const { Server }    = require("socket.io");
 
-const authRoutes = require("./src/routes/auth.routes");
-const userRoutes = require("./src/routes/user.routes");
-const contractRoutes = require("./src/routes/contract.routes");
+const authRoutes          = require("./src/routes/auth.routes");
+const userRoutes          = require("./src/routes/user.routes");
+const contractRoutes      = require("./src/routes/contract.routes");
 const contractTermsRoutes = require("./src/routes/contractTerms.routes");
-const uploadRoutes = require("./src/routes/upload.routes");
-const projectsRoutes = require("./src/routes/project.routes");
+const uploadRoutes        = require("./src/routes/upload.routes");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
-  },
+    credentials: true
+  }
 });
 
 app.set("io", io);
@@ -38,7 +37,7 @@ app.use(helmet());
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
+    credentials: true
   })
 );
 app.use(morgan("dev"));
@@ -54,8 +53,8 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-    },
+      maxAge: 24 * 60 * 60 * 1000
+    }
   })
 );
 
@@ -70,7 +69,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/contracts", contractRoutes);
 app.use("/api/contract-terms", contractTermsRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/projects", projectsRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
@@ -78,7 +76,7 @@ app.use((err, req, res, next) => {
   res.status(status).json({
     status: "error",
     message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
   });
 });
 

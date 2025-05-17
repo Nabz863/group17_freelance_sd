@@ -9,6 +9,7 @@ export default function DashboardLayout({
   menuItems = [],
   contentMap = {},
 }) {
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
   const { logout } = useAuth0();
@@ -55,6 +56,7 @@ export default function DashboardLayout({
             className={`dashboard-sidebar-btn${
               activeSection === label ? " selected" : ""
             }`}
+            
             type="button"
             onClick={(e) => handleSidebarBtnClick(e, label)}
             onTouchStart={(e) => handleSidebarBtnClick(e, label)}
