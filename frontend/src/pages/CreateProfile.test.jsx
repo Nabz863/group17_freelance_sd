@@ -2,6 +2,8 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
+import CreateProfile from "./CreateProfile";
+
 const mockNavigate = jest.fn();
 
 jest.mock("react-router-dom", () => ({
@@ -28,8 +30,6 @@ jest.mock("../utils/supabaseClient", () => ({
     }),
   }),
 }));
-
-import CreateProfile from "./CreateProfile";
 
 describe("CreateProfile", () => {
   beforeEach(() => {

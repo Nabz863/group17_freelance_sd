@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/theme.css";
-import ReportIssue from './ReportIssue';
 
-export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
+export default function DashboardLayout({
+  role = "User",
+  menuItems = [],
+  contentMap = {},
+}) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
@@ -20,8 +23,10 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
     ripple.className = "ripple";
     const rect = btn.getBoundingClientRect();
     const size = Math.max(btn.offsetWidth, btn.offsetHeight) * 0.8;
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - size / 2;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top - size / 2;
+    const x =
+      (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - size / 2;
+    const y =
+      (e.touches ? e.touches[0].clientY : e.clientY) - rect.top - size / 2;
     ripple.style.width = ripple.style.height = `${size}px`;
     ripple.style.left = `${x}px`;
     ripple.style.top = `${y}px`;
@@ -41,7 +46,9 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
         {menuItems.map((label) => (
           <button
             key={label}
-            className={`dashboard-sidebar-btn${activeSection === label ? " selected" : ""} text-center pt-2 pb-1`}
+            className={`dashboard-sidebar-btn${
+              activeSection === label ? " selected" : ""
+            } text-center pt-2 pb-1`}
             type="button"
             onClick={(e) => handleSidebarBtnClick(e, label)}
             onTouchStart={(e) => handleSidebarBtnClick(e, label)}
@@ -54,7 +61,7 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
           type="button"
           onClick={() => {
             logout({ returnTo: window.location.origin });
-            navigate('/');
+            navigate("/");
           }}
         >
           Logout

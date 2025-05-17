@@ -1,6 +1,8 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
+import ClientProfileForm from "./ClientProfileForm";
+
 jest.mock(
   "react-router-dom",
   () => ({
@@ -30,8 +32,6 @@ jest.mock("../utils/supabaseClient", () => ({
   }),
 }));
 
-import ClientProfileForm from "./ClientProfileForm";
-
 describe("ClientProfileForm", () => {
   it("shows loading then renders the form title", async () => {
     render(<ClientProfileForm />);
@@ -48,9 +48,7 @@ describe("ClientProfileForm", () => {
   it("renders the key input fields", async () => {
     render(<ClientProfileForm />);
 
-    await waitFor(() =>
-      screen.getByRole("heading", { name: /Client Profile/i })
-    );
+    await screen.findByRole("heading", { name: /Client Profile/i });
 
     expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Last Name/i)).toBeInTheDocument();

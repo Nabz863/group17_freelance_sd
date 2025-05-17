@@ -2,6 +2,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 
+import ClientDashboard from "./ClientDashboard";
+
 // Mock subcomponents
 jest.mock("../components/DashboardLayout", () => (props) => {
   return (
@@ -21,8 +23,6 @@ jest.mock("./PostJobForm", () => () => (
 jest.mock("../components/ViewApplicationsSection", () => () => (
   <div data-testid="view-applications">Mock ViewApplicationsSection</div>
 ));
-
-import ClientDashboard from "./ClientDashboard";
 
 describe("ClientDashboard", () => {
   it("renders the client dashboard with correct role and menu items", () => {

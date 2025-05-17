@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import supabase from '../utils/supabaseClient';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState, useEffect } from "react";
+import supabase from "../utils/supabaseClient";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function ClientContracts() {
   const { user, isLoading: authLoading } = useAuth0();
@@ -15,12 +15,12 @@ export default function ClientContracts() {
     const fetchContracts = async () => {
       try {
         const { data, error } = await supabase
-          .from('contracts')
-          .select('*')
-          .eq('client_id', user.sub);
+          .from("contracts")
+          .select("*")
+          .eq("client_id", user.sub);
 
         if (error) {
-          console.error('Error fetching contracts:', error);
+          console.error("Error fetching contracts:", error);
         } else {
           setContracts(data);
         }
@@ -45,7 +45,8 @@ export default function ClientContracts() {
         <ul>
           {contracts.map((c) => (
             <li key={c.id}>
-              <strong>{c.title}</strong><br />
+              <strong>{c.title}</strong>
+              <br />
               Status: {c.status}
             </li>
           ))}
