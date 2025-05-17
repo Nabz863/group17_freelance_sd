@@ -1,7 +1,7 @@
-import {useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {useAuth0} from "@auth0/auth0-react";
-//import supabase from "../utils/supabaseClient";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import supabase from "../utils/supabaseClient";
 import axios from "axios";
 import "../styles/theme.css";
 
