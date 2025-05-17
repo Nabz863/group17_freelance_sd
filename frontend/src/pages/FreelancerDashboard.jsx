@@ -2,13 +2,16 @@
 
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import ApplyJobSection from '../components/ApplyJobSection';
 import ChatList from '../components/ChatList';
 import ChatSection from '../components/ChatSection';
+import FreelancerProfile from '../components/FreelancerProfile';
 
 export default function FreelancerDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState(null);
 
   if (isLoading) {
@@ -24,14 +27,14 @@ export default function FreelancerDashboard() {
     'Inbox',
     'Payments',
     'Documents',
-    'Available Jobs'
+    'Available Jobs',
+    'Report Issue'
   ];
   const contentMap = {
     'Account Settings': (
-      <>
-        <h1>Account Settings</h1>
-        <p>Edit your freelancer profile and more.</p>
-      </>
+      <div className="p-6">
+        <FreelancerProfile />
+      </div>
     ),
     Clients: (
       <>
