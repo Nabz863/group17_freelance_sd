@@ -1,6 +1,6 @@
 // src/pages/FreelancerDashboard.jsx
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import ApplyJobSection from '../components/ApplyJobSection';
@@ -26,7 +26,6 @@ export default function FreelancerDashboard() {
     'Documents',
     'Available Jobs'
   ];
-
   const contentMap = {
     'Account Settings': (
       <>
