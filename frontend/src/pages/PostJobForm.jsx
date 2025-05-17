@@ -1,33 +1,33 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
-import axios from "axios";
-import "../styles/theme.css";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import supabase from '../utils/supabaseClient';
+import '../styles/theme.css';
 
 export default function PostJobForm({ embed = false }) {
   const { user } = useAuth0();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    requirements: "",
-    budget: "",
-    deadline: "",
+    title: '',
+    description: '',
+    requirements: '',
+    budget: '',
+    deadline: ''
   });
   const [milestones, setMilestones] = useState([
-    { title: "", dueDate: "", amount: "" },
+    { title: '', dueDate: '', amount: '' }
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleChange = (e) => {
-    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = e => {
+    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
   const handleMilestoneChange = (i, field, val) => {
-    setMilestones((ms) => {
+    setMilestones(ms => {
       const copy = [...ms];
       copy[i][field] = val;
       return copy;
@@ -35,36 +35,56 @@ export default function PostJobForm({ embed = false }) {
   };
 
   const handleAddMilestone = () => {
-    setMilestones((ms) => [...ms, { title: "", dueDate: "", amount: "" }]);
+    setMilestones(ms => [...ms, { title: '', dueDate: '', amount: '' }]);
   };
 
-  const handleRemoveMilestone = (i) => {
+  const handleRemoveMilestone = i => {
     if (milestones.length === 1) return;
-    setMilestones((ms) => ms.filter((_, idx) => idx !== i));
+    setMilestones(ms => ms.filter((_, idx) => idx !== i));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
 
     try {
-      const payload = {
-        clientId: user.sub,
-        title: formData.title,
-        description: formData.description,
-        requirements: formData.requirements,
-        budget: formData.budget,
-        deadline: formData.deadline,
-        milestones: milestones.filter((m) => m.title && m.amount && m.dueDate),
-      };
+      const { data: project, error: pErr } = await supabase
+        .from('projects')
+        .insert({
+          client_id: user.sub,
+          description: JSON.stringify({
+            title: formData.title,
+            details: formData.description,
+            requirements: formData.requirements,
+            budget: formData.budget,
+            deadline: formData.deadline
+          }),
+          completed: false
+        })
+        .select('id')
+        .single();
+      if (pErr) throw pErr;
 
-      const response = await axios.post("/api/projects", payload);
-      console.log("Project created:", response.data);
+      const msToInsert = milestones
+        .filter(m => m.title && m.dueDate && m.amount)
+        .map(m => ({
+          project_id: project.id,
+          title: m.title,
+          due_date: m.dueDate,
+          amount: parseFloat(m.amount)
+        }));
+      if (msToInsert.length) {
+        const { error: mErr } = await supabase
+          .from('milestones')
+          .insert(msToInsert);
+        if (mErr) console.error('Milestones error:', mErr);
+      }
+
       setSubmitted(true);
     } catch (err) {
-      console.error("Job post failed:", err);
-      setError(err.response?.data?.error || "Submission failed");
+      console.error('Job post submission failed:', err);
+      setError(err.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -73,14 +93,12 @@ export default function PostJobForm({ embed = false }) {
   if (submitted) {
     return (
       <section className="text-center">
-        <h1 className="text-black text-2xl mb-4">Job Posted Successfully</h1>
-        <p className="text-gray-600">
-          Your job is now live for freelancers to apply.
-        </p>
+        <h1 className="text-accent text-2xl mb-4">Job Posted Successfully</h1>
+        <p>Your job is now live for freelancers to apply.</p>
         {!embed && (
           <button
             className="primary-btn mt-4"
-            onClick={() => navigate("/client")}
+            onClick={() => navigate('/client')}
           >
             Back to Dashboard
           </button>
@@ -92,16 +110,16 @@ export default function PostJobForm({ embed = false }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       {!embed && (
-        <>
-          <h1 className="text-3xl text-black font-bold">Post a New Job</h1>
-          <p className="text-gray-600 mb-6">
+        <header>
+          <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
+          <p className="text-gray-400 mb-6">
             Describe your project and attract the right freelancers
           </p>
-        </>
+        </header>
       )}
 
       <label className="form-label">
-        <span className="text-black">Job Title:</span>
+        Job Title:
         <input
           name="title"
           value={formData.title}
@@ -112,7 +130,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        <span className="text-black">Project Description:</span>
+        Project Description:
         <textarea
           name="description"
           value={formData.description}
@@ -124,7 +142,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        <span className="text-black">Requirements:</span>
+        Requirements:
         <textarea
           name="requirements"
           value={formData.requirements}
@@ -135,7 +153,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        <span className="text-black">Budget (ZAR):</span>
+        Budget (ZAR):
         <input
           type="number"
           name="budget"
@@ -147,7 +165,7 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <label className="form-label">
-        <span className="text-black">Deadline:</span>
+        Deadline:
         <input
           type="date"
           name="deadline"
@@ -163,7 +181,7 @@ export default function PostJobForm({ embed = false }) {
           Milestones
         </legend>
         {milestones.map((m, i) => (
-          <section
+          <article
             key={i}
             className="mb-4 p-4 border border-gray-700 rounded bg-[#1a1a1a]"
           >
@@ -184,8 +202,8 @@ export default function PostJobForm({ embed = false }) {
               <input
                 type="text"
                 value={m.title}
-                onChange={(e) =>
-                  handleMilestoneChange(i, "title", e.target.value)
+                onChange={e =>
+                  handleMilestoneChange(i, 'title', e.target.value)
                 }
                 className="form-input"
                 required
@@ -197,8 +215,8 @@ export default function PostJobForm({ embed = false }) {
               <input
                 type="number"
                 value={m.amount}
-                onChange={(e) =>
-                  handleMilestoneChange(i, "amount", e.target.value)
+                onChange={e =>
+                  handleMilestoneChange(i, 'amount', e.target.value)
                 }
                 className="form-input"
                 required
@@ -211,14 +229,14 @@ export default function PostJobForm({ embed = false }) {
               <input
                 type="date"
                 value={m.dueDate}
-                onChange={(e) =>
-                  handleMilestoneChange(i, "dueDate", e.target.value)
+                onChange={e =>
+                  handleMilestoneChange(i, 'dueDate', e.target.value)
                 }
                 className="form-input"
                 required
               />
             </label>
-          </section>
+          </article>
         ))}
 
         <button
@@ -236,7 +254,7 @@ export default function PostJobForm({ embed = false }) {
         {!embed && (
           <button
             type="button"
-            onClick={() => navigate("/client")}
+            onClick={() => navigate('/client')}
             className="px-6 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-800 transition-colors"
           >
             Cancel
@@ -247,7 +265,7 @@ export default function PostJobForm({ embed = false }) {
           disabled={submitting}
           className="px-6 py-2 bg-[#1abc9c] rounded-md text-white hover:bg-[#16a085] transition-colors disabled:opacity-50"
         >
-          {submitting ? "Posting…" : "Submit Job"}
+          {submitting ? 'Posting…' : 'Submit Job'}
         </button>
       </footer>
     </form>
