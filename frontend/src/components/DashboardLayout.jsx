@@ -1,6 +1,8 @@
 import {useState} from "react";
 import "../styles/theme.css";
 import ReportIssue from './ReportIssue';
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
