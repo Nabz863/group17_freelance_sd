@@ -1,6 +1,5 @@
-
 // src/utils/supabase.js
-import { createClient } from "@supabase/supabase-js";
+const { createClient } = require("@supabase/supabase-js");
 
 // Initialize Supabase client with environment variables
 const supabase = createClient(
@@ -8,4 +7,4 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_ANON_KEY // Your Supabase anon key (from .env)
 );
 
-export default supabase;
+module.exports = supabase;
