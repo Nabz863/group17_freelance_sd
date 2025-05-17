@@ -22,15 +22,9 @@ export default function ReportIssue({ onClose }) {
     setSelectedUser(user);
     setFormData({
       ...formData,
-      reportedId: user.user_id,
+      reportedId: user.id,
       reportedEmail: user.email,
-      reportedName: user.name,
-      reportedCompany: user.companyName,
-      reportedIndustry: user.industry,
-      reportedLocation: user.location,
-      reportedContactPhone: user.contactPhone,
-      reportedContactEmail: user.contactEmail,
-      reportedPreferredContact: user.preferredContact
+      reportedName: user.name
     });
   };
 

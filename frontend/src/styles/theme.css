@@ -73,7 +73,11 @@
   
   /* Sidebar Button */
   .dashboard-sidebar-btn {
+<<<<<<< HEAD
     --color: #1abc9c;
+=======
+    --color: var(--primary-color);
+>>>>>>> parent of f28f029c (searching names of clients and freelancers to report them)
     font-family: inherit;
     width: 8em;
     height: 2.6em;

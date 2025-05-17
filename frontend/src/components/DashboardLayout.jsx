@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import "../styles/theme.css";
 import ReportIssue from './ReportIssue';
+<<<<<<< HEAD
+=======
+import { useNavigate } from 'react-router-dom';
+>>>>>>> parent of f28f029c (searching names of clients and freelancers to report them)
 
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
+
+
+  const handleLogout = () => {
+    logout({ returnTo: window.location.origin });
+    navigate('/');
+  };
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
@@ -45,6 +55,16 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
             {label}
           </button>
         ))}
+<<<<<<< HEAD
+=======
+        <button
+          className="dashboard-sidebar-btn logout-btn"
+          type="button"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+>>>>>>> parent of f28f029c (searching names of clients and freelancers to report them)
       </nav>
 
       <button
@@ -60,6 +80,12 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
 
       <section className="dashboard-content animate-fadeInUp">
         {contentMap[activeSection] || <p>No content found.</p>}
+<<<<<<< HEAD
+=======
+        {activeSection === 'Report Issue' && (
+          <ReportIssue onClose={() => setActiveSection(menuItems[0])} />
+        )}
+>>>>>>> parent of f28f029c (searching names of clients and freelancers to report them)
       </section>
     </main>
   );
