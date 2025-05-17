@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import {useState} from "react";
 import "../styles/theme.css";
 import ReportIssue from './ReportIssue';
 
@@ -6,6 +6,11 @@ export default function DashboardLayout({ role = "User", menuItems = [], content
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
 
+
+  const handleLogout = () => {
+    logout({ returnTo: window.location.origin });
+    navigate('/');
+  };
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
