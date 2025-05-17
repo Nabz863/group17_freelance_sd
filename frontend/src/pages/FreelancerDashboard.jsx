@@ -1,6 +1,6 @@
 // src/pages/FreelancerDashboard.jsx
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import DashboardLayout from '../components/DashboardLayout';
 import ApplyJobSection from '../components/ApplyJobSection';
