@@ -1,22 +1,22 @@
 // src/pages/ClientDashboard.jsx
 
-import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { toast } from 'react-toastify';
+import {useState, useEffect} from 'react';
+import {useAuth0} from '@auth0/auth0-react';
+import {toast} from 'react-toastify';
 import DashboardLayout from '../components/DashboardLayout';
 import PostJobForm from './PostJobForm';
 import ViewApplicationsSection from '../components/ViewApplicationsSection';
 import ChatList from '../components/ChatList';
 import ChatSection from '../components/ChatSection';
 import supabase from '../utils/supabaseClient';
-import { createContract } from '../services/contractAPI';
+import {createContract} from '../services/contractAPI';
 
 export default function ClientDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
+  const {user, isLoading: authLoading, isAuthenticated} = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
 
-  // ⚓ Always call hooks at the top level
+  //  Always call hooks at the top level
   useEffect(() => {
     if (!user?.sub) return;
     (async () => {

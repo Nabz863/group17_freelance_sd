@@ -1,5 +1,3 @@
-// src/components/ChatSection.jsx
-
 import React, { useEffect, useState, useRef } from 'react';
 import supabase from '../utils/supabaseClient';
 
@@ -8,7 +6,6 @@ export default function ChatSection({ projectId, currentUserId }) {
   const [newText, setNewText] = useState('');
   const bottomRef = useRef(null);
 
-  // 1) Load existing messages
   useEffect(() => {
     if (!projectId) return;
     (async () => {
@@ -22,7 +19,6 @@ export default function ChatSection({ projectId, currentUserId }) {
     })();
   }, [projectId]);
 
-  // 2) Subscribe to new messages
   useEffect(() => {
     if (!projectId) return;
 
@@ -47,12 +43,10 @@ export default function ChatSection({ projectId, currentUserId }) {
     };
   }, [projectId]);
 
-  // 3) Auto-scroll on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 4) Sending
   const sendMessage = async () => {
     const text = newText.trim();
     if (!text) return;
