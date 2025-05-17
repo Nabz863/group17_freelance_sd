@@ -5,6 +5,8 @@ import ReportIssue from './ReportIssue';
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState(menuItems[0]);
+  const { logout } = useAuth0();
+  const navigate = useNavigate();
 
 
   const handleLogout = () => {
