@@ -1,6 +1,6 @@
 // src/pages/FreelancerDashboard.jsx
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
@@ -31,9 +31,9 @@ export default function FreelancerDashboard() {
     'Report Issue'
   ];
 
-  const handleReportIssue = () => {
-    navigate('/report-issue');
-  };
+  //const handleReportIssue = () => {
+    //navigate('/report-issue');
+  //};
 
   const contentMap = {
     'Account Settings': (

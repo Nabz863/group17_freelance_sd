@@ -1,18 +1,18 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+//import axios from "axios";
+import { useEffect, useState } from "react";
+//import { toast } from "react-toastify";
 import DashboardLayout from "../components/DashboardLayout";
 import ViewApplicationsSection from "../components/ViewApplicationsSection";
 import supabase from "../utils/supabaseClient";
 import PostJobForm from "./PostJobForm";
-import { useAuth0 } from '@auth0/auth0-react';
+import {useAuth0} from '@auth0/auth0-react';
 import ReportIssue from "../components/ReportIssue";
 export default function ClientDashboard() {
-  const { user, getAccessTokenSilently } = useAuth0();   //(changed for dev purposes.Uncomment b4 committing)
+  const {user} = useAuth0();   //(changed for dev purposes.Uncomment b4 committing)
   const [projects, setProjects] = useState([]);
 
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [activeSection, setActiveSection] = useState("Account Settings");
+  const [setActiveSection] = useState("Account Settings");
 
   useEffect(() => {
     async function load() {
@@ -34,30 +34,30 @@ export default function ClientDashboard() {
       return pid;
     });
 
-    try {
-      const token = await getAccessTokenSilently();     //(changed for dev purposes.Uncomment b4 committing)
-      const { data: contract } = await axios.post(
-        "/api/contracts",
-        {
-          projectId: currentProjectId,
-          clientId: user.sub,
-          freelancerId,
-          title: `Contract for project ${currentProjectId}`,
-          contractSections: [],
-        },
-        { headers: { Authorization: `Bearer ${token}` } }     //(changed for dev purposes.Uncomment b4 committing)
-      );
-      await supabase
-        .from("projects")
-        .update({ freelancer_id: freelancerId })
-        .eq("id", currentProjectId);
+    //try {
+      //const token = await getAccessTokenSilently();     //(changed for dev purposes.Uncomment b4 committing)
+      //const { data: contract } = await axios.post(
+        //"/api/contracts",
+        //{
+          //projectId: currentProjectId,
+          //clientId: user.sub,
+          //freelancerId,
+          //title: `Contract for project ${currentProjectId}`,
+          //contractSections: [],
+        //},
+        //{ headers: { Authorization: `Bearer ${token}` } }     //(changed for dev purposes.Uncomment b4 committing)
+      //);
+      //await supabase
+        //.from("projects")
+        //.update({ freelancer_id: freelancerId })
+        //.eq("id", currentProjectId);
 
-      toast.success("Contract sent to freelancer for review!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to assign freelancer/contract.");
-    }
-  };
+      //toast.success("Contract sent to freelancer for review!");
+    //} catch (err) {
+      //console.error(err);
+      //toast.error("Failed to assign freelancer/contract.");
+    //}
+  //};
 
   const menuItems = [
     "Account Settings",
@@ -144,4 +144,5 @@ export default function ClientDashboard() {
       setActiveSection={setActiveSection}
     />
   );
+}
 }
