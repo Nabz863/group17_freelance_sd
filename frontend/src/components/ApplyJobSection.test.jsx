@@ -1,15 +1,15 @@
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import ApplyJobSection from './ApplyJobSection';
-import { useAuth0 } from '@auth0/auth0-react';
-import supabase from '../utils/supabaseClient';
-
 jest.mock('../utils/supabaseClient', () => ({
   __esModule: true,
   default: {
     from: jest.fn(),
   },
 }));
+
+import React from 'react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import ApplyJobSection from './ApplyJobSection';
+import { useAuth0 } from '@auth0/auth0-react';
+import supabase from '../utils/supabaseClient';
 
 jest.mock('@auth0/auth0-react');
 
@@ -68,7 +68,10 @@ describe('ApplyJobSection', () => {
     render(<ApplyJobSection />);
     expect(screen.getByText(/Loading\.\.\./i)).toBeInTheDocument();
 
-    await screen.findByText(/No jobs available right now\./i);
+    await waitFor(() =>
+      expect(screen.getByText(/No jobs available right now\./i))
+        .toBeInTheDocument()
+    );
   });
 
   it('shows error message when fetch fails', async () => {
@@ -79,7 +82,11 @@ describe('ApplyJobSection', () => {
     });
 
     render(<ApplyJobSection />);
-    await screen.findByText(/Failed to load jobs\. Please try again later\./i);
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Failed to load jobs\. Please try again later\./i)
+      ).toBeInTheDocument()
+    );
   });
 
   it('renders a job card and applies successfully', async () => {
@@ -100,7 +107,7 @@ describe('ApplyJobSection', () => {
     });
 
     render(<ApplyJobSection />);
-    await screen.findByText('Test Job');
+    await waitFor(() => screen.getByText('Test Job'));
 
     fireEvent.click(screen.getByRole('button', { name: /Apply Now/i }));
 

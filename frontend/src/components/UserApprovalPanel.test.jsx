@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import UserApprovalPanel from './UserApprovalPanel';
-import supabase from '../utils/supabaseClient';
 
 jest.mock('../utils/supabaseClient', () => ({
   __esModule: true,
   default: { from: jest.fn() },
 }));
+import supabase from '../utils/supabaseClient';
 
 describe('UserApprovalPanel', () => {
   const mockClients = [

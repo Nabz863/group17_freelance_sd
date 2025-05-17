@@ -1,61 +1,64 @@
-// src/pages/ClientDashboard.jsx
-
-import { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import DashboardLayout from "../components/DashboardLayout";
-import PostJobForm from "./PostJobForm";
 import ViewApplicationsSection from "../components/ViewApplicationsSection";
-import ChatList from "../components/ChatList";
-import ChatSection from "../components/ChatSection";
 import supabase from "../utils/supabaseClient";
-import { createContract } from "../services/contractAPI";
-
+import PostJobForm from "./PostJobForm";
+import { useAuth0 } from '@auth0/auth0-react';
+import ReportIssue from "../components/ReportIssue";
 export default function ClientDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
-  const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [activeChat, setActiveChat] = useState(null);
+  //const { user, getAccessTokenSilently } = useAuth0();   (changed for dev purposes.Uncomment b4 committing)
+  const user = { sub: "mock-client-id", email: "mock@client.com" }; //remove b4 committing
+  const [projects, setProjects] = useState([]);
 
-  //  Always call hooks at the top level
+  const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [activeSection, setActiveSection] = useState("Account Settings");
+
   useEffect(() => {
-    if (!user?.sub) return;
-    (async () => {
+    async function load() {
       const { data, error } = await supabase
         .from("projects")
-        .select("id")
-        .eq("client_id", user.sub)
-        .limit(1);
+        .select("*")
+        .eq("client_id", user.sub);
       if (!error && data.length) {
+        setProjects(data);
         setCurrentProjectId(data[0].id);
       }
-    })();
-  }, [user?.sub]);
+    }
+    load();
+  }, [user.sub]);
 
   const handleAssign = async (freelancerId) => {
+    setCurrentProjectId((pid) => {
+      if (!pid) return pid;
+      return pid;
+    });
+
     try {
-      await createContract({
-        projectId: currentProjectId,
-        title: `Contract for project ${currentProjectId}`,
-        freelancerId,
-      });
-      toast.success("Contract created – freelancer notified");
+      //const token = await getAccessTokenSilently();     (changed for dev purposes.Uncomment b4 committing)
+      const { data: contract } = await axios.post(
+        "/api/contracts",
+        {
+          projectId: currentProjectId,
+          clientId: user.sub,
+          freelancerId,
+          title: `Contract for project ${currentProjectId}`,
+          contractSections: [],
+        }
+        //{ headers: { Authorization: `Bearer ${token}` } }     (changed for dev purposes.Uncomment b4 committing)
+      );
+      await supabase
+        .from("projects")
+        .update({ freelancer_id: freelancerId })
+        .eq("id", currentProjectId);
+
+      toast.success("Contract sent to freelancer for review!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to create contract");
+      toast.error("Failed to assign freelancer/contract.");
     }
   };
-
-  // Early returns for loading/auth
-  if (authLoading) {
-    return <p className="mt-4 text-gray-400">Loading auth…</p>;
-  }
-  if (!isAuthenticated) {
-    return (
-      <p className="mt-4 text-gray-400">
-        Please log in to view your dashboard.
-      </p>
-    );
-  }
 
   const menuItems = [
     "Account Settings",
@@ -65,13 +68,36 @@ export default function ClientDashboard() {
     "Projects",
     "Post a Job",
     "Applications",
+    "Issues"
   ];
+
+  const handleIssueClose = () => {
+    setActiveSection(menuItems[0]);
+  };
+
+  function ProjectsList({ projects }) {
+    if (!projects.length) return <p>No projects posted yet.</p>;
+
+    return (
+      <div>
+        <h2>Your Projects</h2>
+        <ul>
+          {projects.map((project) => (
+            <li key={project.id}>
+              <strong>{project.title}</strong>
+              <p>{project.description}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   const contentMap = {
     "Account Settings": (
       <>
         <h1>Account Settings</h1>
-        <p>Edit profile, password and more.</p>
+        <p>Edit your profile, password and more.</p>
       </>
     ),
     Freelancers: (
@@ -81,16 +107,10 @@ export default function ClientDashboard() {
       </>
     ),
     Inbox: (
-      <div className="flex h-full">
-        <ChatList userId={user.sub} isClient={true} onSelect={setActiveChat} />
-        <div className="flex-1 p-4">
-          {activeChat ? (
-            <ChatSection projectId={activeChat} currentUserId={user.sub} />
-          ) : (
-            <p className="text-gray-500">Select a chat to begin messaging.</p>
-          )}
-        </div>
-      </div>
+      <>
+        <h1>Inbox</h1>
+        <p>Your messages with freelancers.</p>
+      </>
     ),
     Payments: (
       <>
@@ -98,13 +118,8 @@ export default function ClientDashboard() {
         <p>Review invoices and payment history.</p>
       </>
     ),
-    Projects: (
-      <>
-        <h1>Projects</h1>
-        <p>See current and past projects with freelancers.</p>
-      </>
-    ),
-    "Post a Job": <PostJobForm embed={false} />,
+    Projects: <ProjectsList projects={projects} />,
+    "Post a Job": <PostJobForm />,
     Applications: currentProjectId ? (
       <ViewApplicationsSection
         projectId={currentProjectId}
@@ -113,13 +128,21 @@ export default function ClientDashboard() {
     ) : (
       <p>Loading applications…</p>
     ),
+    Issues: (
+      <>
+        <h1>Issues</h1>
+        <p>View and manage reported issues.</p>
+        <ReportIssue onClose={handleIssueClose} />
+      </>
+    )
   };
 
   return (
     <DashboardLayout
-      role="Client"
+      role="Clients"
       menuItems={menuItems}
       contentMap={contentMap}
+      setActiveSection={setActiveSection}
     />
   );
 }

@@ -4,8 +4,6 @@ import userEvent from "@testing-library/user-event";
 
 import { mockNavigate } from "react-router-dom";
 
-import RegisterRole from "./RegisterRole";
-
 jest.mock("@auth0/auth0-react", () => ({
   useAuth0: () => ({ user: { sub: "test-user" } }),
 }));
@@ -17,6 +15,8 @@ jest.mock("../utils/supabaseClient", () => ({
     }),
   }),
 }));
+
+import RegisterRole from "./RegisterRole";
 
 describe("RegisterRole", () => {
   beforeEach(() => {

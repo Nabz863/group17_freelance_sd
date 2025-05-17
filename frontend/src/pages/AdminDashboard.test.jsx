@@ -2,8 +2,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 
-import AdminDashboard from "./AdminDashboard";
-
 // Mock the layout and child components
 jest.mock("../components/DashboardLayout", () => (props) => {
   return (
@@ -19,6 +17,8 @@ jest.mock("../components/DashboardLayout", () => (props) => {
 jest.mock("../components/UserApprovalPanel", () => () => (
   <div data-testid="user-approval-panel">Mock UserApprovalPanel</div>
 ));
+
+import AdminDashboard from "./AdminDashboard";
 
 describe("AdminDashboard", () => {
   it("renders the admin dashboard layout with role and menu items", () => {

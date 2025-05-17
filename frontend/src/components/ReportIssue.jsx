@@ -1,20 +1,21 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import supabase from "../utils/supabaseClient";
-import UserSearch from "./UserSearch";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import supabase from '../utils/supabaseClient';
+import UserSearch from './UserSearch';
 
 export default function ReportIssue({ onClose }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    reportedId: "",
-    reportedEmail: "",
-    reportedName: "",
-    title: "",
-    description: "",
+    reportedId: '',
+    reportedEmail: '',
+    reportedName: '',
+    title: '',
+    description: ''
   });
   const [selectedUser, setSelectedUser] = useState(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleUserSelect = (user) => {
@@ -29,7 +30,7 @@ export default function ReportIssue({ onClose }) {
       reportedLocation: user.location,
       reportedContactPhone: user.contactPhone,
       reportedContactEmail: user.contactEmail,
-      reportedPreferredContact: user.preferredContact,
+      reportedPreferredContact: user.preferredContact
     });
   };
 
@@ -40,30 +41,32 @@ export default function ReportIssue({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
 
     try {
       const { user } = await supabase.auth.getUser();
-
+      
       if (!user) {
-        throw new Error("User not authenticated");
+        throw new Error('User not authenticated');
       }
 
       if (!selectedUser || !formData.title || !formData.description) {
-        throw new Error("Please select a user and fill in all fields");
+        throw new Error('Please select a user and fill in all fields');
       }
 
-      const { error: insertError } = await supabase.from("issues").insert({
-        reporter_id: user.id,
-        reported_id: formData.reportedId,
-        title: formData.title,
-        description: formData.description,
-        reported_email: formData.reportedEmail,
-        reported_name: formData.reportedName,
-        status: "pending",
-        created_at: new Date().toISOString(),
-      });
+      const { error: insertError } = await supabase
+        .from('issues')
+        .insert({
+          reporter_id: user.id,
+          reported_id: formData.reportedId,
+          title: formData.title,
+          description: formData.description,
+          reported_email: formData.reportedEmail,
+          reported_name: formData.reportedName,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        });
 
       if (insertError) throw insertError;
 
@@ -71,29 +74,31 @@ export default function ReportIssue({ onClose }) {
       const adminId = process.env.REACT_APP_AUTH0_ADMIN_ID;
 
       // Create a detailed message notification for admin
-      const { error: messageError } = await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: adminId,
-        text: `New issue reported by ${user.email}:
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          receiver_id: adminId,
+          text: `New issue reported by ${user.email}:
 Title: ${formData.title}
 Description: ${formData.description}
 Reported User: ${formData.reportedName} (${formData.reportedEmail})
 User ID: ${formData.reportedId}`,
-        project_id: null,
-        created_at: new Date().toISOString(),
-      });
+          project_id: null,
+          created_at: new Date().toISOString()
+        });
 
       if (messageError) {
-        console.error("Error creating admin notification:", messageError);
+        console.error('Error creating admin notification:', messageError);
       }
 
-      setSuccess("Issue reported successfully! Admin has been notified.");
+      setSuccess('Issue reported successfully! Admin has been notified.');
       setTimeout(() => {
         onClose();
-        navigate("/dashboard");
+        navigate('/dashboard');
       }, 2000);
     } catch (error) {
-      console.error("Error reporting issue:", error);
+      console.error('Error reporting issue:', error);
       setError(error.message);
     } finally {
       setSubmitting(false);
@@ -104,8 +109,16 @@ User ID: ${formData.reportedId}`,
     <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
       <div className="bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl p-6 space-y-8">
         <h2 className="text-2xl font-bold mb-6 text-center">Report Issue</h2>
-        {error && <div className="text-red-400 mb-4">{error}</div>}
-        {success && <div className="text-green-400 mb-4">{success}</div>}
+        {error && (
+          <div className="text-red-400 mb-4">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="text-green-400 mb-4">
+            {success}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="bg-gray-700 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-4">Reported User</h3>
@@ -115,20 +128,16 @@ User ID: ${formData.reportedId}`,
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="font-semibold">Selected User:</div>
                   <div className="text-lg mt-2">{selectedUser.name}</div>
-                  <div className="text-sm text-gray-400 mt-1">
-                    {selectedUser.email}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {selectedUser.role}
-                  </div>
+                  <div className="text-sm text-gray-400 mt-1">{selectedUser.email}</div>
+                  <div className="text-xs text-gray-500 mt-1">{selectedUser.role}</div>
                   <button
                     onClick={() => {
                       setSelectedUser(null);
                       setFormData({
                         ...formData,
-                        reportedId: "",
-                        reportedEmail: "",
-                        reportedName: "",
+                        reportedId: '',
+                        reportedEmail: '',
+                        reportedName: ''
                       });
                     }}
                     className="text-red-400 hover:text-red-300 mt-4 px-4 py-2 rounded-lg border border-red-400 hover:bg-red-800 transition-colors"
@@ -186,30 +195,14 @@ User ID: ${formData.reportedId}`,
               >
                 {submitting ? (
                   <>
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Submitting...
                   </>
                 ) : (
-                  "Report Issue"
+                  'Report Issue'
                 )}
               </button>
             </div>
