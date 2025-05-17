@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import supabase from "../utils/supabaseClient";
 import axios from "axios";
 import "../styles/theme.css";
 
@@ -75,7 +74,9 @@ export default function PostJobForm({ embed = false }) {
     return (
       <section className="text-center">
         <h1 className="text-black text-2xl mb-4">Job Posted Successfully</h1>
-        <p className="text-gray-600">Your job is now live for freelancers to apply.</p>
+        <p className="text-gray-600">
+          Your job is now live for freelancers to apply.
+        </p>
         {!embed && (
           <button
             className="primary-btn mt-4"
@@ -158,7 +159,9 @@ export default function PostJobForm({ embed = false }) {
       </label>
 
       <fieldset className="border border-gray-700 rounded-lg p-4 mb-6">
-        <legend className="text-lg font-semibold text-white mb-3">Milestones</legend>
+        <legend className="text-lg font-semibold text-white mb-3">
+          Milestones
+        </legend>
         {milestones.map((m, i) => (
           <section
             key={i}
