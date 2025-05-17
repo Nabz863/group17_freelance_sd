@@ -8,8 +8,7 @@ import PostJobForm from "./PostJobForm";
 import { useAuth0 } from '@auth0/auth0-react';
 import ReportIssue from "../components/ReportIssue";
 export default function ClientDashboard() {
-  //const { user, getAccessTokenSilently } = useAuth0();   (changed for dev purposes.Uncomment b4 committing)
-  const user = { sub: "mock-client-id", email: "mock@client.com" }; //remove b4 committing
+  const { user, getAccessTokenSilently } = useAuth0();   //(changed for dev purposes.Uncomment b4 committing)
   const [projects, setProjects] = useState([]);
 
   const [currentProjectId, setCurrentProjectId] = useState(null);
@@ -36,7 +35,7 @@ export default function ClientDashboard() {
     });
 
     try {
-      //const token = await getAccessTokenSilently();     (changed for dev purposes.Uncomment b4 committing)
+      const token = await getAccessTokenSilently();     //(changed for dev purposes.Uncomment b4 committing)
       const { data: contract } = await axios.post(
         "/api/contracts",
         {
@@ -45,8 +44,8 @@ export default function ClientDashboard() {
           freelancerId,
           title: `Contract for project ${currentProjectId}`,
           contractSections: [],
-        }
-        //{ headers: { Authorization: `Bearer ${token}` } }     (changed for dev purposes.Uncomment b4 committing)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }     //(changed for dev purposes.Uncomment b4 committing)
       );
       await supabase
         .from("projects")
