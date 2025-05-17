@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../styles/theme.css";
+import ReportIssue from './ReportIssue';
 
 export default function DashboardLayout({ role = "User", menuItems = [], contentMap = {} }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
