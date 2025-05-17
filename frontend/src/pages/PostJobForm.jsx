@@ -110,12 +110,12 @@ export default function PostJobForm({ embed = false }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       {!embed && (
-        <>
+        <header>
           <h1 className="text-3xl text-accent font-bold">Post a New Job</h1>
           <p className="text-gray-400 mb-6">
             Describe your project and attract the right freelancers
           </p>
-        </>
+        </header>
       )}
 
       <label className="form-label">
@@ -176,10 +176,12 @@ export default function PostJobForm({ embed = false }) {
         />
       </label>
 
-      <div className="border border-gray-700 rounded-lg p-4 mb-6">
-        <h3 className="text-lg font-semibold text-white mb-3">Milestones</h3>
+      <fieldset className="border border-gray-700 rounded-lg p-4 mb-6">
+        <legend className="text-lg font-semibold text-white mb-3">
+          Milestones
+        </legend>
         {milestones.map((m, i) => (
-          <div
+          <article
             key={i}
             className="mb-4 p-4 border border-gray-700 rounded bg-[#1a1a1a]"
           >
@@ -234,7 +236,8 @@ export default function PostJobForm({ embed = false }) {
                 required
               />
             </label>
-          </div>
+
+          </article>
         ))}
 
         <button
