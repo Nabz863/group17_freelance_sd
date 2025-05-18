@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-import { format } from "date-fns";
+// Removed unused format import from date-fns
 // Using browser's built-in crypto API instead of node's crypto module
 
 export default function ApplyJobSection() {

@@ -14,7 +14,7 @@ export default function DeliverableForm({ projectId, milestone }) {
     setError(null);
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('deliverables')
         .insert({
           contract_id: projectId,

@@ -105,7 +105,7 @@ export default function ActiveProjects({ isClient = false }) {
     };
 
     fetchProjects();
-  }, [user?.sub]);
+  }, [user?.sub, isClient]);
 
   if (loading) {
     return (

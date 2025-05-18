@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import supabase from '../utils/supabaseClient';
-import { useAuth0 } from '@auth0/auth0-react';
+// Removed unused useAuth0 import
 
 export default function ClientCompletionTracking({ projectId, milestones }) {
-  const { user } = useAuth0();
+  // Removed unused user variable from useAuth0()
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
