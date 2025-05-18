@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 import { format } from "date-fns";
+import crypto from 'crypto';
 
 export default function ApplyJobSection() {
   const { user } = useAuth0();
@@ -19,7 +20,7 @@ export default function ApplyJobSection() {
 
       try {
         const [{ data: projectData, error: projectError }, { data: appsData, error: appsError }] = await Promise.all([
-          supabase.from("projects").select("id, description, milestones(*)").is("freelancer_id", null).eq("completed", false),
+          supabase.from("projects").select("id, description, created_at, clients!inner(*)").is("freelancer_id", null).eq("completed", false),
           supabase.from("applications").select("projectid").eq("freelancerid", user.sub),
         ]);
 
@@ -44,9 +45,9 @@ export default function ApplyJobSection() {
       } catch (err) {
         console.error("Error loading job data", err);
         setError("Failed to load jobs. Please try again later.");
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchJobs();
@@ -57,14 +58,14 @@ export default function ApplyJobSection() {
       alert("You’ve already applied to this job.");
       return;
     }
-  
+
     const { error } = await supabase.from("applications").insert({
       applicationid: crypto.randomUUID(),
       freelancerid: user.sub,
       projectid: projectId,
       status: "pending",
     });
-  
+
     if (error) {
       console.error("Failed to apply to project:", error);
       alert("Failed to apply. Try again.");
@@ -72,6 +73,7 @@ export default function ApplyJobSection() {
       setAppliedProjectIds((prev) => [...prev, projectId]);
     }
   };
+
   return (
     <section className="dashboard-content">
       <h1>Available Jobs</h1>
@@ -88,7 +90,6 @@ export default function ApplyJobSection() {
             const { title, details, requirements, budget, deadline } =
               proj.description || {};
             const applied = appliedProjectIds.includes(proj.id);
-            const milestones = proj.milestones || [];
 
             return (
               <div
@@ -111,30 +112,6 @@ export default function ApplyJobSection() {
                   <p className="text-sm text-gray-500 mt-2">
                     <strong>Deadline:</strong> {deadline}
                   </p>
-                )}
-                {milestones.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-sm font-semibold text-accent mb-2">Milestones</h3>
-                    <ul className="space-y-2">
-                      {milestones.map((milestone) => (
-                        <li key={milestone.id} className="text-sm text-gray-400">
-                          <div className="flex justify-between">
-                            <div>
-                              <strong>{milestone.title}</strong>
-                              {milestone.due_date && (
-                                <span className="text-xs text-gray-500 ml-2">
-                                  Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-sm text-gray-500">
-                              ${milestone.amount}
-                            </span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 )}
                 <button
                   className={`primary-btn mt-2 ${

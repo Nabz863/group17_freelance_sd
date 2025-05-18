@@ -7,6 +7,7 @@ import ApplyJobSection from "../components/ApplyJobSection";
 import ChatList from "../components/ChatList";
 import ChatSection from "../components/ChatSection";
 import FreelancerProfile from "../components/FreelancerProfile";
+import ActiveProjects from "../components/ActiveProjects";
 
 export default function FreelancerDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth0();
@@ -29,7 +30,7 @@ export default function FreelancerDashboard() {
     "Clients",
     "Inbox",
     "Payments",
-    "Documents",
+    "Projects & Documents",
     "Available Jobs",
     "Report Issue",
   ];
@@ -68,12 +69,7 @@ export default function FreelancerDashboard() {
         <p>See payment history and withdrawals.</p>
       </>
     ),
-    Documents: (
-      <>
-        <h1>Documents</h1>
-        <p>Manage project documents and uploads.</p>
-      </>
-    ),
+    "Projects & Documents": <ActiveProjects />,
     "Available Jobs": <ApplyJobSection />,
 
     "Report Issue": (
