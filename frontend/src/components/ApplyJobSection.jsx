@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
+// Removed unused format import from date-fns
+// Using browser's built-in crypto API instead of node's crypto module
 
 export default function ApplyJobSection() {
   const { user } = useAuth0();
@@ -18,7 +20,7 @@ export default function ApplyJobSection() {
 
       try {
         const [{ data: projectData, error: projectError }, { data: appsData, error: appsError }] = await Promise.all([
-          supabase.from("projects").select("id, description").is("freelancer_id", null).eq("completed", false),
+          supabase.from("projects").select("id, description, created_at, clients!inner(*)").is("freelancer_id", null).eq("completed", false),
           supabase.from("applications").select("projectid").eq("freelancerid", user.sub),
         ]);
 
@@ -43,9 +45,9 @@ export default function ApplyJobSection() {
       } catch (err) {
         console.error("Error loading job data", err);
         setError("Failed to load jobs. Please try again later.");
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchJobs();
@@ -56,14 +58,14 @@ export default function ApplyJobSection() {
       alert("You’ve already applied to this job.");
       return;
     }
-  
+
     const { error } = await supabase.from("applications").insert({
-      applicationid: crypto.randomUUID(),
+      applicationid: crypto.randomUUID(), // Using browser's built-in crypto API
       freelancerid: user.sub,
       projectid: projectId,
       status: "pending",
     });
-  
+
     if (error) {
       console.error("Failed to apply to project:", error);
       alert("Failed to apply. Try again.");
@@ -71,6 +73,7 @@ export default function ApplyJobSection() {
       setAppliedProjectIds((prev) => [...prev, projectId]);
     }
   };
+
   return (
     <section className="dashboard-content">
       <h1>Available Jobs</h1>
@@ -100,12 +103,16 @@ export default function ApplyJobSection() {
                     <strong>Requirements:</strong> {requirements}
                   </p>
                 )}
-                <p className="text-sm text-gray-500 mt-1">
-                  <strong>Budget:</strong> R{budget}
-                </p>
-                <p className="text-sm text-gray-500 mb-3">
-                  <strong>Deadline:</strong> {deadline}
-                </p>
+                {budget && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    <strong>Budget:</strong> R{budget}
+                  </p>
+                )}
+                {deadline && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    <strong>Deadline:</strong> {deadline}
+                  </p>
+                )}
                 <button
                   className={`primary-btn mt-2 ${
                     applied ? "opacity-60 cursor-not-allowed" : ""

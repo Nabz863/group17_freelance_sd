@@ -2,9 +2,9 @@ const {
   createContract,
   getContractById,
   updateContractStatus,
-  generateFormalContract
-} = require('../services/contractService');
-const supabase = require('../utils/supabaseClient');
+  generateFormalContract,
+} = require("../services/contractService");
+const supabase = require("../utils/supabase");
 
 async function createContractHandler(req, res) {
   try {
@@ -16,15 +16,15 @@ async function createContractHandler(req, res) {
       title,
       clientId,
       freelancerId,
-      contractSections
+      contractSections,
     });
 
-    const io = req.app.get('io');
-    io.to(freelancerId).emit('notification', {
-      type: 'CONTRACT_CREATED',
+    const io = req.app.get("io");
+    io.to(freelancerId).emit("notification", {
+      type: "CONTRACT_CREATED",
       message: `New contract "${contract.title}" awaits your review`,
       contractId: contract.id,
-      pdfUrl: contract.pdf_url
+      pdfUrl: contract.pdf_url,
     });
 
     res.status(201).json({ success: true, contract });
@@ -37,18 +37,18 @@ async function createContractHandler(req, res) {
 async function listContractsHandler(req, res) {
   try {
     const role = req.user.role;
-    const me   = req.auth.sub;
+    const me = req.auth.sub;
 
     const { data: allContracts, error } = await supabase
-      .from('contracts')
-      .select('*');
+      .from("contracts")
+      .select("*");
     if (error) throw error;
 
     let contracts = allContracts;
-    if (role === 'client') {
-      contracts = allContracts.filter(c => c.client_id === me);
-    } else if (role === 'freelancer') {
-      contracts = allContracts.filter(c => c.freelancer_id === me);
+    if (role === "client") {
+      contracts = allContracts.filter((c) => c.client_id === me);
+    } else if (role === "freelancer") {
+      contracts = allContracts.filter((c) => c.freelancer_id === me);
     }
 
     res.json({ success: true, contracts });
@@ -62,16 +62,16 @@ async function getContractHandler(req, res) {
   try {
     const { contractId } = req.params;
     const contract = await getContractById(contractId);
-    if (!contract) return res.status(404).json({ message: 'Not found' });
+    if (!contract) return res.status(404).json({ message: "Not found" });
 
     const role = req.user.role;
-    const me   = req.auth.sub;
+    const me = req.auth.sub;
     if (
-      role !== 'admin' &&
+      role !== "admin" &&
       contract.client_id !== me &&
       contract.freelancer_id !== me
     ) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     res.json({ success: true, contract });
@@ -84,42 +84,42 @@ async function getContractHandler(req, res) {
 async function updateContractStatusHandler(req, res) {
   try {
     const { contractId } = req.params;
-    const { status }     = req.body;
-    const role           = req.user.role;
-    const me             = req.auth.sub;
+    const { status } = req.body;
+    const role = req.user.role;
+    const me = req.auth.sub;
 
     const contract = await getContractById(contractId);
-    if (!contract) return res.status(404).json({ message: 'Not found' });
+    if (!contract) return res.status(404).json({ message: "Not found" });
 
-    const isClient     = role === 'client'     && contract.client_id === me;
-    const isFreelancer = role === 'freelancer' && contract.freelancer_id === me;
-    if (!isClient && !isFreelancer && role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+    const isClient = role === "client" && contract.client_id === me;
+    const isFreelancer = role === "freelancer" && contract.freelancer_id === me;
+    if (!isClient && !isFreelancer && role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
-    if (isFreelancer && !['accepted','rejected'].includes(status)) {
+    if (isFreelancer && !["accepted", "rejected"].includes(status)) {
       return res.status(400).json({
-        message: 'Freelancers can only accept or reject contracts'
+        message: "Freelancers can only accept or reject contracts",
       });
     }
 
     const updated = await updateContractStatus(contractId, status);
 
-    if (isFreelancer && status === 'accepted') {
+    if (isFreelancer && status === "accepted") {
       const { error: projErr } = await supabase
-        .from('projects')
+        .from("projects")
         .update({ freelancer_id: contract.freelancer_id })
-        .eq('id', contract.project_id);
+        .eq("id", contract.project_id);
       if (projErr) {
-        console.error('Error assigning freelancer to project:', projErr);
+        console.error("Error assigning freelancer to project:", projErr);
       }
     }
 
-    const io = req.app.get('io');
+    const io = req.app.get("io");
     const target = isFreelancer ? contract.client_id : contract.freelancer_id;
-    io.to(target).emit('notification', {
-      type: 'CONTRACT_UPDATED',
-      message: `Contract "${contract.title}" was ${status}`
+    io.to(target).emit("notification", {
+      type: "CONTRACT_UPDATED",
+      message: `Contract "${contract.title}" was ${status}`,
     });
 
     res.json({ success: true, contract: updated });
@@ -133,17 +133,17 @@ async function generateDocumentHandler(req, res) {
   try {
     const { contractId } = req.params;
     const role = req.user.role;
-    const me   = req.auth.sub;
+    const me = req.auth.sub;
 
     const contract = await getContractById(contractId);
-    if (!contract) return res.status(404).json({ message: 'Not found' });
+    if (!contract) return res.status(404).json({ message: "Not found" });
 
     if (
-      role !== 'admin' &&
+      role !== "admin" &&
       contract.client_id !== me &&
       contract.freelancer_id !== me
     ) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const document = await generateFormalContract(contractId);
@@ -159,7 +159,7 @@ async function downloadContractPdfHandler(req, res) {
     const { contractId } = req.params;
     const contract = await getContractById(contractId);
     if (!contract || !contract.pdf_url) {
-      return res.status(404).send('PDF not found');
+      return res.status(404).send("PDF not found");
     }
     return res.redirect(contract.pdf_url);
   } catch (err) {
@@ -174,5 +174,5 @@ module.exports = {
   getContractHandler,
   updateContractStatusHandler,
   generateDocumentHandler,
-  downloadContractPdfHandler
+  downloadContractPdfHandler,
 };
