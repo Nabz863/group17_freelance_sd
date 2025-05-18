@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
 import { format } from 'date-fns';
+import DeliverableForm from './DeliverableForm';
 
 export default function ActiveProjects() {
   const { user } = useAuth0();
@@ -26,7 +27,7 @@ export default function ActiveProjects() {
 
         if (projectError) throw projectError;
 
-        // Get milestones for each project
+        // Get milestones and deliverables for each project
         const projectPromises = projectData.map(async (project) => {
           const { data: milestoneData, error: milestoneError } = await supabase
             .from('milestones')
@@ -35,7 +36,25 @@ export default function ActiveProjects() {
 
           if (milestoneError) throw milestoneError;
 
-          return { ...project, milestones: milestoneData || [] };
+          // Get deliverables for each milestone
+          const milestonesWithDeliverables = await Promise.all(
+            milestoneData.map(async (milestone) => {
+              const { data: deliverables, error: deliverablesError } = await supabase
+                .from('deliverables')
+                .select('*')
+                .eq('contract_id', project.id)
+                .eq('milestone_number', milestone.number);
+
+              if (deliverablesError) throw deliverablesError;
+
+              return { ...milestone, deliverables: deliverables || [] };
+            })
+          );
+
+          return { 
+            ...project, 
+            milestones: milestonesWithDeliverables 
+          };
         });
 
         const projectsWithMilestones = await Promise.all(projectPromises);
@@ -122,25 +141,66 @@ export default function ActiveProjects() {
             {project.milestones?.length > 0 && (
               <div className="mt-4">
                 <h3 className="text-sm font-semibold text-accent mb-2">Milestones</h3>
-                <ul className="space-y-2">
-                  {project.milestones.map((milestone) => (
-                    <li key={milestone.id} className="text-sm text-gray-400">
-                      <div className="flex justify-between">
-                        <div>
-                          <strong>{milestone.title}</strong>
-                          {milestone.due_date && (
-                            <span className="text-xs text-gray-500 ml-2">
-                              Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          ${milestone.amount}
-                        </span>
+                {project.milestones.map((milestone) => (
+                  <div key={milestone.id} className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="text-sm font-semibold text-accent">{milestone.title}</h4>
+                        {milestone.due_date && (
+                          <span className="text-xs text-gray-500">
+                            Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
+                          </span>
+                        )}
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                      <span className="text-sm text-gray-500">
+                        ${milestone.amount}
+                      </span>
+                    </div>
+
+                    {milestone.deliverables.length > 0 && (
+                      <div className="mt-2">
+                        <h4 className="text-xs font-semibold text-accent mb-1">Deliverables</h4>
+                        <div className="space-y-2">
+                          {milestone.deliverables.map((deliverable) => (
+                            <div key={deliverable.id} className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="mb-1">{deliverable.description}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Submitted: {format(new Date(deliverable.submitted_at), 'MMM d, yyyy')}
+                                  </p>
+                                  {deliverable.status !== 'pending' && (
+                                    <p className="text-xs">
+                                      Status: <span className={`font-semibold ${
+                                        deliverable.status === 'approved' ? 'text-green-500' :
+                                        deliverable.status === 'revision_requested' ? 'text-red-500' :
+                                        'text-gray-500'
+                                      }`}>
+                                        {deliverable.status}
+                                      </span>
+                                    </p>
+                                  )}
+                                  {deliverable.revision_comments && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                      Revision Comments: {deliverable.revision_comments}
+                                    </p>
+                                  )}
+                                </div>
+                                {deliverable.approved_at && (
+                                  <p className="text-xs text-gray-500">
+                                    Approved: {format(new Date(deliverable.approved_at), 'MMM d, yyyy')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <DeliverableForm projectId={project.id} milestone={milestone} />
+                  </div>
+                ))}
               </div>
             )}
           </div>
