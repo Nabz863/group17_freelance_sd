@@ -21,7 +21,7 @@ export default function ApplyJobSection() {
       try {
         const [{ data: projectData, error: projectError }, { data: appsData, error: appsError }] = await Promise.all([
           supabase.from("projects").select("id, description, created_at, clients!inner(*)").is("freelancer_id", null).eq("completed", false),
-          supabase.from("applications").select("projectid").eq("freelancerid", user.sub),
+          supabase.from("applications").select("projectid").eq("freelancerid", user.sub).cast("projectid", "uuid"),
         ]);
 
         if (projectError || appsError) {
@@ -60,7 +60,7 @@ export default function ApplyJobSection() {
     }
 
     const { error } = await supabase.from("applications").insert({
-      applicationid: crypto.randomUUID(), // Using browser's built-in crypto API
+      applicationid: `app_${Date.now()}_${Math.random().toString(36).substring(2)}`,
       freelancerid: user.sub,
       projectid: projectId,
       status: "pending",
