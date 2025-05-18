@@ -21,7 +21,7 @@ export default function FreelancerDeliverableUpdate({ deliverable }) {
           submitted_by: user.sub,
           submitted_at: new Date().toISOString()
         })
-        .eq('id', deliverable.id);
+        .eq('id', { type: 'uuid', value: deliverable.id });
 
       if (error) throw error;
     } catch (err) {

@@ -18,7 +18,7 @@ export default function ClientCompletionTracking({ projectId, milestones }) {
           completed: isComplete,
           completed_at: isComplete ? new Date().toISOString() : null
         })
-        .eq('id', milestoneId);
+        .eq('id', { type: 'uuid', value: milestoneId });
 
       if (error) throw error;
     } catch (err) {
@@ -40,7 +40,7 @@ export default function ClientCompletionTracking({ projectId, milestones }) {
           completed: isComplete,
           completed_at: isComplete ? new Date().toISOString() : null
         })
-        .eq('id', projectId);
+        .eq('id', { type: 'uuid', value: projectId });
 
       if (error) throw error;
     } catch (err) {

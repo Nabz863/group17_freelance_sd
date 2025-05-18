@@ -21,7 +21,7 @@ export default function ClientDeliverableApproval({ deliverable, projectId }) {
           approved_at: status === 'approved' ? new Date().toISOString() : null,
           revision_comments: status === 'revision_requested' ? comments : null
         })
-        .eq('id', deliverable.id);
+        .eq('id', { type: 'uuid', value: deliverable.id });
 
       if (error) throw error;
     } catch (err) {

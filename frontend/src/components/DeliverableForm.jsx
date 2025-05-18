@@ -17,10 +17,11 @@ export default function DeliverableForm({ projectId, milestone }) {
       const { error } = await supabase
         .from('deliverables')
         .insert({
-          contract_id: projectId,
+          contract_id: { type: 'uuid', value: projectId },
           milestone_number: milestone.number,
           description,
-          submitted_by: user.sub
+          submitted_by: user.sub,
+          status: 'pending'  // Added missing status field required by schema
         });
 
       if (error) throw error;
