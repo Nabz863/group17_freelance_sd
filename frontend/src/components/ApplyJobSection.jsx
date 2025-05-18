@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 import { format } from "date-fns";
-import crypto from 'crypto';
+// Using browser's built-in crypto API instead of node's crypto module
 
 export default function ApplyJobSection() {
   const { user } = useAuth0();
@@ -60,7 +60,7 @@ export default function ApplyJobSection() {
     }
 
     const { error } = await supabase.from("applications").insert({
-      applicationid: crypto.randomUUID(),
+      applicationid: crypto.randomUUID(), // Using browser's built-in crypto API
       freelancerid: user.sub,
       projectid: projectId,
       status: "pending",
