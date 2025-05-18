@@ -26,7 +26,7 @@ export default function RegisterRole() {
         .insert({ user_id: userId, status: "pending" });
 
       if (error) throw error;
-      navigate("/create-profile");
+      navigate(role === "client" ? "/create-client-profile" : "/create-freelancer-profile");
     } catch (err) {
       console.error("Registration error:", err.message);
     }

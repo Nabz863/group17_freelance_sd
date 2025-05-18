@@ -26,10 +26,10 @@ export default function FreelancerProfileForm() {
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) {
-          navigate("/create-profile");
-        } else {
+        if (!data?.profile) {
           setLoading(false);
+        } else {
+          navigate("/freelancer");
         }
       });
   }, [user, navigate]);
@@ -43,7 +43,11 @@ export default function FreelancerProfileForm() {
 
     await supabase
       .from("freelancers")
-      .update({ profileData: formData, status: "pending" })
+      .update({ 
+        profile: JSON.stringify(formData),
+        status: "pending",
+        updated_at: new Date().toISOString()
+      })
       .eq("user_id", user.sub);
 
     if (cvFile) {
@@ -56,7 +60,7 @@ export default function FreelancerProfileForm() {
           .getPublicUrl(uploadData.path).publicUrl;
         await supabase
           .from("freelancers")
-          .update({ profile: url })
+          .update({ cv_url: url })
           .eq("user_id", user.sub);
       }
     }
