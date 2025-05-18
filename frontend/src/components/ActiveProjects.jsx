@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import DeliverableForm from './DeliverableForm';
 import ClientDeliverableApproval from './ClientDeliverableApproval';
 import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
+import ClientCompletionTracking from './ClientCompletionTracking';
 
 export default function ActiveProjects({ isClient = false }) {
   const { user } = useAuth0();
@@ -91,7 +92,10 @@ export default function ActiveProjects({ isClient = false }) {
           return { ...p, description: desc };
         });
 
-        setProjects(parsedProjects);
+        // Filter out completed projects for freelancers
+        const filteredProjects = isClient ? parsedProjects : parsedProjects.filter(p => !p.completed);
+
+        setProjects(filteredProjects);
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load active projects. Please try again later.');
@@ -155,6 +159,13 @@ export default function ActiveProjects({ isClient = false }) {
                 <h3 className="text-sm font-semibold text-accent mb-2">Project Report</h3>
                 <p className="text-sm text-gray-400">{project.report}</p>
               </div>
+            )}
+
+            {isClient && (
+              <ClientCompletionTracking 
+                projectId={project.id} 
+                milestones={project.milestones}
+              />
             )}
 
             {project.milestones?.length > 0 && (
