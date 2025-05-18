@@ -3,8 +3,10 @@ import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
 import { format } from 'date-fns';
 import DeliverableForm from './DeliverableForm';
+import ClientDeliverableApproval from './ClientDeliverableApproval';
+import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
 
-export default function ActiveProjects() {
+export default function ActiveProjects({ isClient = false }) {
   const { user } = useAuth0();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,24 @@ export default function ActiveProjects() {
 
               if (deliverablesError) throw deliverablesError;
 
-              return { ...milestone, deliverables: deliverables || [] };
+              // For clients, fetch the freelancer's name
+              const deliverablesWithFreelancer = await Promise.all(
+                deliverables.map(async (deliverable) => {
+                  if (!isClient || !deliverable.submitted_by) return deliverable;
+
+                  const { data: freelancer, error: freelancerError } = await supabase
+                    .from('users')
+                    .select('name')
+                    .eq('id', deliverable.submitted_by)
+                    .single();
+
+                  if (freelancerError) throw freelancerError;
+
+                  return { ...deliverable, freelancer_name: freelancer?.name };
+                })
+              );
+
+              return { ...milestone, deliverables: deliverablesWithFreelancer };
             })
           );
 
@@ -185,6 +204,11 @@ export default function ActiveProjects() {
                                       Revision Comments: {deliverable.revision_comments}
                                     </p>
                                   )}
+                                  {isClient && deliverable.submitted_by && (
+                                    <p className="text-xs text-gray-500">
+                                      Submitted by: {deliverable.freelancer_name || 'Freelancer'}
+                                    </p>
+                                  )}
                                 </div>
                                 {deliverable.approved_at && (
                                   <p className="text-xs text-gray-500">
@@ -192,13 +216,21 @@ export default function ActiveProjects() {
                                   </p>
                                 )}
                               </div>
+                              {isClient && deliverable.status === 'pending' && (
+                                <ClientDeliverableApproval deliverable={deliverable} projectId={project.id} />
+                              )}
+                              {!isClient && deliverable.status === 'revision_requested' && (
+                                <FreelancerDeliverableUpdate deliverable={deliverable} />
+                              )}
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <DeliverableForm projectId={project.id} milestone={milestone} />
+                    {!isClient && (
+                      <DeliverableForm projectId={project.id} milestone={milestone} />
+                    )}
                   </div>
                 ))}
               </div>
