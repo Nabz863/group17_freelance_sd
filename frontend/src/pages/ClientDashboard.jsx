@@ -12,9 +12,9 @@ import supabase from "../utils/supabaseClient";
 import PostJobForm from "./PostJobForm";
 
 export default function ClientDashboard() {
-  const { user } = useAuth0();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [projects, setProjects] = useState([]);
+  const [projects] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
 
   useEffect(() => {
@@ -65,7 +65,11 @@ export default function ClientDashboard() {
     return <p className="mt-4 text-gray-400">Loading auth…</p>;
   }
   if (!isAuthenticated) {
-    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
+    return (
+      <p className="mt-4 text-gray-400">
+        Please log in to view your dashboard.
+      </p>
+    );
   }
 
   const menuItems = [

@@ -10,6 +10,7 @@ import FreelancerProfile from "../components/FreelancerProfile";
 
 export default function FreelancerDashboard() {
   const { user, isLoading, isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState(null);
 
   if (isLoading) {
