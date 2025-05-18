@@ -26,10 +26,10 @@ export default function ClientProfileForm() {
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) {
-          navigate("/create-profile");
-        } else {
+        if (!data?.profile) {
           setLoading(false);
+        } else {
+          navigate("/client");
         }
       });
   }, [user, navigate]);
@@ -43,7 +43,11 @@ export default function ClientProfileForm() {
 
     await supabase
       .from("clients")
-      .update({ profileData: formData, status: "pending" })
+      .update({ 
+        profile: JSON.stringify(formData),
+        status: "pending",
+        updated_at: new Date().toISOString()
+      })
       .eq("user_id", user.sub);
 
     if (pdfFile) {
@@ -56,7 +60,7 @@ export default function ClientProfileForm() {
           .getPublicUrl(uploadData.path).publicUrl;
         await supabase
           .from("clients")
-          .update({ profile: url })
+          .update({ profile_url: url })
           .eq("user_id", user.sub);
       }
     }
