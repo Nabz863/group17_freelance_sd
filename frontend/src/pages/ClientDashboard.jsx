@@ -1,49 +1,34 @@
-// src/pages/ClientDashboard.jsx
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import ChatList from "../components/ChatList";
 import ChatSection from "../components/ChatSection";
 import ClientProfile from "../components/ClientProfile";
 import DashboardLayout from "../components/DashboardLayout";
 import ViewApplicationsSection from "../components/ViewApplicationsSection";
-import { createContract } from "../services/contractAPI";
-import supabase from "../utils/supabaseClient";
+import ActiveProjects from "../components/ActiveProjects";
 import PostJobForm from "./PostJobForm";
+import supabase from "../utils/supabaseClient";
+import { createContract } from "../services/contractAPI";
 
 export default function ClientDashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [projects] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
 
-  useEffect(() => {
+  // load one project id for Applications tab
+  useState(() => {
     if (!user?.sub) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("client_id", user.sub)
-        .limit(1);
-      if (!error && data.length) {
-        setCurrentProjectId(data[0].id);
-      }
-    })();
-  }, [user]);
-
-  //listing projects for projects tab
-
-  useEffect(() => {
-    if (!user?.sub) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*, milestones(*)")
-        .eq("client_id", user.sub);
-      if (!error && data.length) {
-        setCurrentProjectId(data[0].id);
-      }
-    })();
+    supabase
+      .from("projects")
+      .select("id")
+      .eq("client_id", user.sub)
+      .limit(1)
+      .then(({ data, error }) => {
+        if (!error && data.length) {
+          setCurrentProjectId(data[0].id);
+        }
+      });
   }, [user?.sub]);
 
   const handleAssign = async (freelancerId) => {
@@ -60,7 +45,6 @@ export default function ClientDashboard() {
     }
   };
 
-  // Early returns for loading/auth
   if (authLoading) {
     return <p className="mt-4 text-gray-400">Loading auth…</p>;
   }
@@ -82,41 +66,6 @@ export default function ClientDashboard() {
     "Applications",
   ];
 
-  function ProjectsList({ projects }) {
-    if (!projects.length) return <p>No projects posted yet.</p>;
-
-    return (
-      <section aria-labelledby="projects-heading">
-        <h2 id="projects-heading" className="projectsHeading">
-          Your Projects
-        </h2>
-        <ul className="projectList">
-          {projects.map((project) => {
-            const desc = JSON.parse(project.description);
-            return (
-              <li key={project.id} className="projectList">
-                <article>
-                  <h3>{desc.title}</h3>
-                  {project.milestones?.length ? (
-                    <ul>
-                      {project.milestones.map((m) => (
-                        <li key={m.id} className="projectMilestones">
-                          {m.title}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No milestones yet.</p>
-                  )}
-                </article>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  }
-
   const contentMap = {
     "My Profile": <ClientProfile />,
 
@@ -126,9 +75,11 @@ export default function ClientDashboard() {
         <p>View or manage freelancers you’ve worked with.</p>
       </>
     ),
+
     Inbox: (
       <section className="flex h-full">
-        <ChatList onSelect={setActiveChat} />
+        {/* pass userId and isClient=true */}
+        <ChatList userId={user.sub} isClient={true} onSelect={setActiveChat} />
         <section className="flex-1 p-4">
           {activeChat ? (
             <ChatSection projectId={activeChat} currentUserId={user.sub} />
@@ -138,13 +89,16 @@ export default function ClientDashboard() {
         </section>
       </section>
     ),
+
     Payments: (
       <>
         <h1>Payments</h1>
         <p>Review invoices and payment history.</p>
       </>
     ),
-    Projects: <ProjectsList projects={projects} />,
+
+    // show all active projects + milestones/deliverables + approval UI
+    Projects: <ActiveProjects isClient={true} />,
 
     "Post a Job": <PostJobForm embed={false} />,
 
