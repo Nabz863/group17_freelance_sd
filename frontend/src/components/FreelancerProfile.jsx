@@ -56,8 +56,7 @@ export default function FreelancerProfile() {
   const handleSubmit = async e => {
     e.preventDefault();
     const payload = {
-      profile: JSON.stringify(formData),
-      updated_at: new Date().toISOString(),
+      profile: JSON.stringify(formData)
     };
     const { error } = await supabase
       .from("freelancers")
