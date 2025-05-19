@@ -1,3 +1,5 @@
+// src/components/FreelancerProfile.jsx
+
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
@@ -26,43 +28,24 @@ export default function FreelancerProfile() {
 
   useEffect(() => {
     if (!user?.sub) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("freelancers")
+        .select("*, profile")
+        .eq("user_id", user.sub)
+        .single();
+      if (error) return console.error(error);
 
-    const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("freelancers")
-          .select("*, profile")     // make sure you include `profile`
-          .eq("user_id", user.sub)
-          .single();
-        if (error) throw error;
-        if (!data) {
-          setProfile(null);
-          return;
-        }
-
-        // Parse the JSON‐string in data.profile into an object
-        let parsed = data.profile;
-        if (typeof parsed === "string") {
-          try {
-            parsed = JSON.parse(parsed);
-          } catch {
-            parsed = {};
-          }
-        }
-
-        // Merge parsed into the full record
-        setProfile({ ...data, profile: parsed });
-
-        // Seed the form values
-        setFormData(prev => ({ ...prev, ...parsed, email: user.email }));
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      } finally {
-        setLoading(false);
+      let parsed = data.profile;
+      if (typeof parsed === "string") {
+        try { parsed = JSON.parse(parsed); }
+        catch { parsed = {}; }
       }
-    };
 
-    fetchProfile();
+      setProfile({ ...data, profile: parsed });
+      setFormData({ ...parsed, email: user.email });
+      setLoading(false);
+    })();
   }, [user?.sub, user?.email]);
 
   const handleChange = e => {
@@ -72,129 +55,161 @@ export default function FreelancerProfile() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    try {
-      const payload = {
-        profile: JSON.stringify(formData),
-        updated_at: new Date().toISOString(),
-      };
-      const { error } = await supabase
-        .from("freelancers")
-        .update(payload)
-        .eq("user_id", user.sub);
-      if (error) throw error;
+    const payload = {
+      profile: JSON.stringify(formData),
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await supabase
+      .from("freelancers")
+      .update(payload)
+      .eq("user_id", user.sub);
+    if (error) return console.error(error);
 
-      // Reflect changes locally
-      setProfile(prev => ({ ...prev, profile: { ...formData } }));
-      setEditing(false);
-    } catch (err) {
-      console.error("Error saving profile:", err);
-    }
+    setProfile(prev => ({ ...prev, profile: { ...formData } }));
+    setEditing(false);
   };
 
   if (loading) {
-    return <p className="text-white">Loading profile...</p>;
+    return <p className="text-white">Loading profile…</p>;
   }
   if (!profile) {
-    return <p className="text-white">No profile found. Please complete your setup.</p>;
+    return <p className="text-white">No profile found. Complete setup first.</p>;
   }
 
   return (
-    <div className="profile-container p-6 bg-[#0e0e0e] text-white rounded-lg">
+    <div className="profile-container p-6 bg-[#0e0e0e] text-white">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Profile Information</h2>
-        {!editing && (
+        <h2 className="text-2xl font-bold">Freelancer Profile</h2>
+        {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
           >
             Edit Profile
           </button>
+        ) : (
+          <div className="space-x-2">
+            <button
+              onClick={() => setEditing(false)}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="profile-form"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
         )}
       </div>
 
       {editing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* First & Last Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="form-label">
-              First Name
+        <form
+          id="profile-form"
+          onSubmit={handleSubmit}
+          className="space-y-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                First Name *
+              </label>
               <input
+                type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                className="form-input"
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </label>
-            <label className="form-label">
-              Last Name
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Last Name *
+              </label>
               <input
+                type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
                 required
-                className="form-input"
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </label>
+            </div>
           </div>
 
-          {/* Profession & Specialization */}
-          <label className="form-label">
-            Profession
-            <input
-              name="profession"
-              value={formData.profession}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </label>
-          <label className="form-label">
-            Specialization
-            <input
-              name="specialization"
-              value={formData.specialization}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Profession *
+              </label>
+              <input
+                type="text"
+                name="profession"
+                value={formData.profession}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Specialization *
+              </label>
+              <input
+                type="text"
+                name="specialization"
+                value={formData.specialization}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+          </div>
 
-          {/* Experience & Rate & Availability */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <label className="form-label">
-              Years of Experience
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Years of Experience *
+              </label>
               <input
                 type="number"
-                min="0"
                 name="experience"
+                min="0"
                 value={formData.experience}
                 onChange={handleChange}
                 required
-                className="form-input"
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </label>
-            <label className="form-label">
-              Hourly Rate (ZAR)
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Hourly Rate (ZAR) *
+              </label>
               <input
                 type="number"
+                name="hourly_rate"
                 min="0"
                 step="0.01"
-                name="hourly_rate"
                 value={formData.hourly_rate}
                 onChange={handleChange}
                 required
-                className="form-input"
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </label>
-            <label className="form-label">
-              Availability
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Availability *
+              </label>
               <select
                 name="availability"
                 value={formData.availability}
                 onChange={handleChange}
                 required
-                className="form-select"
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               >
                 <option value="">Select availability</option>
                 <option value="full-time">Full-time</option>
@@ -203,148 +218,146 @@ export default function FreelancerProfile() {
                 <option value="evenings">Evenings only</option>
                 <option value="contract">Contract</option>
               </select>
-            </label>
+            </div>
           </div>
 
-          {/* Contact & Portfolio */}
-          <label className="form-label">
-            Phone Number
-            <input
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </label>
-          <label className="form-label">
-            Email
-            <input
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </label>
-          <label className="form-label">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Email *
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+          </div>
+
+          <label className="block text-sm font-medium mb-1">
             Portfolio URL
             <input
-              name="portfolio_url"
               type="url"
+              name="portfolio_url"
               value={formData.portfolio_url}
               onChange={handleChange}
-              className="form-input"
+              className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
           </label>
 
-          {/* Skills & Description */}
-          <label className="form-label">
-            Skills (comma-separated)
+          <label className="block text-sm font-medium mb-1">
+            Skills (comma-separated) *
             <input
+              type="text"
               name="skills"
               value={formData.skills}
               onChange={handleChange}
               required
-              className="form-input"
-            />
-          </label>
-          <label className="form-label">
-            Bio / Work Description
-            <textarea
-              name="description"
-              rows="5"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              className="form-textarea"
+              className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
           </label>
 
-          <div className="flex space-x-2 pt-4">
-            <button
-              type="submit"
-              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white"
-            >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({ ...profile.profile, email: profile.profile.email });
-                setEditing(false);
-              }}
-              className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded text-white"
-            >
-              Cancel
-            </button>
-          </div>
+          <label className="block text-sm font-medium mb-1">
+            Bio / Work Description *
+            <textarea
+              name="description"
+              rows={4}
+              value={formData.description}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+            />
+          </label>
         </form>
       ) : (
-        <div className="space-y-4">
-          <p>
-            <strong>Name:</strong> {profile.profile.firstName}{" "}
-            {profile.profile.lastName}
-          </p>
-          <p>
-            <strong>Profession:</strong> {profile.profile.profession}
-          </p>
-          <p>
-            <strong>Specialization:</strong> {profile.profile.specialization}
-          </p>
-          <p>
-            <strong>Experience:</strong> {profile.profile.experience} years
-          </p>
-          <p>
-            <strong>Hourly Rate:</strong> ZAR{" "}
-            {parseFloat(profile.profile.hourly_rate || 0).toLocaleString()}/hr
-          </p>
-          <p>
-            <strong>Availability:</strong> {profile.profile.availability}
-          </p>
-          <p>
-            <strong>Phone:</strong> {profile.profile.phone}
-          </p>
-          <p>
-            <strong>Email:</strong> {profile.profile.email}
-          </p>
-          <p>
-            <strong>Portfolio:</strong>{" "}
-            {profile.profile.portfolio_url ? (
-              <a
-                href={profile.profile.portfolio_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
-              >
-                View
-              </a>
-            ) : (
-              "N/A"
-            )}
-          </p>
-          <p>
-            <strong>Skills:</strong>{" "}
-            {profile.profile.skills
-              ?.split(",")
-              .map((s, i) => (
-                <span
-                  key={i}
-                  className="inline-block bg-gray-700 text-white px-2 py-1 rounded mr-1"
-                >
-                  {s.trim()}
-                </span>
-              ))}
-          </p>
-          <p>
-            <strong>Description:</strong>
-            <br />
-            <span className="whitespace-pre-line">
-              {profile.profile.description}
-            </span>
-          </p>
+        <div className="space-y-6">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-400">Full Name</p>
+                <p className="font-medium">
+                  {profile.profile.firstName}{" "}
+                  {profile.profile.lastName}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Profession</p>
+                <p className="font-medium">{profile.profile.profession}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Specialization</p>
+                <p className="font-medium">{profile.profile.specialization}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Experience</p>
+                <p className="font-medium">
+                  {profile.profile.experience} years
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-xl font-semibold mb-4">Contact Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-400">Email</p>
+                <p className="font-medium">{profile.profile.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Phone</p>
+                <p className="font-medium">{profile.profile.phone}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Location</p>
+                <p className="font-medium">{profile.profile.location}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Availability</p>
+                <p className="font-medium capitalize">
+                  {profile.profile.availability}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-xl font-semibold mb-4">Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {profile.profile.skills
+                .split(",")
+                .map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm"
+                  >
+                    {skill.trim()}
+                  </span>
+                ))}
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-xl font-semibold mb-4">About Me</h3>
+            <p className="whitespace-pre-line">{profile.profile.description}</p>
+          </div>
         </div>
       )}
     </div>
