@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from 'react';
-import {useAuth0} from '@auth0/auth0-react';
+import React, { useEffect, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 import DeliverableForm from './DeliverableForm';
 import ClientDeliverableApproval from './ClientDeliverableApproval';
 import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
 import ClientCompletionTracking from './ClientCompletionTracking';
 
-export default function ActiveProjects({isClient = false}) {
-  const {user} = useAuth0();
+export default function ActiveProjects({ isClient = false }) {
+  const { user } = useAuth0();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
@@ -22,7 +22,7 @@ export default function ActiveProjects({isClient = false}) {
         setError(null);
 
         // Fetch projects where this freelancer is assigned and not completed
-        const {data: projectData, error: projectError} = await supabase
+        const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('id, description, client_id, completed, created_at, report')
           .eq('freelancer_id', user.sub)
@@ -31,10 +31,10 @@ export default function ActiveProjects({isClient = false}) {
         if (projectError) throw projectError;
 
         const projectPromises = projectData.map(async (project) => {
-          // Fetch milestones, including the numeric `number` field
-          const {data: milestoneData, error: milestoneError} = await supabase
+          // Fetch milestones, aliasing milestone_number → number
+          const { data: milestoneData, error: milestoneError } = await supabase
             .from('milestones')
-            .select('id, project_id, number, title, due_date, amount')
+            .select('id, project_id, milestone_number:number, title, due_date, amount')
             .eq('project_id', project.id);
 
           if (milestoneError) throw milestoneError;
@@ -47,11 +47,12 @@ export default function ActiveProjects({isClient = false}) {
                 .select('*')
                 .eq('contract_id', project.id);
 
+              // Only filter by milestone_number if it's a valid number
               if (typeof milestone.number === 'number') {
                 q = q.eq('milestone_number', milestone.number);
               } else {
                 console.warn(
-                  `Skipping deliverables fetch for milestone ${milestone.id}: number is`,
+                  `Skipping deliverables fetch for milestone ${milestone.id}: invalid number`,
                   milestone.number
                 );
               }
@@ -77,10 +78,7 @@ export default function ActiveProjects({isClient = false}) {
             })
           );
 
-          return {
-            ...project,
-            milestones: milestonesWithDeliverables
-          };
+          return { ...project, milestones: milestonesWithDeliverables };
         });
 
         const projectsWithMilestones = await Promise.all(projectPromises);
@@ -115,7 +113,7 @@ export default function ActiveProjects({isClient = false}) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1abc9c]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1abc9c]" />
       </div>
     );
   }
@@ -220,6 +218,9 @@ export default function ActiveProjects({isClient = false}) {
                               key={deliverable.id}
                               className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]"
                             >
+
+                              {/* Deliverable info */}
+
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="mb-1">{deliverable.description}</p>
@@ -260,6 +261,8 @@ export default function ActiveProjects({isClient = false}) {
                                   </p>
                                 )}
                               </div>
+
+                              {/* Actions */}
                               {isClient && deliverable.status === 'pending' && (
                                 <ClientDeliverableApproval
                                   deliverable={deliverable}
