@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, {useEffect, useState} from 'react';
+import {useAuth0} from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
-import { format } from 'date-fns';
+import {format} from 'date-fns';
 import DeliverableForm from './DeliverableForm';
 import ClientDeliverableApproval from './ClientDeliverableApproval';
 import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
 import ClientCompletionTracking from './ClientCompletionTracking';
 
-export default function ActiveProjects({ isClient = false }) {
-  const { user } = useAuth0();
+export default function ActiveProjects({isClient = false}) {
+  const {user} = useAuth0();
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
 
   useEffect(() => {
     if (!user?.sub) return;
@@ -21,8 +21,8 @@ export default function ActiveProjects({ isClient = false }) {
         setLoading(true);
         setError(null);
 
-        // First get all projects where the freelancer is selected
-        const { data: projectData, error: projectError } = await supabase
+        // Fetch projects where this freelancer is assigned and not completed
+        const {data: projectData, error: projectError} = await supabase
           .from('projects')
           .select('id, description, client_id, completed, created_at, report')
           .eq('freelancer_id', user.sub)
@@ -30,39 +30,45 @@ export default function ActiveProjects({ isClient = false }) {
 
         if (projectError) throw projectError;
 
-        // Get milestones and deliverables for each project
         const projectPromises = projectData.map(async (project) => {
-          const { data: milestoneData, error: milestoneError } = await supabase
+          // Fetch milestones, including the numeric `number` field
+          const {data: milestoneData, error: milestoneError} = await supabase
             .from('milestones')
-            .select('*')
+            .select('id, project_id, number, title, due_date, amount')
             .eq('project_id', project.id);
 
           if (milestoneError) throw milestoneError;
 
-          // Get deliverables for each milestone
+          // For each milestone, fetch its deliverables (guarding undefined number)
           const milestonesWithDeliverables = await Promise.all(
             milestoneData.map(async (milestone) => {
-              const { data: deliverables, error: deliverablesError } = await supabase
+              let q = supabase
                 .from('deliverables')
                 .select('*')
-                .eq('contract_id', project.id)
-                .eq('milestone_number', milestone.number);
+                .eq('contract_id', project.id);
 
+              if (typeof milestone.number === 'number') {
+                q = q.eq('milestone_number', milestone.number);
+              } else {
+                console.warn(
+                  `Skipping deliverables fetch for milestone ${milestone.id}: number is`,
+                  milestone.number
+                );
+              }
+
+              const { data: deliverables, error: deliverablesError } = await q;
               if (deliverablesError) throw deliverablesError;
 
-              // For clients, fetch the freelancer's name
+              // If in client view, fetch the freelancer's name for each deliverable
               const deliverablesWithFreelancer = await Promise.all(
                 deliverables.map(async (deliverable) => {
                   if (!isClient || !deliverable.submitted_by) return deliverable;
-
-                  const { data: freelancer, error: freelancerError } = await supabase
+                  const { data: freelancer, error: fe } = await supabase
                     .from('users')
                     .select('name')
                     .eq('id', deliverable.submitted_by)
                     .single();
-
-                  if (freelancerError) throw freelancerError;
-
+                  if (fe) throw fe;
                   return { ...deliverable, freelancer_name: freelancer?.name };
                 })
               );
@@ -71,29 +77,28 @@ export default function ActiveProjects({ isClient = false }) {
             })
           );
 
-          return { 
-            ...project, 
-            milestones: milestonesWithDeliverables 
+          return {
+            ...project,
+            milestones: milestonesWithDeliverables
           };
         });
 
         const projectsWithMilestones = await Promise.all(projectPromises);
-        
-        // Parse description if it's a string
+
+        // Parse project.description if it's a JSON string
         const parsedProjects = projectsWithMilestones.map((p) => {
           let desc = p.description;
           if (typeof desc === 'string') {
-            try {
-              desc = JSON.parse(desc);
-            } catch {
-              desc = {};
-            }
+            try { desc = JSON.parse(desc); }
+            catch { desc = {}; }
           }
           return { ...p, description: desc };
         });
 
-        // Filter out completed projects for freelancers
-        const filteredProjects = isClient ? parsedProjects : parsedProjects.filter(p => !p.completed);
+        // Freelancers only see in-progress; clients see all
+        const filteredProjects = isClient
+          ? parsedProjects
+          : parsedProjects.filter(p => !p.completed);
 
         setProjects(filteredProjects);
       } catch (err) {
@@ -132,7 +137,10 @@ export default function ActiveProjects({ isClient = false }) {
       {projects.map((project) => {
         const { title, details } = project.description || {};
         return (
-          <div key={project.id} className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+          <div
+            key={project.id}
+            className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]"
+          >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-xl text-accent font-bold mb-1">{title}</h2>
@@ -147,35 +155,49 @@ export default function ActiveProjects({ isClient = false }) {
                 </p>
               </div>
               <div className="flex items-center">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  project.completed ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-100'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    project.completed
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-500 text-gray-100'
+                  }`}
+                >
                   {project.completed ? 'Completed' : 'In Progress'}
                 </span>
               </div>
             </div>
+
             {project.report && (
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-accent mb-2">Project Report</h3>
+                <h3 className="text-sm font-semibold text-accent mb-2">
+                  Project Report
+                </h3>
                 <p className="text-sm text-gray-400">{project.report}</p>
               </div>
             )}
 
             {isClient && (
-              <ClientCompletionTracking 
-                projectId={project.id} 
+              <ClientCompletionTracking
+                projectId={project.id}
                 milestones={project.milestones}
               />
             )}
 
             {project.milestones?.length > 0 && (
               <div className="mt-4">
-                <h3 className="text-sm font-semibold text-accent mb-2">Milestones</h3>
+                <h3 className="text-sm font-semibold text-accent mb-2">
+                  Milestones
+                </h3>
                 {project.milestones.map((milestone) => (
-                  <div key={milestone.id} className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4">
+                  <div
+                    key={milestone.id}
+                    className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h4 className="text-sm font-semibold text-accent">{milestone.title}</h4>
+                        <h4 className="text-sm font-semibold text-accent">
+                          {milestone.title}
+                        </h4>
                         {milestone.due_date && (
                           <span className="text-xs text-gray-500">
                             Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
@@ -189,10 +211,15 @@ export default function ActiveProjects({ isClient = false }) {
 
                     {milestone.deliverables.length > 0 && (
                       <div className="mt-2">
-                        <h4 className="text-xs font-semibold text-accent mb-1">Deliverables</h4>
+                        <h4 className="text-xs font-semibold text-accent mb-1">
+                          Deliverables
+                        </h4>
                         <div className="space-y-2">
                           {milestone.deliverables.map((deliverable) => (
-                            <div key={deliverable.id} className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]">
+                            <div
+                              key={deliverable.id}
+                              className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]"
+                            >
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="mb-1">{deliverable.description}</p>
@@ -201,11 +228,16 @@ export default function ActiveProjects({ isClient = false }) {
                                   </p>
                                   {deliverable.status !== 'pending' && (
                                     <p className="text-xs">
-                                      Status: <span className={`font-semibold ${
-                                        deliverable.status === 'approved' ? 'text-green-500' :
-                                        deliverable.status === 'revision_requested' ? 'text-red-500' :
-                                        'text-gray-500'
-                                      }`}>
+                                      Status:{' '}
+                                      <span
+                                        className={`font-semibold ${
+                                          deliverable.status === 'approved'
+                                            ? 'text-green-500'
+                                            : deliverable.status === 'revision_requested'
+                                            ? 'text-red-500'
+                                            : 'text-gray-500'
+                                        }`}
+                                      >
                                         {deliverable.status}
                                       </span>
                                     </p>
@@ -223,12 +255,16 @@ export default function ActiveProjects({ isClient = false }) {
                                 </div>
                                 {deliverable.approved_at && (
                                   <p className="text-xs text-gray-500">
-                                    Approved: {format(new Date(deliverable.approved_at), 'MMM d, yyyy')}
+                                    Approved:{' '}
+                                    {format(new Date(deliverable.approved_at), 'MMM d, yyyy')}
                                   </p>
                                 )}
                               </div>
                               {isClient && deliverable.status === 'pending' && (
-                                <ClientDeliverableApproval deliverable={deliverable} projectId={project.id} />
+                                <ClientDeliverableApproval
+                                  deliverable={deliverable}
+                                  projectId={project.id}
+                                />
                               )}
                               {!isClient && deliverable.status === 'revision_requested' && (
                                 <FreelancerDeliverableUpdate deliverable={deliverable} />
