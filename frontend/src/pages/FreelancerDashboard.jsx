@@ -1,12 +1,10 @@
-// src/components/FreelancerProfile.jsx
-
-import React, { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import React, {useState, useEffect} from "react";
+import {useAuth0} from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
 import "../styles/theme.css";
 
 export default function FreelancerProfile() {
-  const { user } = useAuth0();
+  const {user} = useAuth0();
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [editing, setEditing]   = useState(false);
@@ -30,7 +28,7 @@ export default function FreelancerProfile() {
 
     const fetchProfile = async () => {
       try {
-        const { data, error } = await supabase
+        const {data, error} = await supabase
           .from("freelancers")
           .select("*")
           .eq("user_id", user.sub)
@@ -186,3 +184,27 @@ export default function FreelancerProfile() {
             ) : (
               "N/A"
             )}
+          </p>
+          <p>
+            <strong>Skills: </strong>
+            {profile.profile.skills?.split(",").map((s, i) => (
+              <span
+                key={i}
+                className="inline-block bg-gray-700 text-white px-2 py-1 rounded mr-1"
+              >
+                {s.trim()}
+              </span>
+            ))}
+          </p>
+          <p>
+            <strong>Description: </strong>
+            <br />
+            <span className="whitespace-pre-line">
+              {profile.profile.description}
+            </span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
