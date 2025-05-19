@@ -1,5 +1,3 @@
-// src/components/ActiveProjects.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
@@ -23,7 +21,7 @@ export default function ActiveProjects({ isClient = false }) {
         setLoading(true);
         setError(null);
 
-        // 1) Fetch active projects for this freelancer
+        // 1) Fetch all in-progress projects for this freelancer
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('id, description, client_id, completed, created_at, report')
@@ -33,65 +31,49 @@ export default function ActiveProjects({ isClient = false }) {
 
         // 2) For each project, fetch its milestones & deliverables
         const projectPromises = projectData.map(async (project) => {
-          // Fetch milestones, including the milestone_number column
+          // Fetch milestones (no milestone_number column in schema)
           const { data: milestoneData, error: milestoneError } = await supabase
             .from('milestones')
-            .select('id, project_id, milestone_number, title, due_date, amount')
+            .select('id, project_id, title, due_date, amount')
             .eq('project_id', project.id);
           if (milestoneError) throw milestoneError;
 
           // Attach deliverables to each milestone
           const milestonesWithDeliverables = await Promise.all(
-            milestoneData.map(async (milestone) => {
-              let q = supabase
+            milestoneData.map(async (ms) => {
+              // Fetch deliverables by matching milestone_id
+              const { data: deliverables, error: dErr } = await supabase
                 .from('deliverables')
                 .select('*')
-                .eq('contract_id', project.id);
+                .eq('contract_id', project.id)
+                .eq('milestone_id', ms.id);
+              if (dErr) throw dErr;
 
-              // Only filter by milestone_number if defined
-              if (typeof milestone.milestone_number === 'number') {
-                q = q.eq('milestone_number', milestone.milestone_number);
-              } else {
-                console.warn(
-                  `Skipping deliverables fetch for milestone ${milestone.id}: milestone_number is`,
-                  milestone.milestone_number
-                );
-              }
-
-              const { data: deliverables, error: deliverablesError } = await q;
-              if (deliverablesError) throw deliverablesError;
-
-              // If client view, fetch freelancer name for each deliverable
-              const deliverablesWithFreelancer = await Promise.all(
+              // If client, fetch freelancer name
+              const withNames = await Promise.all(
                 deliverables.map(async (d) => {
                   if (!isClient || !d.submitted_by) return d;
-                  const { data: freelancer, error: fe } = await supabase
+                  const { data: f, error: fErr } = await supabase
                     .from('users')
                     .select('name')
                     .eq('id', d.submitted_by)
                     .single();
-                  if (fe) throw fe;
-                  return { ...d, freelancer_name: freelancer?.name };
+                  if (fErr) throw fErr;
+                  return { ...d, freelancer_name: f?.name };
                 })
               );
 
-              return {
-                ...milestone,
-                deliverables: deliverablesWithFreelancer
-              };
+              return { ...ms, deliverables: withNames };
             })
           );
 
-          return {
-            ...project,
-            milestones: milestonesWithDeliverables
-          };
+          return { ...project, milestones: milestonesWithDeliverables };
         });
 
-        const projectsWithMilestones = await Promise.all(projectPromises);
+        const result = await Promise.all(projectPromises);
 
-        // Parse description JSON
-        const parsedProjects = projectsWithMilestones.map(p => {
+        // Parse project.description JSON
+        const parsed = result.map((p) => {
           let desc = p.description;
           if (typeof desc === 'string') {
             try { desc = JSON.parse(desc); } catch { desc = {}; }
@@ -99,7 +81,7 @@ export default function ActiveProjects({ isClient = false }) {
           return { ...p, description: desc };
         });
 
-        setProjects(parsedProjects);
+        setProjects(parsed);
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load active projects.');
@@ -133,100 +115,129 @@ export default function ActiveProjects({ isClient = false }) {
 
   return (
     <div className="space-y-6">
-      {projects.map(project => {
+      {projects.map((project) => {
         const { title, details } = project.description || {};
         return (
-          <div key={project.id} className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+          <div
+            key={project.id}
+            className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]"
+          >
             {/* Project Header */}
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-xl text-accent font-bold mb-1">{title}</h2>
                 <p className="text-sm text-gray-300 mb-2">{details}</p>
                 {project.client_id && (
-                  <p className="text-sm text-gray-500">Client ID: {project.client_id}</p>
+                  <p className="text-sm text-gray-500">
+                    Client ID: {project.client_id}
+                  </p>
                 )}
                 <p className="text-xs text-gray-500">
                   Created: {format(new Date(project.created_at), 'MMM d, yyyy')}
                 </p>
               </div>
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                project.completed ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-100'
-              }`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs ${
+                  project.completed
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-500 text-gray-100'
+                }`}
+              >
                 {project.completed ? 'Completed' : 'In Progress'}
               </span>
             </div>
 
-            {/* Project Report */}
+            {/* Report */}
             {project.report && (
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-accent mb-2">Project Report</h3>
+                <h3 className="text-sm font-semibold text-accent mb-2">
+                  Project Report
+                </h3>
                 <p className="text-sm text-gray-400">{project.report}</p>
               </div>
             )}
 
-            {/* Client-specific tracking */}
+            {/* Client-specific */}
             {isClient && (
-              <ClientCompletionTracking projectId={project.id} milestones={project.milestones} />
+              <ClientCompletionTracking
+                projectId={project.id}
+                milestones={project.milestones}
+              />
             )}
 
-            {/* Milestones Section */}
-            {project.milestones.map(milestone => (
-              <div key={milestone.id} className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4">
+            {/* Milestones & Deliverables */}
+            {project.milestones.map((ms) => (
+              <div
+                key={ms.id}
+                className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-accent">{milestone.title}</h4>
-                    {milestone.due_date && (
+                    <h4 className="text-sm font-semibold text-accent">
+                      {ms.title}
+                    </h4>
+                    {ms.due_date && (
                       <span className="text-xs text-gray-500">
-                        Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
+                        Due: {format(new Date(ms.due_date), 'MMM d, yyyy')}
                       </span>
                     )}
                   </div>
-                  <span className="text-sm text-gray-500">${milestone.amount}</span>
+                  <span className="text-sm text-gray-500">${ms.amount}</span>
                 </div>
 
-                {/* Deliverables */}
-                {milestone.deliverables.map(deliv => (
-                  <div key={deliv.id} className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a] mb-2">
-                    <p className="mb-1">{deliv.description}</p>
+                {ms.deliverables.map((d) => (
+                  <div
+                    key={d.id}
+                    className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a] mb-2"
+                  >
+                    <p className="mb-1">{d.description}</p>
                     <p className="text-xs text-gray-500">
-                      Submitted: {format(new Date(deliv.submitted_at), 'MMM d, yyyy')}
+                      Submitted: {format(new Date(d.submitted_at), 'MMM d, yyyy')}
                     </p>
-                    {deliv.status !== 'pending' && (
+                    {d.status !== 'pending' && (
                       <p className="text-xs">
                         Status:{' '}
-                        <span className={`font-semibold ${
-                          deliv.status === 'approved'
-                            ? 'text-green-500'
-                            : deliv.status === 'revision_requested'
-                            ? 'text-red-500'
-                            : 'text-gray-500'
-                        }`}>
-                          {deliv.status}
+                        <span
+                          className={`font-semibold ${
+                            d.status === 'approved'
+                              ? 'text-green-500'
+                              : d.status === 'revision_requested'
+                              ? 'text-red-500'
+                              : 'text-gray-500'
+                          }`}
+                        >
+                          {d.status}
                         </span>
                       </p>
                     )}
-                    {isClient && deliv.submitted_by && (
+                    {isClient && d.submitted_by && (
                       <p className="text-xs text-gray-500">
-                        Submitted by: {deliv.freelancer_name || 'Freelancer'}
+                        Submitted by: {d.freelancer_name || 'Freelancer'}
                       </p>
                     )}
-                    {deliv.status === 'revision_requested' && !isClient && (
-                      <FreelancerDeliverableUpdate deliverable={deliv} />
+                    {!isClient && d.status === 'revision_requested' && (
+                      <FreelancerDeliverableUpdate deliverable={d} />
                     )}
-                    {isClient && deliv.status === 'pending' && (
-                      <ClientDeliverableApproval deliverable={deliv} projectId={project.id} />
+                    {isClient && d.status === 'pending' && (
+                      <ClientDeliverableApproval
+                        deliverable={d}
+                        projectId={project.id}
+                      />
                     )}
-                    {isClient && deliv.approved_at && (
+                    {isClient && d.approved_at && (
                       <p className="text-xs text-gray-500">
-                        Approved: {format(new Date(deliv.approved_at), 'MMM d, yyyy')}
+                        Approved: {format(new Date(d.approved_at), 'MMM d, yyyy')}
                       </p>
                     )}
                   </div>
                 ))}
 
-                {/* New Deliverable Form for freelancer */}
+                {/* New deliverable form */}
                 {!isClient && (
-                  <DeliverableForm projectId={project.id} milestone={milestone} />
+                  <DeliverableForm
+                    projectId={project.id}
+                    milestone={ms}
+                  />
                 )}
               </div>
             ))}
