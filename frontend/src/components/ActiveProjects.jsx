@@ -3,11 +3,8 @@ import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
 import { format } from 'date-fns';
 import DeliverableForm from './DeliverableForm';
-import ClientDeliverableApproval from './ClientDeliverableApproval';
-import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
-import ClientCompletionTracking from './ClientCompletionTracking';
 
-export default function ActiveProjects({ isClient = false }) {
+export default function ActiveProjects() {
   const { user } = useAuth0();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -24,63 +21,57 @@ export default function ActiveProjects({ isClient = false }) {
         // 1) Fetch active projects for this freelancer
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
-          .select('id, description, client_id, completed, created_at, report')
+          .select('id, description, completed, created_at, report')
           .eq('freelancer_id', user.sub)
           .eq('completed', false);
         if (projectError) throw projectError;
 
-        // 2) For each project, fetch its milestones & deliverables
-        const projectPromises = projectData.map(async (project) => {
-          // Fetch milestones, including the new `number` column
-          const { data: milestoneData, error: milestoneError } = await supabase
-            .from('milestones')
-            .select('id, project_id, number, title, due_date, amount')
-            .eq('project_id', project.id);
-          if (milestoneError) throw milestoneError;
+        // 2) For each project, fetch milestones and their deliverables
+        const detailed = await Promise.all(
+          projectData.map(async (project) => {
+            // Parse JSON description
+            let desc = project.description;
+            if (typeof desc === 'string') {
+              try { desc = JSON.parse(desc); } catch { desc = {}; }
+            }
 
-          // Attach deliverables to each milestone
-          const milestonesWithDeliverables = await Promise.all(
-            milestoneData.map(async (ms) => {
-              const { data: deliverables, error: dErr } = await supabase
-                .from('deliverables')
-                .select('*')
-                .eq('contract_id', project.id)
-                .eq('milestone_number', ms.number);
-              if (dErr) throw dErr;
+            // Fetch ordered milestones (with your new `number` column)
+            const { data: msData, error: msError } = await supabase
+              .from('milestones')
+              .select('id, project_id, number, title, due_date, amount')
+              .eq('project_id', project.id)
+              .order('number', { ascending: true });
+            if (msError) throw msError;
 
-              // If client view, fetch freelancer name for each deliverable
-              const deliverablesWithFreelancer = await Promise.all(
-                deliverables.map(async (d) => {
-                  if (!isClient || !d.submitted_by) return d;
-                  const { data: f, error: fErr } = await supabase
-                    .from('users')
-                    .select('name')
-                    .eq('id', d.submitted_by)
-                    .single();
-                  if (fErr) throw fErr;
-                  return { ...d, freelancer_name: f?.name };
-                })
-              );
+            // Fetch deliverables per milestone
+            const milestones = await Promise.all(
+              msData.map(async (ms) => {
+                const { data: delivs, error: dErr } = await supabase
+                  .from('deliverables')
+                  .select('*')
+                  .eq('project_id', project.id)
+                  .eq('milestone_number', ms.number)
+                  .order('submitted_at', { ascending: true });
+                if (dErr) throw dErr;
+                return { ...ms, deliverables: delivs };
+              })
+            );
 
-              return { ...ms, deliverables: deliverablesWithFreelancer };
-            })
-          );
+            // Determine first incomplete milestone (no approved deliverable)
+            const firstIncompleteIndex = milestones.findIndex(
+              (ms) => !ms.deliverables.some((d) => d.status === 'approved')
+            );
 
-          return { ...project, milestones: milestonesWithDeliverables };
-        });
+            return {
+              ...project,
+              description: desc,
+              milestones,
+              firstIncompleteIndex
+            };
+          })
+        );
 
-        const results = await Promise.all(projectPromises);
-
-        // Parse JSON description
-        const parsed = results.map((p) => {
-          let desc = p.description;
-          if (typeof desc === 'string') {
-            try { desc = JSON.parse(desc); } catch { desc = {}; }
-          }
-          return { ...p, description: desc };
-        });
-
-        setProjects(parsed);
+        setProjects(detailed);
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load active projects.');
@@ -90,7 +81,7 @@ export default function ActiveProjects({ isClient = false }) {
     };
 
     fetchProjects();
-  }, [user?.sub, isClient]);
+  }, [user?.sub]);
 
   if (loading) {
     return (
@@ -126,11 +117,6 @@ export default function ActiveProjects({ isClient = false }) {
               <div>
                 <h2 className="text-xl text-accent font-bold mb-1">{title}</h2>
                 <p className="text-sm text-gray-300 mb-2">{details}</p>
-                {project.client_id && (
-                  <p className="text-sm text-gray-500">
-                    Client ID: {project.client_id}
-                  </p>
-                )}
                 <p className="text-xs text-gray-500">
                   Created: {format(new Date(project.created_at), 'MMM d, yyyy')}
                 </p>
@@ -156,16 +142,8 @@ export default function ActiveProjects({ isClient = false }) {
               </div>
             )}
 
-            {/* Client-specific tracking */}
-            {isClient && (
-              <ClientCompletionTracking
-                projectId={project.id}
-                milestones={project.milestones}
-              />
-            )}
-
-            {/* Milestones & Deliverables */}
-            {project.milestones.map((ms) => (
+            {/* Milestones */}
+            {project.milestones.map((ms, idx) => (
               <div
                 key={ms.id}
                 className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4"
@@ -184,52 +162,44 @@ export default function ActiveProjects({ isClient = false }) {
                   <span className="text-sm text-gray-500">${ms.amount}</span>
                 </div>
 
-                {ms.deliverables.map((d) => (
-                  <div
-                    key={d.id}
-                    className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a] mb-2"
-                  >
-                    <p className="mb-1">{d.description}</p>
-                    <p className="text-xs text-gray-500">
-                      Submitted: {format(new Date(d.submitted_at), 'MMM d, yyyy')}
-                    </p>
-                    {d.status !== 'pending' && (
-                      <p className="text-xs">
-                        Status:{' '}
-                        <span
-                          className={`font-semibold ${
-                            d.status === 'approved'
-                              ? 'text-green-500'
-                              : d.status === 'revision_requested'
-                              ? 'text-red-500'
-                              : 'text-gray-500'
-                          }`}
-                        >
-                          {d.status}
-                        </span>
-                      </p>
-                    )}
-                    {isClient && d.submitted_by && (
-                      <p className="text-xs text-gray-500">
-                        Submitted by: {d.freelancer_name || 'Freelancer'}
-                      </p>
-                    )}
-                    {!isClient && d.status === 'revision_requested' && (
-                      <FreelancerDeliverableUpdate deliverable={d} />
-                    )}
-                    {isClient && d.status === 'pending' && (
-                      <ClientDeliverableApproval deliverable={d} projectId={project.id} />
-                    )}
-                    {isClient && d.approved_at && (
-                      <p className="text-xs text-gray-500">
-                        Approved: {format(new Date(d.approved_at), 'MMM d, yyyy')}
-                      </p>
-                    )}
+                {/* Deliverables List */}
+                {ms.deliverables.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    {ms.deliverables.map((d) => (
+                      <div
+                        key={d.id}
+                        className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]"
+                      >
+                        <p className="mb-1">{d.description}</p>
+                        <p className="text-xs text-gray-500">
+                          Submitted: {format(new Date(d.submitted_at), 'MMM d, yyyy')}
+                        </p>
+                        {d.status !== 'pending' && (
+                          <p className="text-xs">
+                            Status:{' '}
+                            <span
+                              className={`font-semibold ${
+                                d.status === 'approved'
+                                  ? 'text-green-500'
+                                  : 'text-red-500'
+                              }`}
+                            >
+                              {d.status}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
 
-                {/* New deliverable form */}
-                {!isClient && <DeliverableForm projectId={project.id} milestone={ms} />}
+                {/* Only allow submission on first incomplete milestone */}
+                {idx === project.firstIncompleteIndex && (
+                  <DeliverableForm
+                    projectId={project.id}
+                    milestone={ms}
+                  />
+                )}
               </div>
             ))}
           </div>
