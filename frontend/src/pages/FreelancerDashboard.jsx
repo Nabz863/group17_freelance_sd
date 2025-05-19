@@ -87,7 +87,7 @@ export default function FreelancerDashboard() {
     Projects: (
       <section className="p-4">
         <h2 className="text-2xl font-semibold mb-4">Your Active Projects</h2>
-        <ActiveProjects />
+        <ActiveProjects isClient={true}/>
       </section>
     ),
 
