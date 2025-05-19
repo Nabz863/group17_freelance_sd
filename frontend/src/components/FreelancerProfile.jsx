@@ -250,7 +250,7 @@ export default function FreelancerProfile() {
             </div>
           </div>
 
-          <label className="block text-sm font-medium mb-1">
+          <section className="block text-sm font-medium mb-1">
             Portfolio URL
             <input
               type="url"
@@ -259,9 +259,9 @@ export default function FreelancerProfile() {
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </label>
+          </section>
 
-          <label className="block text-sm font-medium mb-1">
+          <section className="block text-sm font-medium mb-1">
             Skills (comma-separated) *
             <input
               type="text"
@@ -271,9 +271,9 @@ export default function FreelancerProfile() {
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </label>
+          </section>
 
-          <label className="block text-sm font-medium mb-1">
+          <section className="block text-sm font-medium mb-1">
             Bio / Work Description *
             <textarea
               name="description"
@@ -283,7 +283,7 @@ export default function FreelancerProfile() {
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </label>
+          </section>
         </form>
       ) : (
         <div className="space-y-6">
