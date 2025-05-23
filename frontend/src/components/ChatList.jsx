@@ -25,28 +25,32 @@ export default function ChatList({userId, isClient, onSelect}) {
   }, [userId, isClient]);
 
   return (
-    <ul className="space-y-2 p-4">
-      {projects.length === 0 && (
-        <li className="text-gray-500">No chats yet</li>
-      )}
-      {projects.map(p => {
-        let title = p.id;
-        try {
-          const desc = JSON.parse(p.description);
-          title = desc.title || title;
-        } catch {}
-        return (
-          <li key={p.id}>
+    <aside className="w-1/3 max-w-sm h-full overflow-y-auto bg-[#111] border-r border-[#222]">
+      <section className="text-white text-lg font-semibold px-4 py-3 border-b border-[#222]">
+        Chats
+      </section>
+      <nav className="flex flex-col">
+        {projects.length === 0 && (
+          <p className="text-gray-500 px-4 py-4">No chats yet</p>
+        )}
+        {projects.map(p => {
+          let title = p.id;
+          try {
+            const desc = JSON.parse(p.description);
+            title = desc.title || title;
+          } catch {}
+          return (
             <button
+              key={p.id}
               type="button"
-              className="w-full text-left px-4 py-2 rounded bg-[#1f1f1f] hover:bg-[#2a2a2a] text-white transition"
+              className="text-left px-4 py-3 hover:bg-[#1a1a1a] text-white border-b border-[#222] transition"
               onClick={() => onSelect(p.id)}
             >
               {title}
             </button>
-          </li>
-        );
-      })}
-    </ul>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }
