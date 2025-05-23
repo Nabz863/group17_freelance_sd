@@ -1,30 +1,27 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import { useState } from "react";
-import { toast } from "react-toastify";
-import ChatList from "../components/ChatList";
-import ChatSection from "../components/ChatSection";
+import {useAuth0} from "@auth0/auth0-react";
+import {useEffect, useState} from "react";
+import {toast} from "react-toastify";
+import ChatSectionWrapper from "../components/ChatSectionWrapper";
 import ClientProfile from "../components/ClientProfile";
 import DashboardLayout from "../components/DashboardLayout";
 import ViewApplicationsSection from "../components/ViewApplicationsSection";
 import ActiveProjects from "../components/ActiveProjects";
 import PostJobForm from "./PostJobForm";
 import supabase from "../utils/supabaseClient";
-import { createContract } from "../services/contractAPI";
+import {createContract} from "../services/contractAPI";
 
 export default function ClientDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth0();
+  const {user, isLoading: authLoading, isAuthenticated} = useAuth0();
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [activeChat, setActiveChat] = useState(null);
 
-  // load one project id for Applications tab
-  useState(() => {
+  useEffect(() => {
     if (!user?.sub) return;
     supabase
       .from("projects")
       .select("id")
       .eq("client_id", user.sub)
       .limit(1)
-      .then(({ data, error }) => {
+      .then(({data, error}) => {
         if (!error && data.length) {
           setCurrentProjectId(data[0].id);
         }
@@ -48,12 +45,9 @@ export default function ClientDashboard() {
   if (authLoading) {
     return <p className="mt-4 text-gray-400">Loading auth…</p>;
   }
+
   if (!isAuthenticated) {
-    return (
-      <p className="mt-4 text-gray-400">
-        Please log in to view your dashboard.
-      </p>
-    );
+    return <p className="mt-4 text-gray-400">Please log in to view your dashboard.</p>;
   }
 
   const menuItems = [
@@ -70,34 +64,23 @@ export default function ClientDashboard() {
     "My Profile": <ClientProfile />,
 
     Freelancers: (
-      <>
-        <h1>Freelancers</h1>
+      <section className="p-4 text-white">
+        <header className="text-2xl font-semibold mb-2">Freelancers</header>
         <p>View or manage freelancers you’ve worked with.</p>
-      </>
-    ),
-
-    Inbox: (
-      <section className="flex h-full">
-        {/* pass userId and isClient=true */}
-        <ChatList userId={user.sub} isClient={true} onSelect={setActiveChat} />
-        <section className="flex-1 p-4">
-          {activeChat ? (
-            <ChatSection projectId={activeChat} currentUserId={user.sub} />
-          ) : (
-            <p className="text-gray-500">Select a chat to begin messaging.</p>
-          )}
-        </section>
       </section>
     ),
 
-    Payments: (
-      <>
-        <h1>Payments</h1>
-        <p>Review invoices and payment history.</p>
-      </>
+    Inbox: (
+      <ChatSectionWrapper user={user} isClient={true} />
     ),
 
-    // show all active projects + milestones/deliverables + approval UI
+    Payments: (
+      <section className="p-4 text-white">
+        <header className="text-2xl font-semibold mb-2">Payments</header>
+        <p>Review invoices and payment history.</p>
+      </section>
+    ),
+
     Projects: <ActiveProjects isClient={true} />,
 
     "Post a Job": <PostJobForm embed={false} />,
@@ -108,7 +91,7 @@ export default function ClientDashboard() {
         onAssign={handleAssign}
       />
     ) : (
-      <p>Loading applications…</p>
+      <p className="p-4 text-gray-400">Loading applications…</p>
     ),
   };
 

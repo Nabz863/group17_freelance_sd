@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
 import supabase from '../utils/supabaseClient';
 
-export default function ChatList({ userId, isClient, onSelect }) {
+export default function ChatList({userId, isClient, onSelect}) {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    if (!userId) return;  // don’t query until we have a userId
+    if (!userId) return;
 
     (async () => {
       let q = supabase.from('projects').select('id, description');
@@ -15,7 +15,7 @@ export default function ChatList({ userId, isClient, onSelect }) {
         q = q.eq('freelancer_id', userId);
       }
 
-      const { data, error } = await q;
+      const {data, error} = await q;
       if (error) {
         console.error('Error loading projects for chat:', error);
       } else {
@@ -25,7 +25,7 @@ export default function ChatList({ userId, isClient, onSelect }) {
   }, [userId, isClient]);
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2 p-4">
       {projects.length === 0 && (
         <li className="text-gray-500">No chats yet</li>
       )}
@@ -39,7 +39,7 @@ export default function ChatList({ userId, isClient, onSelect }) {
           <li key={p.id}>
             <button
               type="button"
-              className="w-full text-left px-3 py-2 rounded hover:bg-[#222]"
+              className="w-full text-left px-4 py-2 rounded bg-[#1f1f1f] hover:bg-[#2a2a2a] text-white transition"
               onClick={() => onSelect(p.id)}
             >
               {title}
