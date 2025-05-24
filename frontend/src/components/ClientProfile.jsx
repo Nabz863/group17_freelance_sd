@@ -132,8 +132,8 @@ export default function ClientProfile() {
   ];
 
   return (
-    <div className="profile-container p-6 bg-[#0e0e0e] text-white">
-      <div className="flex justify-between items-center mb-6">
+    <section className="profile-container p-6 bg-[#0e0e0e] text-white">
+      <section className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Client Profile</h2>
         {!editing ? (
           <button
@@ -143,7 +143,7 @@ export default function ClientProfile() {
             Edit Profile
           </button>
         ) : (
-          <div className="space-x-2">
+          <section className="space-x-2">
             <button
               onClick={() => setEditing(false)}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
@@ -157,14 +157,14 @@ export default function ClientProfile() {
             >
               Save Changes
             </button>
-          </div>
+          </section>
         )}
-      </div>
+      </section>
 
       {editing ? (
         <form id="profile-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 First Name *
               </label>
@@ -176,8 +176,8 @@ export default function ClientProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Last Name *
               </label>
@@ -189,11 +189,11 @@ export default function ClientProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Company Name *
               </label>
@@ -205,8 +205,8 @@ export default function ClientProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Client Type *
               </label>
@@ -223,10 +223,10 @@ export default function ClientProfile() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">Industry *</label>
             <input
               type="text"
@@ -236,9 +236,9 @@ export default function ClientProfile() {
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </div>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">
               Project Needs *
             </label>
@@ -251,10 +251,10 @@ export default function ClientProfile() {
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               placeholder="Briefly describe your project needs..."
             />
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Location *
               </label>
@@ -266,8 +266,8 @@ export default function ClientProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Budget Range *
               </label>
@@ -285,8 +285,8 @@ export default function ClientProfile() {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Project Timeline *
               </label>
@@ -304,11 +304,11 @@ export default function ClientProfile() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Contact Phone *
               </label>
@@ -321,8 +321,8 @@ export default function ClientProfile() {
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
                 placeholder="+27 12 345 6789"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Contact Email *
               </label>
@@ -335,14 +335,14 @@ export default function ClientProfile() {
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
                 placeholder="your@email.com"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">
               Preferred Contact Method *
             </label>
-            <div className="flex space-x-4 mt-2">
+            <section className="flex space-x-4 mt-2">
               {contactPreferences.map((pref) => (
                 <label key={pref.value} className="inline-flex items-center">
                   <input
@@ -354,83 +354,83 @@ export default function ClientProfile() {
                     className="form-radio text-blue-500"
                     required
                   />
-                  <span className="ml-2">{pref.label}</span>
+                  <p className="ml-2">{pref.label}</p>
                 </label>
               ))}
-            </div>
-          </div>
+            </section>
+          </section>
         </form>
       ) : (
-        <div className="space-y-6">
-          <div className="bg-gray-800 rounded-lg p-6">
+        <section className="space-y-6">
+          <section className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <section>
                 <p className="text-sm text-gray-400">Full Name</p>
                 <p className="font-medium">
                   {formData.firstName} {formData.lastName}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Company</p>
                 <p className="font-medium">{formData.companyName}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Client Type</p>
                 <p className="font-medium capitalize">{formData.clientType}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Industry</p>
                 <p className="font-medium">{formData.industry}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Location</p>
                 <p className="font-medium">{formData.location}</p>
-              </div>
-            </div>
-          </div>
+              </section>
+            </section>
+          </section>
 
-          <div className="bg-gray-800 rounded-lg p-6">
+          <section className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Project Details</h3>
-            <div className="space-y-4">
-              <div>
+            <section className="space-y-4">
+              <section>
                 <p className="text-sm text-gray-400">Project Needs</p>
                 <p className="whitespace-pre-line">{formData.projectNeeds}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              </section>
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <section>
                   <p className="text-sm text-gray-400">Budget Range</p>
                   <p>{formData.budgetRange}</p>
-                </div>
-                <div>
+                </section>
+                <section>
                   <p className="text-sm text-gray-400">Project Timeline</p>
                   <p>{formData.projectTimeline}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+                </section>
+              </section>
+            </section>
+          </section>
 
-          <div className="bg-gray-800 rounded-lg p-6">
+          <section className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Contact Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <section>
                 <p className="text-sm text-gray-400">Phone</p>
                 <p>{formData.contactPhone}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Email</p>
                 <p>{formData.contactEmail}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">
                   Preferred Contact Method
                 </p>
                 <p className="capitalize">{formData.preferredContact}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+              </section>
+            </section>
+          </section>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
