@@ -109,9 +109,9 @@ export default function ActiveProjects({ isClient = false }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1abc9c]"></div>
-      </div>
+      <section className="flex items-center justify-center h-full">
+        <section className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1abc9c]" />
+      </section>
     );
   }
 
@@ -128,127 +128,122 @@ export default function ActiveProjects({ isClient = false }) {
   }
 
   return (
-    <div className="space-y-6">
-      {projects.map((project) => {
+    <section className="space-y-6">
+      {projects.map(project => {
         const { title, details } = project.description || {};
         return (
-          <div key={project.id} className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-xl text-accent font-bold mb-1">{title}</h2>
-                <p className="text-sm text-gray-300 mb-2">{details}</p>
-                {project.client_id && (
-                  <p className="text-sm text-gray-500">
-                    Client ID: {project.client_id}
-                  </p>
-                )}
+          <section key={project.id} className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+            {/* Project Header */}
+            <section className="flex justify-between mb-4">
+              <section>
+                <h2 className="text-xl text-accent font-bold">{title}</h2>
+                <p className="text-sm text-gray-300">{details}</p>
                 <p className="text-xs text-gray-500">
                   Created: {format(new Date(project.created_at), 'MMM d, yyyy')}
                 </p>
-              </div>
-              <div className="flex items-center">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  project.completed ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-100'
-                }`}>
-                  {project.completed ? 'Completed' : 'In Progress'}
-                </span>
-              </div>
-            </div>
+              </section>
+              <span className={`px-2 py-1 text-xs rounded-full ${
+                project.completed ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-100'
+              }`}>
+                {project.completed ? 'Completed' : 'In Progress'}
+              </span>
+            </section>
+
+            {/* Project Report */}
             {project.report && (
-              <div className="mb-4">
+              <section className="mb-4">
                 <h3 className="text-sm font-semibold text-accent mb-2">Project Report</h3>
                 <p className="text-sm text-gray-400">{project.report}</p>
-              </div>
+              </section>
             )}
 
-            {isClient && (
-              <ClientCompletionTracking 
-                projectId={project.id} 
-                milestones={project.milestones}
-              />
-            )}
+            {/* Milestones & Deliverables */}
+            {project.milestones.map((ms, idx) => (
+              <section key={ms.id} className="mb-4 p-4 bg-[#1a1a1a] border border-[#1abc9c] rounded-lg">
+                <section className="flex justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-accent">{ms.title}</h4>
+                  <span className="text-sm text-gray-500">${ms.amount}</span>
+                </section>
+                {ms.due_date && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    Due: {format(new Date(ms.due_date), 'MMM d, yyyy')}
+                  </p>
+                )}
 
-            {project.milestones?.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-semibold text-accent mb-2">Milestones</h3>
-                {project.milestones.map((milestone) => (
-                  <div key={milestone.id} className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c] mb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="text-sm font-semibold text-accent">{milestone.title}</h4>
-                        {milestone.due_date && (
-                          <span className="text-xs text-gray-500">
-                            Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
+                {/* list of deliverables */}
+                {ms.deliverables.map(d => (
+                  <section key={d.id} className="mb-3 p-2 bg-[#2a2a2a] rounded text-sm text-gray-200">
+                    <p className="mb-1">{d.description}</p>
+                    <p className="text-xs text-gray-400 mb-1">
+                      Submitted: {format(new Date(d.submitted_at), 'MMM d, yyyy')}
+                    </p>
+
+                    {isClient ? (
+                      d.status === 'pending' ? (
+                        <section className="space-y-2">
+                          <section className="space-x-2">
+                            <button
+                              onClick={() => handleApprove(d.id)}
+                              className="px-3 py-1 bg-green-500 rounded text-black text-xs"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleReject(d.id)}
+                              className="px-3 py-1 bg-red-500 rounded text-white text-xs"
+                            >
+                              Reject
+                            </button>
+                          </section>
+                          <textarea
+                            className="w-full p-1 bg-gray-800 border border-gray-700 rounded text-xs text-white"
+                            rows={2}
+                            placeholder="Revision comments…"
+                            value={revisionComments[d.id] || ''}
+                            onChange={e =>
+                              setRevisionComments(prev => ({ ...prev, [d.id]: e.target.value }))
+                            }
+                          />
+                        </section>
+                      ) : (
+                        <p className="text-xs">
+                          Status:{' '}
+                          <span
+                            className={`font-semibold ${
+                              d.status === 'approved' ? 'text-green-400' : 'text-red-400'
+                            }`}
+                          >
+                            {d.status.replace('_', ' ')}
                           </span>
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        ${milestone.amount}
-                      </span>
-                    </div>
-
-                    {milestone.deliverables.length > 0 && (
-                      <div className="mt-2">
-                        <h4 className="text-xs font-semibold text-accent mb-1">Deliverables</h4>
-                        <div className="space-y-2">
-                          {milestone.deliverables.map((deliverable) => (
-                            <div key={deliverable.id} className="text-sm text-gray-400 p-2 rounded-lg bg-[#2a2a2a]">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <p className="mb-1">{deliverable.description}</p>
-                                  <p className="text-xs text-gray-500">
-                                    Submitted: {format(new Date(deliverable.submitted_at), 'MMM d, yyyy')}
-                                  </p>
-                                  {deliverable.status !== 'pending' && (
-                                    <p className="text-xs">
-                                      Status: <span className={`font-semibold ${
-                                        deliverable.status === 'approved' ? 'text-green-500' :
-                                        deliverable.status === 'revision_requested' ? 'text-red-500' :
-                                        'text-gray-500'
-                                      }`}>
-                                        {deliverable.status}
-                                      </span>
-                                    </p>
-                                  )}
-                                  {deliverable.revision_comments && (
-                                    <p className="text-xs text-red-500 mt-1">
-                                      Revision Comments: {deliverable.revision_comments}
-                                    </p>
-                                  )}
-                                  {isClient && deliverable.submitted_by && (
-                                    <p className="text-xs text-gray-500">
-                                      Submitted by: {deliverable.freelancer_name || 'Freelancer'}
-                                    </p>
-                                  )}
-                                </div>
-                                {deliverable.approved_at && (
-                                  <p className="text-xs text-gray-500">
-                                    Approved: {format(new Date(deliverable.approved_at), 'MMM d, yyyy')}
-                                  </p>
-                                )}
-                              </div>
-                              {isClient && deliverable.status === 'pending' && (
-                                <ClientDeliverableApproval deliverable={deliverable} projectId={project.id} />
-                              )}
-                              {!isClient && deliverable.status === 'revision_requested' && (
-                                <FreelancerDeliverableUpdate deliverable={deliverable} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                        </p>
+                      )
+                    ) : (
+                      // freelancer sees status only
+                      <p className="text-xs">
+                        Status:{' '}
+                        <span
+                          className={`font-semibold ${
+                            d.status === 'approved' ? 'text-green-400' :
+                            d.status === 'revision_requested' ? 'text-red-400' :
+                            'text-gray-400'
+                          }`}
+                        >
+                          {d.status.replace('_', ' ')}
+                        </span>
+                      </p>
                     )}
-
-                    {!isClient && (
-                      <DeliverableForm projectId={project.id} milestone={milestone} />
-                    )}
-                  </div>
+                  </section>
                 ))}
-              </div>
-            )}
-          </div>
+
+                {/* deliverable form only for freelancer AND only on first incomplete milestone */}
+                {!isClient && idx === project.firstIncompleteIndex && (
+                  <DeliverableForm projectId={project.id} milestone={ms} />
+                )}
+              </section>
+            ))}
+          </section>
         );
       })}
-    </div>
+    </section>
   );
 }
