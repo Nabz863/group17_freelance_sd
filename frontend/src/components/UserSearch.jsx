@@ -72,7 +72,7 @@ export default function UserSearch({ onSelectUser }) {
   };
 
   return (
-    <div className="relative">
+    <section className="relative">
       <input
         type="text"
         value={searchQuery}
@@ -81,26 +81,26 @@ export default function UserSearch({ onSelectUser }) {
         className="w-full px-3 py-2 border border-gray-600 rounded focus:outline-none focus:border-blue-500"
       />
       {searchQuery && (
-        <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-lg shadow-lg max-h-60 overflow-auto z-10">
+        <section className="absolute top-full left-0 w-full mt-2 bg-white rounded-lg shadow-lg max-h-60 overflow-auto z-10">
           {isLoading ? (
-            <div className="p-4 text-center">Searching...</div>
+            <section className="p-4 text-center">Searching...</section>
           ) : searchResults.length === 0 ? (
-            <div className="p-4 text-center">No users found</div>
+            <section className="p-4 text-center">No users found</section>
           ) : (
             searchResults.map((user) => (
-              <div
+              <section
                 key={user.id}
                 onClick={() => handleSelectUser(user)}
                 className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
               >
-                <div className="font-semibold">{user.name}</div>
-                <div className="text-sm text-gray-600">{user.email}</div>
-                <div className="text-xs text-gray-500">{user.role}</div>
-              </div>
+                <section className="font-semibold">{user.name}</section>
+                <p className="text-sm text-gray-600">{user.email}</p>
+                <p className="text-xs text-gray-500">{user.role}</p>
+              </section>
             ))
           )}
-        </div>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
