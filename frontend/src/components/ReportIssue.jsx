@@ -24,13 +24,6 @@ export default function ReportIssue({ onClose }) {
       reportedId: user.id,
       reportedEmail: user.email,
       reportedName: user.name,
-      reportedCompany: user.companyName,
-      reportedIndustry: user.industry,
-      reportedLocation: user.location,
-      reportedContactPhone: user.contactPhone,
-      reportedContactEmail: user.contactEmail,
-      reportedPreferredContact: user.preferredContact,
-
     });
   };
 
@@ -68,26 +61,6 @@ export default function ReportIssue({ onClose }) {
 
       if (insertError) throw insertError;
 
-      // Get admin user ID from environment variable
-      const adminId = process.env.REACT_APP_AUTH0_ADMIN_ID;
-
-      // Create a detailed message notification for admin
-      const { error: messageError } = await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: adminId,
-        text: `New issue reported by ${user.email}:
-Title: ${formData.title}
-Description: ${formData.description}
-Reported User: ${formData.reportedName} (${formData.reportedEmail})
-User ID: ${formData.reportedId}`,
-        project_id: null,
-        created_at: new Date().toISOString(),
-      });
-
-      if (messageError) {
-        console.error("Error creating admin notification:", messageError);
-      }
-
       setSuccess("Issue reported successfully! Admin has been notified.");
       setTimeout(() => {
         onClose();
@@ -102,26 +75,26 @@ User ID: ${formData.reportedId}`,
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl p-6 space-y-8">
+    <section className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <section className="bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl p-6 space-y-8">
         <h2 className="text-2xl font-bold mb-6 text-center">Report Issue</h2>
-        {error && <div className="text-red-400 mb-4">{error}</div>}
-        {success && <div className="text-green-400 mb-4">{success}</div>}
+        {error && <section className="text-red-400 mb-4">{error}</section>}
+        {success && <section className="text-green-400 mb-4">{success}</section>}
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="bg-gray-700 p-6 rounded-lg">
+          <section className="bg-gray-700 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-4">Reported User</h3>
-            <div className="space-y-4">
+            <section className="space-y-4">
               <UserSearch onSelectUser={handleUserSelect} />
               {selectedUser && (
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <div className="font-semibold">Selected User:</div>
-                  <div className="text-lg mt-2">{selectedUser.name}</div>
-                  <div className="text-sm text-gray-400 mt-1">
+                <section className="bg-gray-800 p-4 rounded-lg">
+                  <p className="font-semibold">Selected User:</p>
+                  <p className="text-lg mt-2">{selectedUser.name}</p>
+                  <p className="text-sm text-gray-400 mt-1">
                     {selectedUser.email}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
                     {selectedUser.role}
-                  </div>
+                  </p>
                   <button
                     onClick={() => {
                       setSelectedUser(null);
@@ -136,14 +109,14 @@ User ID: ${formData.reportedId}`,
                   >
                     Clear Selection
                   </button>
-                </div>
+                </section>
               )}
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="bg-gray-700 p-6 rounded-lg">
+          <section className="bg-gray-700 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-4">Issue Title</h3>
-            <div className="space-y-4">
+            <section className="space-y-4">
               <input
                 type="text"
                 name="title"
@@ -153,12 +126,12 @@ User ID: ${formData.reportedId}`,
                 placeholder="Enter a brief title for the issue"
                 required
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="bg-gray-700 p-6 rounded-lg">
+          <section className="bg-gray-700 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-4">Issue Description</h3>
-            <div className="space-y-4">
+            <section className="space-y-4">
               <textarea
                 name="description"
                 value={formData.description}
@@ -168,11 +141,11 @@ User ID: ${formData.reportedId}`,
                 rows="6"
                 required
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="bg-gray-700 p-6 rounded-lg">
-            <div className="flex justify-end space-x-4">
+          <section className="bg-gray-700 p-6 rounded-lg">
+            <section className="flex justify-end space-x-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -213,10 +186,10 @@ User ID: ${formData.reportedId}`,
                   "Report Issue"
                 )}
               </button>
-            </div>
-          </div>
+            </section>
+          </section>
         </form>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
