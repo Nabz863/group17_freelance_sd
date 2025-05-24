@@ -33,13 +33,13 @@ export default function ClientDeliverableApproval({ deliverable, projectId }) {
   };
 
   return (
-    <div className="mt-4">
-      <div className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+    <section className="mt-4">
+      <section className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
         <h3 className="text-sm font-semibold text-accent mb-2">Deliverable Actions</h3>
-        <div className="space-y-4">
+        <section className="space-y-4">
           {deliverable.status === 'pending' && (
             <>
-              <div>
+              <section>
                 <label className="block text-sm text-gray-300 mb-1">
                   Revision Comments (if requesting revision)
                 </label>
@@ -50,8 +50,8 @@ export default function ClientDeliverableApproval({ deliverable, projectId }) {
                   className="w-full p-2 rounded bg-[#2a2a2a] border border-[#1abc9c] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
                   placeholder="Enter your revision comments..."
                 />
-              </div>
-              <div className="flex gap-4">
+              </section>
+              <section className="flex gap-4">
                 <button
                   onClick={() => handleApproval('approved')}
                   disabled={loading}
@@ -66,14 +66,14 @@ export default function ClientDeliverableApproval({ deliverable, projectId }) {
                 >
                   {loading ? 'Requesting Revision...' : 'Request Revision'}
                 </button>
-              </div>
+              </section>
             </>
           )}
           {error && (
             <p className="text-red-500 text-sm">{error}</p>
           )}
-        </div>
-      </div>
-    </div>
+        </section>
+      </section>
+    </section>
   );
 }
