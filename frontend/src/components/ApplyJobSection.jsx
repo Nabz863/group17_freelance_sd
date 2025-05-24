@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-// Removed unused format import from date-fns
-// Using browser's built-in crypto API instead of node's crypto module
 
 export default function ApplyJobSection() {
   const { user } = useAuth0();
@@ -85,14 +83,14 @@ export default function ApplyJobSection() {
       ) : projects.length === 0 ? (
         <p className="text-gray-400 mt-4">No jobs available right now.</p>
       ) : (
-        <div className="grid gap-6 mt-6">
+        <section className="grid gap-6 mt-6">
           {projects.map((proj) => {
             const { title, details, requirements, budget, deadline } =
               proj.description || {};
             const applied = appliedProjectIds.includes(proj.id);
 
             return (
-              <div
+              <section
                 key={proj.id}
                 className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]"
               >
@@ -122,10 +120,10 @@ export default function ApplyJobSection() {
                 >
                   {applied ? "Application Submitted" : "Apply Now"}
                 </button>
-              </div>
+              </section>
             );
           })}
-        </div>
+        </section>
       )}
     </section>
   );
