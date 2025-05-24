@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import supabase from '../utils/supabaseClient';
-// Removed unused useAuth0 import
 
 export default function ClientCompletionTracking({ projectId, milestones }) {
-  // Removed unused user variable from useAuth0()
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -59,17 +57,17 @@ export default function ClientCompletionTracking({ projectId, milestones }) {
     : 0;
 
   return (
-    <div className="mt-4">
-      <div className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+    <section className="mt-4">
+      <section className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
         <h3 className="text-sm font-semibold text-accent mb-2">Completion Tracking</h3>
         
-        <div className="space-y-4">
+        <section className="space-y-4">
           {/* Project Completion Status */}
-          <div className="flex items-center justify-between">
-            <div>
+          <section className="flex items-center justify-between">
+            <section>
               <h4 className="text-sm text-gray-300 mb-1">Project Completion</h4>
               <p className="text-sm font-semibold text-accent">{completionPercentage}% Complete</p>
-            </div>
+            </section>
             <button
               onClick={() => handleProjectCompletion(true)}
               disabled={loading || completionPercentage < 100}
@@ -77,19 +75,19 @@ export default function ClientCompletionTracking({ projectId, milestones }) {
             >
               {loading ? 'Marking Complete...' : 'Mark Project Complete'}
             </button>
-          </div>
+          </section>
 
           {/* Milestone Completion Status */}
-          <div className="space-y-2">
+          <section className="space-y-2">
             <h4 className="text-sm text-gray-300 mb-2">Milestone Completion</h4>
             {milestones.map((milestone) => (
-              <div key={milestone.id} className="flex items-center justify-between">
-                <div>
+              <section key={milestone.id} className="flex items-center justify-between">
+                <section>
                   <p className="text-sm text-gray-300">{milestone.title}</p>
                   {milestone.completed && (
                     <p className="text-xs text-green-500">Completed</p>
                   )}
-                </div>
+                </section>
                 <button
                   onClick={() => handleMilestoneCompletion(milestone.id, !milestone.completed)}
                   disabled={loading}
@@ -99,15 +97,15 @@ export default function ClientCompletionTracking({ projectId, milestones }) {
                 >
                   {loading ? 'Updating...' : milestone.completed ? 'Completed' : 'Mark Complete'}
                 </button>
-              </div>
+              </section>
             ))}
-          </div>
+          </section>
 
           {error && (
             <p className="text-red-500 text-sm mt-2">{error}</p>
           )}
-        </div>
-      </div>
-    </div>
+        </section>
+      </section>
+    </section>
   );
 }
