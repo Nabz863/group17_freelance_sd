@@ -107,8 +107,8 @@ export default function FreelancerProfile() {
   ];
 
   return (
-    <div className="profile-container">
-      <div className="flex justify-between items-center mb-6">
+    <section className="profile-container">
+      <section className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Profile Information</h2>
         {!editing && (
           <button
@@ -118,12 +118,12 @@ export default function FreelancerProfile() {
             Edit Profile
           </button>
         )}
-      </div>
+      </section>
 
       {editing ? (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 First Name *
               </label>
@@ -135,8 +135,8 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Last Name *
               </label>
@@ -148,11 +148,11 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Profession *
               </label>
@@ -164,8 +164,8 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Specialization *
               </label>
@@ -177,11 +177,11 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Years of Experience *
               </label>
@@ -194,8 +194,8 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Hourly Rate (ZAR) *
               </label>
@@ -209,8 +209,8 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Availability *
               </label>
@@ -228,11 +228,11 @@ export default function FreelancerProfile() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <section>
               <label className="block text-sm font-medium mb-1">
                 Location *
               </label>
@@ -244,8 +244,8 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-            <div>
+            </section>
+            <section>
               <label className="block text-sm font-medium mb-1">Phone *</label>
               <input
                 type="tel"
@@ -255,10 +255,10 @@ export default function FreelancerProfile() {
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">
               Skills (comma separated) *
             </label>
@@ -271,9 +271,9 @@ export default function FreelancerProfile() {
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </div>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">
               Portfolio URL
             </label>
@@ -284,9 +284,9 @@ export default function FreelancerProfile() {
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </div>
+          </section>
 
-          <div>
+          <section>
             <label className="block text-sm font-medium mb-1">
               Description *
             </label>
@@ -298,9 +298,9 @@ export default function FreelancerProfile() {
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </div>
+          </section>
 
-          <div className="flex space-x-4 pt-4">
+          <section className="flex space-x-4 pt-4">
             <button
               type="submit"
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
@@ -314,35 +314,35 @@ export default function FreelancerProfile() {
             >
               Cancel
             </button>
-          </div>
+          </section>
         </form>
       ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
+        <section className="space-y-4">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section className="space-y-4">
+              <section>
                 <p className="text-sm text-gray-400">Full Name</p>
                 <p className="text-white">
                   {profile.profile?.firstName} {profile.profile?.lastName}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Profession</p>
                 <p className="text-white">{profile.profile?.profession}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Specialization</p>
                 <p className="text-white">
                   {profile.profile?.specialization || "Not specified"}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Experience</p>
                 <p className="text-white">
                   {profile.profile?.experience} years
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Hourly Rate</p>
                 <p className="text-white">
                   ZAR{" "}
@@ -351,36 +351,36 @@ export default function FreelancerProfile() {
                   ).toLocaleString()}
                   /hr
                 </p>
-              </div>
-            </div>
+              </section>
+            </section>
 
-            <div className="space-y-4">
-              <div>
+            <section className="space-y-4">
+              <section>
                 <p className="text-sm text-gray-400">Email</p>
                 <p className="text-white">
                   {profile.profile?.email || user.email}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Phone</p>
                 <p className="text-white">
                   {profile.profile?.phone || "Not provided"}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Location</p>
                 <p className="text-white">
                   {profile.profile?.location || "Not specified"}
                 </p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <p className="text-sm text-gray-400">Availability</p>
                 <p className="text-white capitalize">
                   {profile.profile?.availability || "Not specified"}
                 </p>
-              </div>
+              </section>
               {profile.profile?.portfolio_url && (
-                <div>
+                <section>
                   <p className="text-sm text-gray-400">Portfolio</p>
                   <a
                     href={
@@ -394,35 +394,35 @@ export default function FreelancerProfile() {
                   >
                     View Portfolio
                   </a>
-                </div>
+                </section>
               )}
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="pt-4">
+          <section className="pt-4">
             <p className="text-sm text-gray-400">Skills</p>
-            <div className="flex flex-wrap gap-2 mt-1">
+            <section className="flex flex-wrap gap-2 mt-1">
               {profile.profile?.skills
                 ? profile.profile.skills.split(",").map((skill, index) => (
-                    <span
+                    <p
                       key={index}
                       className="px-3 py-1 text-sm rounded-full bg-gray-700 text-white"
                     >
                       {skill.trim()}
-                    </span>
+                    </p>
                   ))
                 : "No skills listed"}
-            </div>
-          </div>
+            </section>
+          </section>
 
-          <div className="pt-4">
+          <section className="pt-4">
             <p className="text-sm text-gray-400">Description</p>
             <p className="text-white whitespace-pre-line">
               {profile.profile?.description || "No description provided"}
             </p>
-          </div>
-        </div>
+          </section>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
