@@ -33,11 +33,11 @@ export default function FreelancerDeliverableUpdate({ deliverable }) {
   };
 
   return (
-    <div className="mt-4">
-      <div className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+    <section className="mt-4">
+      <section className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
         <h3 className="text-sm font-semibold text-accent mb-2">Update Deliverable</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <section>
             <label className="block text-sm text-gray-300 mb-1">
               Updated Deliverable Description
             </label>
@@ -49,7 +49,7 @@ export default function FreelancerDeliverableUpdate({ deliverable }) {
               placeholder="Enter your updated deliverable description..."
               required
             />
-          </div>
+          </section>
           {error && (
             <p className="text-red-500 text-sm">{error}</p>
           )}
@@ -61,7 +61,7 @@ export default function FreelancerDeliverableUpdate({ deliverable }) {
             {loading ? 'Updating...' : 'Update Deliverable'}
           </button>
         </form>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
