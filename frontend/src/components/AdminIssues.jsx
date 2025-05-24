@@ -87,14 +87,14 @@ export default function AdminIssues() {
     setShowDetails(false);
   };
 
-  if (loading) return <div>Loading issues...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <section>Loading issues...</section>;
+  if (error) return <section>Error: {error}</section>;
 
   return (
-    <div className="space-y-4">
+    <section className="space-y-4">
       <h1 className="text-2xl font-bold">Issues</h1>
-      <div className="bg-white rounded-lg shadow-lg p-4">
-        <div className="overflow-x-auto">
+      <section className="bg-white rounded-lg shadow-lg p-4">
+        <section className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b">
@@ -120,13 +120,13 @@ export default function AdminIssues() {
                   <td className="py-2">{issue.reporter_id}</td>
                   <td className="py-2">{issue.reported_id}</td>
                   <td className="py-2">
-                    <span
+                    <p
                       className={`px-2 py-1 rounded-full text-white ${getStatusColor(
                         issue.status
                       )}`}
                     >
                       {issue.status}
-                    </span>
+                    </p>
                   </td>
                   <td className="py-2">
                     {new Date(issue.created_at).toLocaleDateString()}
@@ -148,13 +148,13 @@ export default function AdminIssues() {
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
+        </section>
+      </section>
 
       {showDetails && selectedIssue && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
+        <section className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <section className="bg-white rounded-lg p-6 max-w-md w-full">
+            <section className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Issue Details</h2>
               <button
                 onClick={handleCloseDetails}
@@ -162,42 +162,42 @@ export default function AdminIssues() {
               >
                 ×
               </button>
-            </div>
-            <div className="space-y-4">
-              <div>
+            </section>
+            <section className="space-y-4">
+              <section>
                 <h3 className="font-semibold">Title:</h3>
                 <p>{selectedIssue.title}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h3 className="font-semibold">Description:</h3>
                 <p>{selectedIssue.description}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h3 className="font-semibold">Reporter ID:</h3>
                 <p>{selectedIssue.reporter_id}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h3 className="font-semibold">Reported ID:</h3>
                 <p>{selectedIssue.reported_id}</p>
-              </div>
-              <div>
+              </section>
+              <section>
                 <h3 className="font-semibold">Status:</h3>
-                <span
+                <p
                   className={`px-2 py-1 rounded-full text-white ${getStatusColor(
                     selectedIssue.status
                   )}`}
                 >
                   {selectedIssue.status}
-                </span>
-              </div>
-              <div>
+                </p>
+              </section>
+              <section>
                 <h3 className="font-semibold">Created At:</h3>
                 <p>{new Date(selectedIssue.created_at).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+              </section>
+            </section>
+          </section>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
