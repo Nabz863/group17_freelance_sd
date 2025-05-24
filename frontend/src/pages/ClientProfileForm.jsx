@@ -43,10 +43,10 @@ export default function ClientProfileForm() {
 
     await supabase
       .from("clients")
-      .update({ 
+      .update({
         profile: JSON.stringify(formData),
         status: "pending",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.sub);
 
@@ -118,7 +118,7 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <div className="form-full-width">
+      <section className="form-full-width">
         <label className="form-label">Upload Profile PDF</label>
         <FileUpload
           accept=".pdf"
@@ -126,13 +126,13 @@ export default function ClientProfileForm() {
           onChange={handleFileChange}
           fileType="profilePdf"
         />
-      </div>
+      </section>
 
-      <div className="form-footer form-full-width">
+      <section className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
           Submit Profile
         </button>
-      </div>
+      </section>
     </ProfileFormLayout>
   );
 }
