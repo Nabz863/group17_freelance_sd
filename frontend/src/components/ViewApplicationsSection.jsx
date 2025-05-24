@@ -14,21 +14,21 @@ export default function ViewApplicationsSection() {
       setLoading(true);
 
       const { data, error } = await supabase
-      .from('projects')
-      .select(`
-        id,
-        description,
-        freelancer_id,
-        applications (
-          freelancerid,
-          status,
-          coverletter,
-          freelancer:freelancerid (
-            profile
+        .from('projects')
+        .select(`
+          id,
+          description,
+          freelancer_id,
+          applications (
+            freelancerid,
+            status,
+            coverletter,
+            freelancer:freelancerid (
+              profile
+            )
           )
-        )
-      `)
-      .eq('client_id', user.sub);
+        `)
+        .eq('client_id', user.sub);
 
       if (error) {
         console.error('Error loading job applications:', error);
@@ -52,8 +52,8 @@ export default function ViewApplicationsSection() {
     if (error) {
       console.error('Error assigning freelancer:', error);
     } else {
-      setJobs(prev =>
-        prev.map(job =>
+      setJobs((prev) =>
+        prev.map((job) =>
           job.id === projectId
             ? { ...job, freelancer_id: freelancerID }
             : job
@@ -63,8 +63,8 @@ export default function ViewApplicationsSection() {
     setAssigning(null);
   };
 
-  const toggleExpanded = projectId => {
-    setExpanded(e => ({ ...e, [projectId]: !e[projectId] }));
+  const toggleExpanded = (projectId) => {
+    setExpanded((e) => ({ ...e, [projectId]: !e[projectId] }));
   };
 
   if (loading) return <p className="mt-4 text-gray-400">Loading applications...</p>;
@@ -74,25 +74,26 @@ export default function ViewApplicationsSection() {
     <section className="dashboard-content">
       <h1>Job Applications</h1>
 
-      {jobs.map(job => {
-        const desc = typeof job.description === 'string'
-          ? JSON.parse(job.description || '{}')
-          : job.description;
+      {jobs.map((job) => {
+        const desc =
+          typeof job.description === 'string'
+            ? JSON.parse(job.description || '{}')
+            : job.description;
 
         return (
-          <div
+          <section
             key={job.id}
             className="card-glow p-4 rounded-lg mb-6 bg-[#1a1a1a] border border-[#1abc9c]"
           >
             <header className="flex justify-between items-center">
-              <div>
+              <section>
                 <h2 className="text-lg text-accent font-semibold">
                   {desc?.title || 'Untitled Job'}
                 </h2>
                 <p className="text-gray-400 text-sm">
                   {desc?.details || 'No description provided.'}
                 </p>
-              </div>
+              </section>
               <button
                 className="primary-btn"
                 onClick={() => toggleExpanded(job.id)}
@@ -106,12 +107,15 @@ export default function ViewApplicationsSection() {
                 {job.applications.length === 0 ? (
                   <p className="text-gray-500 text-sm">No applicants yet.</p>
                 ) : (
-                  job.applications.map(app => {
+                  job.applications.map((app) => {
                     // parse freelancer profile
                     let profile = app.freelancer?.profile;
                     if (typeof profile === 'string') {
-                      try { profile = JSON.parse(profile); }
-                      catch { profile = {}; }
+                      try {
+                        profile = JSON.parse(profile);
+                      } catch {
+                        profile = {};
+                      }
                     }
 
                     return (
@@ -157,7 +161,7 @@ export default function ViewApplicationsSection() {
                 )}
               </ul>
             )}
-          </div>
+          </section>
         );
       })}
     </section>
