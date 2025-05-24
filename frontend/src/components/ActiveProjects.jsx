@@ -3,15 +3,13 @@ import { useAuth0 } from '@auth0/auth0-react';
 import supabase from '../utils/supabaseClient';
 import { format } from 'date-fns';
 import DeliverableForm from './DeliverableForm';
-import ClientDeliverableApproval from './ClientDeliverableApproval';
-import FreelancerDeliverableUpdate from './FreelancerDeliverableUpdate';
-import ClientCompletionTracking from './ClientCompletionTracking';
 
 export default function ActiveProjects({ isClient = false }) {
   const { user } = useAuth0();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [revisionComments, setRevisionComments] = useState({});
 
   useEffect(() => {
     if (!user?.sub) return;
@@ -21,7 +19,6 @@ export default function ActiveProjects({ isClient = false }) {
         setLoading(true);
         setError(null);
 
-        // First get all projects where the freelancer is selected
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('id, description, client_id, completed, created_at, report')
@@ -30,7 +27,6 @@ export default function ActiveProjects({ isClient = false }) {
 
         if (projectError) throw projectError;
 
-        // Get milestones and deliverables for each project
         const projectPromises = projectData.map(async (project) => {
           const { data: milestoneData, error: milestoneError } = await supabase
             .from('milestones')
@@ -39,7 +35,6 @@ export default function ActiveProjects({ isClient = false }) {
 
           if (milestoneError) throw milestoneError;
 
-          // Get deliverables for each milestone
           const milestonesWithDeliverables = await Promise.all(
             milestoneData.map(async (milestone) => {
               const { data: deliverables, error: deliverablesError } = await supabase
@@ -50,7 +45,6 @@ export default function ActiveProjects({ isClient = false }) {
 
               if (deliverablesError) throw deliverablesError;
 
-              // For clients, fetch the freelancer's name
               const deliverablesWithFreelancer = await Promise.all(
                 deliverables.map(async (deliverable) => {
                   if (!isClient || !deliverable.submitted_by) return deliverable;
@@ -71,15 +65,14 @@ export default function ActiveProjects({ isClient = false }) {
             })
           );
 
-          return { 
-            ...project, 
-            milestones: milestonesWithDeliverables 
+          return {
+            ...project,
+            milestones: milestonesWithDeliverables,
           };
         });
 
         const projectsWithMilestones = await Promise.all(projectPromises);
-        
-        // Parse description if it's a string
+
         const parsedProjects = projectsWithMilestones.map((p) => {
           let desc = p.description;
           if (typeof desc === 'string') {
@@ -92,8 +85,9 @@ export default function ActiveProjects({ isClient = false }) {
           return { ...p, description: desc };
         });
 
-        // Filter out completed projects for freelancers
-        const filteredProjects = isClient ? parsedProjects : parsedProjects.filter(p => !p.completed);
+        const filteredProjects = isClient
+          ? parsedProjects
+          : parsedProjects.filter((p) => !p.completed);
 
         setProjects(filteredProjects);
       } catch (err) {
@@ -129,10 +123,13 @@ export default function ActiveProjects({ isClient = false }) {
 
   return (
     <section className="space-y-6">
-      {projects.map(project => {
+      {projects.map((project) => {
         const { title, details } = project.description || {};
         return (
-          <section key={project.id} className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
+          <section
+            key={project.id}
+            className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]"
+          >
             {/* Project Header */}
             <section className="flex justify-between mb-4">
               <section>
@@ -142,27 +139,38 @@ export default function ActiveProjects({ isClient = false }) {
                   Created: {format(new Date(project.created_at), 'MMM d, yyyy')}
                 </p>
               </section>
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                project.completed ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-100'
-              }`}>
+              <p
+                className={`px-2 py-1 text-xs rounded-full ${
+                  project.completed
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-500 text-gray-100'
+                }`}
+              >
                 {project.completed ? 'Completed' : 'In Progress'}
-              </span>
+              </p>
             </section>
 
             {/* Project Report */}
             {project.report && (
               <section className="mb-4">
-                <h3 className="text-sm font-semibold text-accent mb-2">Project Report</h3>
+                <h3 className="text-sm font-semibold text-accent mb-2">
+                  Project Report
+                </h3>
                 <p className="text-sm text-gray-400">{project.report}</p>
               </section>
             )}
 
             {/* Milestones & Deliverables */}
             {project.milestones.map((ms, idx) => (
-              <section key={ms.id} className="mb-4 p-4 bg-[#1a1a1a] border border-[#1abc9c] rounded-lg">
+              <section
+                key={ms.id}
+                className="mb-4 p-4 bg-[#1a1a1a] border border-[#1abc9c] rounded-lg"
+              >
                 <section className="flex justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-accent">{ms.title}</h4>
-                  <span className="text-sm text-gray-500">${ms.amount}</span>
+                  <h4 className="text-sm font-semibold text-accent">
+                    {ms.title}
+                  </h4>
+                  <p className="text-sm text-gray-500">${ms.amount}</p>
                 </section>
                 {ms.due_date && (
                   <p className="text-xs text-gray-500 mb-2">
@@ -171,8 +179,11 @@ export default function ActiveProjects({ isClient = false }) {
                 )}
 
                 {/* list of deliverables */}
-                {ms.deliverables.map(d => (
-                  <section key={d.id} className="mb-3 p-2 bg-[#2a2a2a] rounded text-sm text-gray-200">
+                {ms.deliverables.map((d) => (
+                  <section
+                    key={d.id}
+                    className="mb-3 p-2 bg-[#2a2a2a] rounded text-sm text-gray-200"
+                  >
                     <p className="mb-1">{d.description}</p>
                     <p className="text-xs text-gray-400 mb-1">
                       Submitted: {format(new Date(d.submitted_at), 'MMM d, yyyy')}
@@ -200,42 +211,47 @@ export default function ActiveProjects({ isClient = false }) {
                             rows={2}
                             placeholder="Revision comments…"
                             value={revisionComments[d.id] || ''}
-                            onChange={e =>
-                              setRevisionComments(prev => ({ ...prev, [d.id]: e.target.value }))
+                            onChange={(e) =>
+                              setRevisionComments((prev) => ({
+                                ...prev,
+                                [d.id]: e.target.value,
+                              }))
                             }
                           />
                         </section>
                       ) : (
                         <p className="text-xs">
                           Status:{' '}
-                          <span
+                          <strong
                             className={`font-semibold ${
-                              d.status === 'approved' ? 'text-green-400' : 'text-red-400'
+                              d.status === 'approved'
+                                ? 'text-green-400'
+                                : 'text-red-400'
                             }`}
                           >
                             {d.status.replace('_', ' ')}
-                          </span>
+                          </strong>
                         </p>
                       )
                     ) : (
-                      // freelancer sees status only
                       <p className="text-xs">
                         Status:{' '}
-                        <span
+                        <strong
                           className={`font-semibold ${
-                            d.status === 'approved' ? 'text-green-400' :
-                            d.status === 'revision_requested' ? 'text-red-400' :
-                            'text-gray-400'
+                            d.status === 'approved'
+                              ? 'text-green-400'
+                              : d.status === 'revision_requested'
+                              ? 'text-red-400'
+                              : 'text-gray-400'
                           }`}
                         >
                           {d.status.replace('_', ' ')}
-                        </span>
+                        </strong>
                       </p>
                     )}
                   </section>
                 ))}
 
-                {/* deliverable form only for freelancer AND only on first incomplete milestone */}
                 {!isClient && idx === project.firstIncompleteIndex && (
                   <DeliverableForm projectId={project.id} milestone={ms} />
                 )}
