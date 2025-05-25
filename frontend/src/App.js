@@ -1,175 +1,94 @@
-import React, {useState, useEffect} from "react";
+import {useEffect, useCallback} from "react";
 import {useAuth0} from "@auth0/auth0-react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import supabase from "./utils/supabaseClient";
-import ProfileFormLayout from "./components/ProfileFormLayout";
-import "./styles/theme.css";
+import RoutesComponent from "./routes";
 
-export default function ClientProfileForm() {
-  const {user} = useAuth0();
+export default function App() {
+  const {isAuthenticated, user, isLoading, loginWithRedirect} = useAuth0();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    industry: "",
-    registrationType: "individual", // 'individual' or 'company'
-    companyName: "",
-    registrationNumber: "",
-    vatNumber: "",
-  });
+  const handleAuth = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+
+    const userId = user.sub;
+
+    if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
+      if (location.pathname !== "/admin") navigate("/admin");
+      return;
+    }
+
+    if (!user.email_verified) {
+      if (location.pathname !== "/verify-email") navigate("/verify-email");
+      return;
+    }
+
+    try {
+      const [{data: client}, {data: freelancer}] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("freelancers")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+
+      const isClient = !!client;
+      const isFreelancer = !!freelancer;
+      const profile = client?.profile || freelancer?.profile;
+      const status = client?.status || freelancer?.status;
+
+      if (!isClient && !isFreelancer) {
+        if (location.pathname !== "/register-role") navigate("/register-role");
+        return;
+      }
+
+      if (!profile) {
+        const profilePath = isClient
+          ? "/create-client-profile"
+          : "/create-freelancer-profile";
+        if (location.pathname !== profilePath) navigate(profilePath);
+        return;
+      }
+
+      if (status !== "approved") {
+        if (location.pathname !== "/pending") navigate("/pending");
+        return;
+      }
+
+      const dashboard = isClient ? "/client" : "/freelancer";
+      const protectedPaths = [
+        "/client",
+        "/freelancer",
+        "/post-job",
+        "/review-applicants",
+      ];
+      if (!protectedPaths.includes(location.pathname)) {
+        navigate(dashboard);
+      }
+    } catch (err) {
+      console.error("Auth logic failed:", err);
+      navigate("/error");
+    }
+  }, [isAuthenticated, user, location.pathname, navigate]);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("clients")
-      .select("profile")
-      .eq("user_id", user.sub)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
-          navigate("/create-profile");
-        } else {
-          setLoading(false);
-        }
-      });
-  }, [user, navigate]);
+    if (isLoading) return;
 
-  const handleChange = (e) =>
-    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  const toggleType = () =>
-    setFormData((f) => ({
-      ...f,
-      registrationType: f.registrationType === "individual" ? "company" : "individual",
-    }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const {error} = await supabase
-      .from("clients")
-      .update({ profile: formData, status: "pending" })
-      .eq("user_id", user.sub);
-
-    if (error) {
-      console.error("Failed to submit profile:", error);
-    } else {
-      navigate("/pending");
+    const publicPaths = ["/"];
+    if (!isAuthenticated && !publicPaths.includes(location.pathname)) {
+      loginWithRedirect();
+    } else if (isAuthenticated && user) {
+      handleAuth();
     }
-  };
+  }, [isLoading, isAuthenticated, user, location.pathname, handleAuth, loginWithRedirect]);
 
-  if (loading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0c0c0c] to-[#1a1a1a] text-white text-xl tracking-wide">
-        <p className="animate-pulse">Loading your profile form...</p>
-      </main>
-    );
-  }
+  if (isLoading) return <main><p>Loading...</p></main>;
 
-  return (
-    <ProfileFormLayout
-      title="Client Profile"
-      subtitle="Tell us about yourself or your company to get started"
-      onSubmit={handleSubmit}
-    >
-      <label className="form-label">
-        First Name
-        <input
-          id="firstName"
-          name="firstName"
-          required
-          value={formData.firstName}
-          onChange={handleChange}
-          className="form-input"
-        />
-      </label>
-
-      <label className="form-label">
-        Last Name
-        <input
-          id="lastName"
-          name="lastName"
-          required
-          value={formData.lastName}
-          onChange={handleChange}
-          className="form-input"
-        />
-      </label>
-
-      <label className="form-label">
-        Industry/Sector
-        <input
-          id="industry"
-          name="industry"
-          required
-          value={formData.industry}
-          onChange={handleChange}
-          className="form-input"
-        />
-      </label>
-
-      {/* Toggle switch */}
-      <fieldset className="form-full-width">
-        <legend className="form-label">Registration Type</legend>
-        <section className="flex items-center gap-4">
-          <span className="text-white font-medium">Individual</span>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={formData.registrationType === "company"}
-              onChange={toggleType}
-            />
-            <div className="slider round"></div>
-          </label>
-          <span className="text-white font-medium">Company</span>
-        </section>
-      </fieldset>
-
-      {formData.registrationType === "company" && (
-        <>
-          <label className="form-label">
-            Company Name
-            <input
-              id="companyName"
-              name="companyName"
-              required
-              value={formData.companyName}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </label>
-
-          <label className="form-label">
-            Registration Number
-            <input
-              id="registrationNumber"
-              name="registrationNumber"
-              value={formData.registrationNumber}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </label>
-
-          <label className="form-label">
-            VAT Number (optional)
-            <input
-              id="vatNumber"
-              name="vatNumber"
-              value={formData.vatNumber}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </label>
-        </>
-      )}
-
-      <footer className="form-footer form-full-width">
-        <button type="submit" className="primary-btn">
-          Submit Profile
-        </button>
-      </footer>
-    </ProfileFormLayout>
-  );
+  return <RoutesComponent />;
 }
