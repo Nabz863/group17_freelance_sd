@@ -1,17 +1,11 @@
-import { useEffect, useCallback } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import {useEffect, useCallback} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {useNavigate, useLocation} from "react-router-dom";
 import supabase from "./utils/supabaseClient";
-import { createClient } from '@supabase/supabase-js';
 import RoutesComponent from "./routes";
 
-window.supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
-
 export default function App() {
-  const { isAuthenticated, user, isLoading, loginWithRedirect } = useAuth0();
+  const {isAuthenticated, user, isLoading, loginWithRedirect} = useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,7 +25,7 @@ export default function App() {
     }
 
     try {
-      const [{ data: client }, { data: freelancer }] = await Promise.all([
+      const [{data: client}, {data: freelancer}] = await Promise.all([
         supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
         supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
       ]);
@@ -58,7 +52,7 @@ export default function App() {
       }
 
       const dashboard = isClient ? "/client" : "/freelancer";
-      const protectedPaths = ["/client", "/freelancer", "/post-job", "/review-applicants"]; //whitelist
+      const protectedPaths = ["/client", "/freelancer", "/post-job", "/review-applicants"];
       if (!protectedPaths.includes(location.pathname)) {
         navigate(dashboard);
       }

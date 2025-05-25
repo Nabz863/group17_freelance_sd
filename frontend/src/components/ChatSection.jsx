@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import {useEffect, useState, useRef} from 'react';
+import supabase from '../utils/supabaseClient';
 
-export default function ChatSection({ projectId, currentUserId, isClient }) {
+export default function ChatSection({projectId, currentUserId, isClient}) {
   const [messages, setMessages] = useState([]);
   const [newText, setNewText] = useState('');
   const bottomRef = useRef(null);
@@ -9,22 +10,21 @@ export default function ChatSection({ projectId, currentUserId, isClient }) {
     if (!projectId) return;
 
     (async () => {
-      const res = await fetch('/functions/v1/get-messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: projectId })
-      });
+      const {data, error} = await supabase
+        .from('messages')
+        .select('id, sender_id, text, timestamp')
+        .eq('project_id', projectId)
+        .order('timestamp', { ascending: true });
 
-      const data = await res.json();
-      if (res.ok) setMessages(data);
-      else console.error('Load messages error:', data.error);
+      if (error) console.error('Load messages error:', error);
+      else setMessages(data);
     })();
   }, [projectId]);
 
   useEffect(() => {
     if (!projectId) return;
 
-    const channel = window.supabase
+    const channel = supabase
       .channel('public:messages')
       .on(
         'postgres_changes',
@@ -32,16 +32,16 @@ export default function ChatSection({ projectId, currentUserId, isClient }) {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `project_id=eq.${projectId}`,
+          filter: `project_id=eq.${projectId}`
         },
-        ({ new: inserted }) => {
-          setMessages(msgs => [...msgs, inserted]);
+        ({new: inserted}) => {
+          setMessages((msgs) => [...msgs, inserted]);
         }
       )
       .subscribe();
 
     return () => {
-      window.supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, [projectId]);
 
@@ -53,21 +53,20 @@ export default function ChatSection({ projectId, currentUserId, isClient }) {
     const text = newText.trim();
     if (!text) return;
 
-    const res = await fetch('/functions/v1/send-message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: projectId, sender_id: currentUserId, text })
+    const {error} = await supabase.from('messages').insert({
+      project_id: projectId,
+      sender_id: currentUserId,
+      text
     });
 
-    const result = await res.json();
-    if (!res.ok) console.error('Send message error:', result.error);
+    if (error) console.error('Send message error:', error);
     else setNewText('');
   };
 
   return (
     <main className="chat-container">
       <section className="chat-messages">
-        {messages.map(m => {
+        {messages.map((m) => {
           const isSender = m.sender_id === currentUserId;
           return (
             <article
@@ -89,7 +88,7 @@ export default function ChatSection({ projectId, currentUserId, isClient }) {
 
       <form
         className="chat-input-bar"
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
           sendMessage();
         }}
@@ -98,7 +97,7 @@ export default function ChatSection({ projectId, currentUserId, isClient }) {
           className="chat-input"
           placeholder="Type a message…"
           value={newText}
-          onChange={e => setNewText(e.target.value)}
+          onChange={(e) => setNewText(e.target.value)}
         />
         <button type="submit" className="chat-send-btn">Send</button>
       </form>
