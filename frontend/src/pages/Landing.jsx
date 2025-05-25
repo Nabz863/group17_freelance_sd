@@ -19,6 +19,13 @@ export default function Landing() {
 
   return (
     <main className="landing-container">
+      <header className="flex justify-center py-6">
+        <img
+          src="https://thegigisupblob.blob.core.windows.net/documents/Logo%20Black.jpg"
+          alt="The Gig Is Up Logo"
+          className="h-14 object-contain"
+        />
+      </header>
       <section className="hero-section">
         <h1 className="hero-title">The Gig Is Up</h1>
         <p className="hero-subtitle">
