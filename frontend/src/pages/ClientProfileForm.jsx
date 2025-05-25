@@ -11,19 +11,20 @@ export default function ClientProfileForm() {
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
+    registrationType: "individual",
     firstName: "",
     lastName: "",
-    industry: "",
-    registrationType: "individual",
     companyName: "",
-    companySize: "",
+    industry: "",
+    contactNumber: "",
+    email: "",
   });
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("clients")
-      .select("profileData")
+      .select("profile")
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({data}) => {
@@ -38,12 +39,19 @@ export default function ClientProfileForm() {
   const handleChange = (e) =>
     setFormData((f) => ({...f, [e.target.name]: e.target.value}));
 
+  const handleToggle = () => {
+    setFormData((f) => ({
+      ...f,
+      registrationType: f.registrationType === "individual" ? "company" : "individual",
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const {error} = await supabase
+    const { error } = await supabase
       .from("clients")
-      .update({ profileData: formData, status: "pending" })
+      .update({profile: formData, status: "pending"})
       .eq("user_id", user.sub);
 
     if (error) {
@@ -64,9 +72,48 @@ export default function ClientProfileForm() {
   return (
     <ProfileFormLayout
       title="Client Profile"
-      subtitle="Tell us about your company or yourself"
+      subtitle="Tell us about yourself or your company to get started"
       onSubmit={handleSubmit}
     >
+      <section className="form-full-width">
+        <label className="form-label">Registering As</label>
+        <section className="flex items-center gap-4">
+          <label className="text-white font-medium">
+            Individual
+          </label>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={formData.registrationType === "company"}
+            onClick={handleToggle}
+            className={`relative w-14 h-8 bg-[#444] rounded-full transition-colors duration-300 
+              ${formData.registrationType === "company" ? "bg-[#1abc9c]" : "bg-[#444]"}`}
+          >
+            <span
+              className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 
+                ${formData.registrationType === "company" ? "translate-x-6" : "translate-x-0"}`}
+            />
+          </button>
+          <label className="text-white font-medium">
+            Company
+          </label>
+        </section>
+      </section>
+
+      {formData.registrationType === "company" && (
+        <label className="form-label form-full-width">
+          Company Name
+          <input
+            id="companyName"
+            name="companyName"
+            required
+            value={formData.companyName}
+            onChange={handleChange}
+            className="form-input"
+          />
+        </label>
+      )}
+
       <label className="form-label">
         First Name
         <input
@@ -92,7 +139,7 @@ export default function ClientProfileForm() {
       </label>
 
       <label className="form-label">
-        Industry/Sector
+        Industry / Sector
         <input
           id="industry"
           name="industry"
@@ -103,47 +150,31 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <label className="form-label form-full-width">
-        Registering as
-        <select
-          id="registrationType"
-          name="registrationType"
-          value={formData.registrationType}
+      <label className="form-label">
+        Contact Number
+        <input
+          id="contactNumber"
+          name="contactNumber"
+          required
+          value={formData.contactNumber}
           onChange={handleChange}
-          className="form-select"
-        >
-          <option value="individual">Individual</option>
-          <option value="company">Company</option>
-        </select>
+          className="form-input"
+          type="tel"
+        />
       </label>
 
-      {formData.registrationType === "company" && (
-        <>
-          <label className="form-label">
-            Company Name
-            <input
-              id="companyName"
-              name="companyName"
-              required
-              value={formData.companyName}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </label>
-
-          <label className="form-label">
-            Company Size
-            <input
-              id="companySize"
-              name="companySize"
-              required
-              value={formData.companySize}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </label>
-        </>
-      )}
+      <label className="form-label">
+        Email
+        <input
+          id="email"
+          name="email"
+          required
+          value={formData.email}
+          onChange={handleChange}
+          className="form-input"
+          type="email"
+        />
+      </label>
 
       <footer className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
