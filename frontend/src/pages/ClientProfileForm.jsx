@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {useNavigate} from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
-import FileUpload from "../components/FileUpload";
 import "../styles/theme.css";
 
 export default function ClientProfileForm() {
-  const { user } = useAuth0();
+  const {user} = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -16,13 +15,12 @@ export default function ClientProfileForm() {
     lastName: "",
     industry: "",
   });
-  const [pdfFile, setPdfFile] = useState(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("clients")
-      .select("profile")
+      .select("profileData")
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
@@ -35,33 +33,21 @@ export default function ClientProfileForm() {
   }, [user, navigate]);
 
   const handleChange = (e) =>
-    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
-  const handleFileChange = (files) => setPdfFile(files[0]);
+    setFormData((f) => ({...f, [e.target.name]: e.target.value}));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await supabase
+    const {error} = await supabase
       .from("clients")
       .update({ profileData: formData, status: "pending" })
       .eq("user_id", user.sub);
 
-    if (pdfFile) {
-      const { data: uploadData, error: uploadErr } = await supabase.storage
-        .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
-        .upload(`profiles/${user.sub}.pdf`, pdfFile);
-      if (!uploadErr) {
-        const url = supabase.storage
-          .from(process.env.REACT_APP_AZURE_BLOB_CONTAINER)
-          .getPublicUrl(uploadData.path).publicUrl;
-        await supabase
-          .from("clients")
-          .update({ profile: url })
-          .eq("user_id", user.sub);
-      }
+    if (error) {
+      console.error("Failed to submit profile:", error);
+    } else {
+      navigate("/pending");
     }
-
-    navigate("/pending");
   };
 
   if (loading) {
@@ -75,7 +61,7 @@ export default function ClientProfileForm() {
   return (
     <ProfileFormLayout
       title="Client Profile"
-      subtitle="Tell us about your company and upload your profile PDF"
+      subtitle="Tell us about your company to get started"
       onSubmit={handleSubmit}
     >
       <label className="form-label">
@@ -113,16 +99,6 @@ export default function ClientProfileForm() {
           className="form-input"
         />
       </label>
-
-      <div className="form-full-width">
-        <label className="form-label">Upload Profile PDF</label>
-        <FileUpload
-          accept=".pdf"
-          required
-          onChange={handleFileChange}
-          fileType="profilePdf"
-        />
-      </div>
 
       <div className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
