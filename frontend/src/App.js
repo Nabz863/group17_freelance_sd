@@ -1,9 +1,9 @@
 import React, {useState, useEffect} from "react";
 import {useAuth0} from "@auth0/auth0-react";
 import {useNavigate} from "react-router-dom";
-import supabase from "../utils/supabaseClient";
-import ProfileFormLayout from "../components/ProfileFormLayout";
-import "../styles/theme.css";
+import supabase from "./utils/supabaseClient";
+import ProfileFormLayout from "./components/ProfileFormLayout";
+import "./styles/theme.css";
 
 export default function ClientProfileForm() {
   const {user} = useAuth0();
