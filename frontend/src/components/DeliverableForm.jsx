@@ -1,14 +1,15 @@
+// src/components/DeliverableForm.jsx
+
 import React, { useState } from 'react';
-import supabase from '../utils/supabaseClient';
 import { useAuth0 } from '@auth0/auth0-react';
+import supabase from '../utils/supabaseClient';
 
 export default function DeliverableForm({ projectId, milestone }) {
   const { user } = useAuth0();
   const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -17,55 +18,42 @@ export default function DeliverableForm({ projectId, milestone }) {
       const { error } = await supabase
         .from('deliverables')
         .insert({
-          contract_id: { type: 'uuid', value: projectId },
+          contract_id: projectId,
           milestone_number: milestone.number,
           description,
-          submitted_by: user.sub,
-          status: 'pending'  // Added missing status field required by schema
+          submitted_by: user.sub
         });
 
-      if (error) throw error;
-
-      // Reset form after successful submission
+    if (error) {
+      console.error('Error submitting deliverable:', error);
+    } else {
       setDescription('');
-    } catch (err) {
-      console.error('Error submitting deliverable:', err);
-      setError('Failed to submit deliverable. Please try again.');
-    } finally {
-      setLoading(false);
     }
+
+    setSubmitting(false);
   };
 
   return (
-    <div className="mt-4">
-      <div className="card-glow p-4 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]">
-        <h3 className="text-sm font-semibold text-accent mb-2">Submit Deliverable</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">
-              Deliverable Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className="w-full p-2 rounded bg-[#2a2a2a] border border-[#1abc9c] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
-              placeholder="Enter your deliverable description..."
-              required
-            />
-          </div>
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading || !description.trim()}
-            className="primary-btn w-full"
-          >
-            {loading ? 'Submitting...' : 'Submit Deliverable'}
-          </button>
-        </form>
-      </div>
-    </div>
+    <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+      <textarea
+        className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+        rows={3}
+        placeholder="Describe or link your deliverable…"
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        required
+      />
+      <button
+        type="submit"
+        disabled={submitting}
+        className={`px-4 py-2 rounded ${
+          submitting 
+            ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+            : 'bg-[#1abc9c] text-black hover:bg-[#159a7c]'
+        }`}
+      >
+        {submitting ? 'Submitting…' : 'Submit Deliverable'}
+      </button>
+    </form>
   );
 }

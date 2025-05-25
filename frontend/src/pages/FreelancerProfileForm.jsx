@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+import {useState, useEffect} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {useNavigate} from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
-import FileUpload from "../components/FileUpload";
 import "../styles/theme.css";
 
 export default function FreelancerProfileForm() {
-  const { user } = useAuth0();
+  const {user} = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -15,8 +14,17 @@ export default function FreelancerProfileForm() {
     firstName: "",
     lastName: "",
     profession: "",
+    specialization: "",
+    experience: "",
+    skills: "",
+    hourly_rate: "",
+    location: "",
+    availability: "",
+    phone: "",
+    email: "",
+    portfolio_url: "",
+    description: ""
   });
-  const [cvFile, setCvFile] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -26,28 +34,25 @@ export default function FreelancerProfileForm() {
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data?.profile) {
-          setLoading(false);
+        if (!data) {
+          navigate("/create-profile");
         } else {
-          navigate("/freelancer");
+          setLoading(false);
         }
       });
   }, [user, navigate]);
 
-  const handleChange = (e) =>
-    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
-  const handleFileChange = (files) => setCvFile(files[0]);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const userId = user?.sub;
 
-    await supabase
+    const {error} = await supabase
       .from("freelancers")
-      .update({ 
-        profile: JSON.stringify(formData),
-        status: "pending",
-        updated_at: new Date().toISOString()
-      })
+      .update({ profileData: formData, status: "pending" })
       .eq("user_id", user.sub);
 
     if (cvFile) {
@@ -60,7 +65,7 @@ export default function FreelancerProfileForm() {
           .getPublicUrl(uploadData.path).publicUrl;
         await supabase
           .from("freelancers")
-          .update({ cv_url: url })
+          .update({ profile: url })
           .eq("user_id", user.sub);
       }
     }
@@ -79,52 +84,176 @@ export default function FreelancerProfileForm() {
   return (
     <ProfileFormLayout
       title="Freelancer Profile"
-      subtitle="Tell us about you and upload your CV"
+      subtitle="Tell us about your skills and experience to connect with clients"
       onSubmit={handleSubmit}
     >
-      <label className="form-label">
+      <label htmlFor="firstName" className="form-label">
         First Name
         <input
           id="firstName"
-          name="firstName"
           required
+          name="firstName"
           value={formData.firstName}
           onChange={handleChange}
           className="form-input"
         />
       </label>
 
-      <label className="form-label">
+      <label htmlFor="lastName" className="form-label">
         Last Name
         <input
           id="lastName"
-          name="lastName"
           required
+          name="lastName"
           value={formData.lastName}
           onChange={handleChange}
           className="form-input"
         />
       </label>
 
-      <label className="form-label">
+      <label htmlFor="profession" className="form-label">
         Profession
         <input
           id="profession"
-          name="profession"
           required
+          name="profession"
           value={formData.profession}
           onChange={handleChange}
           className="form-input"
         />
       </label>
 
-      <label className="form-label form-full-width">
-        Upload Your CV (PDF)
-        <FileUpload
-          accept=".pdf"
+      <label htmlFor="specialization" className="form-label">
+        Specialization
+        <input
+          id="specialization"
           required
-          onChange={handleFileChange}
-          fileType="cv"
+          name="specialization"
+          value={formData.specialization}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="experience" className="form-label">
+        Years of Experience
+        <input
+          id="experience"
+          type="number"
+          required
+          name="experience"
+          min="0"
+          value={formData.experience}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="hourly_rate" className="form-label">
+        Hourly Rate (ZAR)
+        <input
+          id="hourly_rate"
+          type="number"
+          required
+          name="hourly_rate"
+          min="0"
+          value={formData.hourly_rate}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="location" className="form-label">
+        Location
+        <input
+          id="location"
+          required
+          name="location"
+          value={formData.location}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="availability" className="form-label">
+        Availability
+        <select
+          id="availability"
+          required
+          name="availability"
+          value={formData.availability}
+          onChange={handleChange}
+          className="form-select"
+        >
+          <option value="">Select availability</option>
+          <option value="full-time">Full-time</option>
+          <option value="part-time">Part-time</option>
+          <option value="weekends">Weekends only</option>
+          <option value="evenings">Evenings only</option>
+          <option value="custom">Custom schedule</option>
+        </select>
+      </label>
+
+      <label htmlFor="phone" className="form-label">
+        Phone Number
+        <input
+          id="phone"
+          type="tel"
+          required
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="email" className="form-label">
+        Email
+        <input
+          id="email"
+          type="email"
+          required
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="portfolio_url" className="form-label">
+        Portfolio URL
+        <input
+          id="portfolio_url"
+          type="url"
+          name="portfolio_url"
+          value={formData.portfolio_url}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="skills" className="form-label form-full-width">
+        Skills (comma-separated)
+        <input
+          id="skills"
+          required
+          name="skills"
+          value={formData.skills}
+          onChange={handleChange}
+          className="form-input"
+        />
+      </label>
+
+      <label htmlFor="description" className="form-label form-full-width">
+        Bio / Work Description
+        <textarea
+          id="description"
+          required
+          name="description"
+          rows="5"
+          value={formData.description}
+          onChange={handleChange}
+          className="form-textarea"
         />
       </label>
 

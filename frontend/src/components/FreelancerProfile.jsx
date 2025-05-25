@@ -1,3 +1,5 @@
+// src/components/FreelancerProfile.jsx
+
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
@@ -5,9 +7,9 @@ import "../styles/theme.css";
 
 export default function FreelancerProfile() {
   const { user } = useAuth0();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [profile, setProfile]   = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [editing, setEditing]   = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,118 +21,101 @@ export default function FreelancerProfile() {
     location: "",
     availability: "",
     phone: "",
+    email: "",
     portfolio_url: "",
     description: "",
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data } = await supabase
-          .from("freelancers")
-          .select("*")
-          .eq("user_id", user.sub)
-          .single();
-
-        if (data) {
-          setProfile(data);
-          if (data.profile) {
-            const profileData =
-              typeof data.profile === "string"
-                ? JSON.parse(data.profile)
-                : data.profile;
-            setFormData((prev) => ({
-              ...prev,
-              ...profileData,
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user?.sub]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase
+    if (!user?.sub) return;
+    (async () => {
+      const { data, error } = await supabase
         .from("freelancers")
-        .update({
-          profile: JSON.stringify(formData),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.sub);
-
-      if (error) throw error;
-
-      // Refresh the profile data
-      const { data } = await supabase
-        .from("freelancers")
-        .select("*")
+        .select("*, profile")
         .eq("user_id", user.sub)
         .single();
+      if (error) return console.error(error);
 
-      setProfile(data);
-      setEditing(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    }
+      let parsed = data.profile;
+      if (typeof parsed === "string") {
+        try { parsed = JSON.parse(parsed); }
+        catch { parsed = {}; }
+      }
+
+      setProfile({ ...data, profile: parsed });
+      setFormData({ ...parsed, email: user.email });
+      setLoading(false);
+    })();
+  }, [user?.sub, user?.email]);
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    const payload = {
+      profile: JSON.stringify(formData)
+    };
+    const { error } = await supabase
+      .from("freelancers")
+      .update(payload)
+      .eq("user_id", user.sub);
+    if (error) return console.error(error);
+
+    setProfile(prev => ({ ...prev, profile: { ...formData } }));
+    setEditing(false);
   };
 
   if (loading) {
-    return <p>Loading profile...</p>;
+    return <p className="text-white">Loading profile…</p>;
   }
-
   if (!profile) {
-    return <p>No profile found. Please complete your profile setup first.</p>;
+    return <p className="text-white">No profile found. Complete setup first.</p>;
   }
-
-  const availabilityOptions = [
-    "full-time",
-    "part-time",
-    "contract",
-    "freelance",
-    "internship",
-  ];
 
   return (
-    <section className="profile-container">
-      <section className="flex justify-between items-center mb-6">
+    <div className="profile-container">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Profile Information</h2>
         {!editing && (
           <button
             onClick={() => setEditing(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
           >
             Edit Profile
           </button>
+        ) : (
+          <div className="space-x-2">
+            <button
+              onClick={() => setEditing(false)}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="profile-form"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
         )}
       </section>
 
       {editing ? (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium mb-1">
                 First Name *
               </label>
               <input
                 type="text"
                 name="firstName"
-                value={formData.firstName || ""}
+                value={formData.firstName}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -143,7 +128,7 @@ export default function FreelancerProfile() {
               <input
                 type="text"
                 name="lastName"
-                value={formData.lastName || ""}
+                value={formData.lastName}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -151,15 +136,15 @@ export default function FreelancerProfile() {
             </section>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium mb-1">
                 Profession *
               </label>
               <input
                 type="text"
                 name="profession"
-                value={formData.profession || ""}
+                value={formData.profession}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -172,7 +157,7 @@ export default function FreelancerProfile() {
               <input
                 type="text"
                 name="specialization"
-                value={formData.specialization || ""}
+                value={formData.specialization}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -180,8 +165,8 @@ export default function FreelancerProfile() {
             </section>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <section>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
               <label className="block text-sm font-medium mb-1">
                 Years of Experience *
               </label>
@@ -189,7 +174,7 @@ export default function FreelancerProfile() {
                 type="number"
                 name="experience"
                 min="0"
-                value={formData.experience || ""}
+                value={formData.experience}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -204,7 +189,7 @@ export default function FreelancerProfile() {
                 name="hourly_rate"
                 min="0"
                 step="0.01"
-                value={formData.hourly_rate || ""}
+                value={formData.hourly_rate}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -216,41 +201,41 @@ export default function FreelancerProfile() {
               </label>
               <select
                 name="availability"
-                value={formData.availability || ""}
+                value={formData.availability}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               >
                 <option value="">Select availability</option>
-                {availabilityOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="weekends">Weekends only</option>
+                <option value="evenings">Evenings only</option>
+                <option value="contract">Contract</option>
               </select>
             </section>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium mb-1">
-                Location *
+                Phone Number *
               </label>
               <input
-                type="text"
-                name="location"
-                value={formData.location || ""}
+                type="tel"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
               />
-            </section>
-            <section>
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1">Phone *</label>
               <input
-                type="tel"
-                name="phone"
-                value={formData.phone || ""}
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
@@ -258,49 +243,48 @@ export default function FreelancerProfile() {
             </section>
           </section>
 
-          <section>
+          <div>
             <label className="block text-sm font-medium mb-1">
               Skills (comma separated) *
             </label>
             <input
+              type="url"
+              name="portfolio_url"
+              value={formData.portfolio_url}
+              onChange={handleChange}
+              className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
+            />
+          </section>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Portfolio URL
+            </label>
+            <input
               type="text"
               name="skills"
-              value={formData.skills || ""}
+              value={formData.skills}
               onChange={handleChange}
-              placeholder="e.g., React, Node.js, UI/UX"
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
           </section>
 
-          <section>
-            <label className="block text-sm font-medium mb-1">
-              Portfolio URL
-            </label>
-            <input
-              type="url"
-              name="portfolio_url"
-              value={formData.portfolio_url || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
-            />
-          </section>
-
-          <section>
+          <div>
             <label className="block text-sm font-medium mb-1">
               Description *
             </label>
             <textarea
               name="description"
-              value={formData.description || ""}
-              onChange={handleChange}
               rows={4}
+              value={formData.description}
+              onChange={handleChange}
               required
               className="w-full p-2 border rounded bg-gray-800 border-gray-700 text-white"
             />
-          </section>
+          </div>
 
-          <section className="flex space-x-4 pt-4">
+          <div className="flex space-x-4 pt-4">
             <button
               type="submit"
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
@@ -314,35 +298,36 @@ export default function FreelancerProfile() {
             >
               Cancel
             </button>
-          </section>
+          </div>
         </form>
       ) : (
-        <section className="space-y-4">
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section className="space-y-4">
-              <section>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
                 <p className="text-sm text-gray-400">Full Name</p>
-                <p className="text-white">
-                  {profile.profile?.firstName} {profile.profile?.lastName}
+                <p className="font-medium">
+                  {profile.profile.firstName}{" "}
+                  {profile.profile.lastName}
                 </p>
               </section>
               <section>
                 <p className="text-sm text-gray-400">Profession</p>
                 <p className="text-white">{profile.profile?.profession}</p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Specialization</p>
                 <p className="text-white">
                   {profile.profile?.specialization || "Not specified"}
                 </p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Experience</p>
-                <p className="text-white">
-                  {profile.profile?.experience} years
+                <p className="font-medium">
+                  {profile.profile.experience} years
                 </p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Hourly Rate</p>
                 <p className="text-white">
                   ZAR{" "}
@@ -351,36 +336,36 @@ export default function FreelancerProfile() {
                   ).toLocaleString()}
                   /hr
                 </p>
-              </section>
-            </section>
+              </div>
+            </div>
 
-            <section className="space-y-4">
-              <section>
+            <div className="space-y-4">
+              <div>
                 <p className="text-sm text-gray-400">Email</p>
                 <p className="text-white">
                   {profile.profile?.email || user.email}
                 </p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Phone</p>
                 <p className="text-white">
                   {profile.profile?.phone || "Not provided"}
                 </p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Location</p>
                 <p className="text-white">
                   {profile.profile?.location || "Not specified"}
                 </p>
-              </section>
-              <section>
+              </div>
+              <div>
                 <p className="text-sm text-gray-400">Availability</p>
-                <p className="text-white capitalize">
-                  {profile.profile?.availability || "Not specified"}
+                <p className="font-medium capitalize">
+                  {profile.profile.availability}
                 </p>
-              </section>
+              </div>
               {profile.profile?.portfolio_url && (
-                <section>
+                <div>
                   <p className="text-sm text-gray-400">Portfolio</p>
                   <a
                     href={
@@ -394,34 +379,34 @@ export default function FreelancerProfile() {
                   >
                     View Portfolio
                   </a>
-                </section>
+                </div>
               )}
-            </section>
-          </section>
+            </div>
+          </div>
 
-          <section className="pt-4">
+          <div className="pt-4">
             <p className="text-sm text-gray-400">Skills</p>
-            <section className="flex flex-wrap gap-2 mt-1">
+            <div className="flex flex-wrap gap-2 mt-1">
               {profile.profile?.skills
                 ? profile.profile.skills.split(",").map((skill, index) => (
-                    <p
+                    <span
                       key={index}
                       className="px-3 py-1 text-sm rounded-full bg-gray-700 text-white"
                     >
                       {skill.trim()}
-                    </p>
+                    </span>
                   ))
                 : "No skills listed"}
-            </section>
-          </section>
+            </div>
+          </div>
 
-          <section className="pt-4">
+          <div className="pt-4">
             <p className="text-sm text-gray-400">Description</p>
             <p className="text-white whitespace-pre-line">
               {profile.profile?.description || "No description provided"}
             </p>
-          </section>
-        </section>
+          </div>
+        </div>
       )}
     </section>
   );
