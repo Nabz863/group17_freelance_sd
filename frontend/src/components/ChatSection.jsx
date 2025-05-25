@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import supabase from '../utils/supabaseClient';
 
 export default function ChatSection({ projectId, currentUserId }) {
@@ -10,7 +10,7 @@ export default function ChatSection({ projectId, currentUserId }) {
     if (!projectId) return;
 
     (async () => {
-      const {data, error} = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .select('id, sender_id, text, timestamp')
         .eq('project_id', projectId)
@@ -52,36 +52,49 @@ export default function ChatSection({ projectId, currentUserId }) {
     const text = newText.trim();
     if (!text) return;
 
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        project_id: projectId,
-        sender_id: currentUserId,
-        receiver_id: null,
-        text,
-      });
+    // look up receiver_id from project
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('client_id, freelancer_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError || !project) {
+      console.error('Error looking up project participants:', projectError);
+      return;
+    }
+
+    const receiverId =
+      currentUserId === project.client_id
+        ? project.freelancer_id
+        : project.client_id;
+
+    const { error } = await supabase.from('messages').insert({
+      project_id: projectId,
+      sender_id: currentUserId,
+      receiver_id: receiverId,
+      text,
+    });
 
     if (error) console.error('Send message error:', error);
     else setNewText('');
   };
 
   return (
-    <main className="flex flex-col flex-1 bg-[#1a1a1a] h-full">
-      <section className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+    <main className="chat-container">
+      <section className="chat-messages">
         {messages.map(m => {
           const isSender = m.sender_id === currentUserId;
           return (
             <article
               key={m.id}
-              className={`max-w-[70%] px-4 py-3 rounded-lg shadow-sm ${
-                isSender ? 'bg-[#1abc9c] text-black self-end' : 'bg-[#2a2a2a] text-white self-start'
-              }`}
+              className={`chat-message ${isSender ? 'chat-message-out' : 'chat-message-in'}`}
             >
-              <header className="text-xs font-bold mb-1">
-                {isSender ? 'You' : m.sender_id}
+              <header className="chat-sender">
+                {isSender ? 'You' : isClient ? 'Freelancer' : 'Client'}
               </header>
-              <p className="text-sm">{m.text}</p>
-              <footer className="text-right text-xs text-gray-400 mt-1">
+              <p className="chat-text">{m.text}</p>
+              <footer className="chat-timestamp">
                 {new Date(m.timestamp).toLocaleTimeString()}
               </footer>
             </article>
@@ -91,24 +104,19 @@ export default function ChatSection({ projectId, currentUserId }) {
       </section>
 
       <form
-        className="flex items-center gap-2 border-t border-[#333] px-4 py-3"
+        className="chat-input-bar"
         onSubmit={e => {
           e.preventDefault();
           sendMessage();
         }}
       >
         <input
-          className="flex-1 bg-[#2a2a2a] text-white rounded px-4 py-2 placeholder-gray-400 focus:outline-none"
+          className="chat-input"
           placeholder="Type a message…"
           value={newText}
           onChange={e => setNewText(e.target.value)}
         />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-[#1abc9c] rounded text-black font-semibold hover:bg-[#16a085] transition"
-        >
-          Send
-        </button>
+        <button type="submit" className="chat-send-btn">Send</button>
       </form>
     </main>
   );

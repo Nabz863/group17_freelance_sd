@@ -1,53 +1,65 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import ChatList from './ChatList';
 import ChatSection from './ChatSection';
 
-export default function ChatSectionWrapper({ user, isClient }) {
+export default function ChatSectionWrapper({user, isClient}) {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [showChatList, setShowChatList] = useState(true);
+  const [showList, setShowList] = useState(true);
 
-  const handleChatSelect = (projectId) => {
-    setSelectedProject(projectId);
-    setShowChatList(false);
-  };
-
-  const handleBackToList = () => {
-    setSelectedProject(null);
-    setShowChatList(true);
-  };
+  useEffect(() => {
+    // Reset to list view when no chat is selected (mobile)
+    if (!selectedProject) {
+      setShowList(true);
+    }
+  }, [selectedProject]);
 
   if (!user) return null;
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#121212] rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-[#333] flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">
-          {showChatList ? "Messages" : "Chat"}
-        </h2>
-        {!showChatList ? (
-          <button
-            className="px-3 py-1 bg-[#333] rounded hover:bg-[#444] text-white"
-            onClick={handleBackToList}
-          >
-            ← Back
-          </button>
-        ) : null}
-      </div>
+    <section className="w-full h-full flex bg-[#0c0c0c]">
+      {/* Left Chat List (visible unless collapsed on mobile) */}
+      {showList && (
+        <ChatList
+          userId={user.sub}
+          isClient={isClient}
+          onSelect={(projectId) => {
+            setSelectedProject(projectId);
+            setShowList(false);
+          }}
+        />
+      )}
 
-      <div className="flex-1 overflow-hidden">
-        {showChatList ? (
-          <ChatList
-            userId={user.sub}
-            isClient={isClient}
-            onSelect={handleChatSelect}
-          />
-        ) : (
+      {/* Right Chat Pane */}
+      {selectedProject && (
+        <section className="flex-1 flex flex-col h-full">
+          {/* Back button for mobile/smaller screens */}
+          <header className="flex items-center justify-between px-4 py-2 border-b border-[#222] bg-[#121212]">
+            <button
+              className="text-white text-sm hover:text-accent transition ripple"
+              onClick={() => setSelectedProject(null)}
+            >
+              ← Back to Chats
+            </button>
+            <h2 className="text-white text-sm font-semibold truncate">
+              Project: {selectedProject}
+            </h2>
+          </header>
+
+          {/* Actual Chat */}
           <ChatSection
             projectId={selectedProject}
             currentUserId={user.sub}
+            isClient={isClient}
           />
-        )}
-      </div>
-    </div>
+        </section>
+      )}
+
+      {/* No project selected — show placeholder */}
+      {!selectedProject && !showList && (
+        <section className="flex-1 flex items-center justify-center text-gray-500">
+          <p>Select a chat to begin messaging.</p>
+        </section>
+      )}
+    </section>
   );
 }
