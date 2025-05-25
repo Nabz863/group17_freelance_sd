@@ -11,23 +11,22 @@ export default function ClientProfileForm() {
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    registrationType: "individual",
     firstName: "",
     lastName: "",
-    companyName: "",
     industry: "",
-    contactNumber: "",
-    email: "",
+    registrationType: "individual",
+    companyName: "",
+    companySize: "",
   });
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("clients")
-      .select("profile")
+      .select("profileData")
       .eq("user_id", user.sub)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({data}) => {
         if (!data) {
           navigate("/create-profile");
         } else {
@@ -36,17 +35,15 @@ export default function ClientProfileForm() {
       });
   }, [user, navigate]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({...prev, [name]: value}));
-  };
+  const handleChange = (e) =>
+    setFormData((f) => ({...f, [e.target.name]: e.target.value}));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const {error} = await supabase
       .from("clients")
-      .update({ profile: formData, status: "pending" })
+      .update({ profileData: formData, status: "pending" })
       .eq("user_id", user.sub);
 
     if (error) {
@@ -67,49 +64,9 @@ export default function ClientProfileForm() {
   return (
     <ProfileFormLayout
       title="Client Profile"
-      subtitle="Tell us about yourself or your company to get started"
+      subtitle="Tell us about your company or yourself"
       onSubmit={handleSubmit}
     >
-      <fieldset className="form-full-width">
-        <legend className="form-label">Registering As</legend>
-        <label className="form-label">
-          <input
-            type="radio"
-            name="registrationType"
-            value="individual"
-            checked={formData.registrationType === "individual"}
-            onChange={handleChange}
-            className="form-input"
-          />
-          Individual
-        </label>
-        <label className="form-label">
-          <input
-            type="radio"
-            name="registrationType"
-            value="company"
-            checked={formData.registrationType === "company"}
-            onChange={handleChange}
-            className="form-input"
-          />
-          Company
-        </label>
-      </fieldset>
-
-      {formData.registrationType === "company" && (
-        <label className="form-label form-full-width">
-          Company Name
-          <input
-            id="companyName"
-            name="companyName"
-            required
-            value={formData.companyName}
-            onChange={handleChange}
-            className="form-input"
-          />
-        </label>
-      )}
-
       <label className="form-label">
         First Name
         <input
@@ -135,7 +92,7 @@ export default function ClientProfileForm() {
       </label>
 
       <label className="form-label">
-        Industry / Sector
+        Industry/Sector
         <input
           id="industry"
           name="industry"
@@ -146,31 +103,47 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <label className="form-label">
-        Contact Number
-        <input
-          id="contactNumber"
-          name="contactNumber"
-          required
-          value={formData.contactNumber}
+      <label className="form-label form-full-width">
+        Registering as
+        <select
+          id="registrationType"
+          name="registrationType"
+          value={formData.registrationType}
           onChange={handleChange}
-          className="form-input"
-          type="tel"
-        />
+          className="form-select"
+        >
+          <option value="individual">Individual</option>
+          <option value="company">Company</option>
+        </select>
       </label>
 
-      <label className="form-label">
-        Email
-        <input
-          id="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="form-input"
-          type="email"
-        />
-      </label>
+      {formData.registrationType === "company" && (
+        <>
+          <label className="form-label">
+            Company Name
+            <input
+              id="companyName"
+              name="companyName"
+              required
+              value={formData.companyName}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+
+          <label className="form-label">
+            Company Size
+            <input
+              id="companySize"
+              name="companySize"
+              required
+              value={formData.companySize}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+        </>
+      )}
 
       <footer className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
