@@ -535,6 +535,18 @@
   text-align: right;
 }
 
+.chat-message-out .chat-sender {
+  color: #000; /* black for contrast */
+}
+
+.chat-message-out .chat-text {
+  color: #000;
+}
+
+.chat-message-out .chat-timestamp {
+  color: #333;
+}
+
 .chat-input-bar {
   display: flex;
   align-items: center;
