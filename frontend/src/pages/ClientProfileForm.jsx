@@ -1,12 +1,12 @@
-import React, {useState, useEffect} from "react";
-import {useAuth0} from "@auth0/auth0-react";
-import {useNavigate} from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
 import "../styles/theme.css";
 
 export default function ClientProfileForm() {
-  const {user} = useAuth0();
+  const { user } = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ export default function ClientProfileForm() {
       .select("profile")
       .eq("user_id", user.sub)
       .maybeSingle()
-      .then(({data}) => {
+      .then(({ data }) => {
         if (!data) {
           navigate("/create-profile");
         } else {
@@ -48,7 +48,8 @@ export default function ClientProfileForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const {error} = await supabase
+
+    const { error } = await supabase
       .from("clients")
       .update({ profile: formData, status: "pending" })
       .eq("user_id", user.sub);
@@ -77,21 +78,25 @@ export default function ClientProfileForm() {
       <section className="form-full-width">
         <label className="form-label">Registering As</label>
         <section className="flex items-center gap-4">
-          <label className="text-white font-medium">Individual</label>
+          <label className="text-white font-medium">
+            Individual
+          </label>
           <button
             type="button"
             role="switch"
             aria-checked={formData.registrationType === "company"}
             onClick={handleToggle}
-            className={`relative w-14 h-8 rounded-full transition-colors duration-300
+            className={`relative w-14 h-8 bg-[#444] rounded-full transition-colors duration-300 
               ${formData.registrationType === "company" ? "bg-[#1abc9c]" : "bg-[#444]"}`}
           >
-            <i
-              className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300
+            <span
+              className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 
                 ${formData.registrationType === "company" ? "translate-x-6" : "translate-x-0"}`}
             />
           </button>
-          <label className="text-white font-medium">Company</label>
+          <label className="text-white font-medium">
+            Company
+          </label>
         </section>
       </section>
 
