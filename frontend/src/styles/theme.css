@@ -41,6 +41,22 @@
     }
   }
   
+  .landing-logo {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(26, 188, 156, 0.35));
+  }
+
+@media (max-width: 600px) {
+  .landing-logo {
+    max-width: 160px;
+  }
+  }
+
   /* Sidebar Styles */
   
   .dashboard-sidebar {
