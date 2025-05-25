@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import {useEffect, useState} from "react";
+import {useAuth0} from "@auth0/auth0-react";
 import supabase from "../utils/supabaseClient";
-// Removed unused format import from date-fns
-// Using browser's built-in crypto API instead of node's crypto module
 
 export default function ApplyJobSection() {
   const { user } = useAuth0();
@@ -19,8 +17,8 @@ export default function ApplyJobSection() {
       setError("");
 
       try {
-        const [{ data: projectData, error: projectError }, { data: appsData, error: appsError }] = await Promise.all([
-          supabase.from("projects").select("id, description, created_at, clients!inner(*)").is("freelancer_id", null).eq("completed", false),
+        const [{data: projectData, error: projectError}, {data: appsData, error: appsError}] = await Promise.all([
+          supabase.from("projects").select("id, description").is("freelancer_id", null).eq("completed", false),
           supabase.from("applications").select("projectid").eq("freelancerid", user.sub),
         ]);
 
@@ -45,9 +43,9 @@ export default function ApplyJobSection() {
       } catch (err) {
         console.error("Error loading job data", err);
         setError("Failed to load jobs. Please try again later.");
-      } finally {
-        setLoading(false);
       }
+
+      setLoading(false);
     };
 
     fetchJobs();
@@ -59,8 +57,8 @@ export default function ApplyJobSection() {
       return;
     }
 
-    const { error } = await supabase.from("applications").insert({
-      applicationid: crypto.randomUUID(), // Using browser's built-in crypto API
+    const {error} = await supabase.from("applications").insert({
+      applicationid: crypto.randomUUID(),
       freelancerid: user.sub,
       projectid: projectId,
       status: "pending",
@@ -85,47 +83,53 @@ export default function ApplyJobSection() {
       ) : projects.length === 0 ? (
         <p className="text-gray-400 mt-4">No jobs available right now.</p>
       ) : (
-        <div className="grid gap-6 mt-6">
+        <section className="grid gap-6 mt-6" role="list">
           {projects.map((proj) => {
-            const { title, details, requirements, budget, deadline } =
-              proj.description || {};
+            const { title, details, requirements, budget, deadline } = proj.description || {};
             const applied = appliedProjectIds.includes(proj.id);
 
             return (
-              <div
+              <article
                 key={proj.id}
                 className="card-glow p-5 rounded-lg bg-[#1a1a1a] border border-[#1abc9c]"
+                role="listitem"
               >
-                <h2 className="text-xl text-accent font-bold">{title}</h2>
-                <p className="text-sm text-gray-300 mt-1">{details}</p>
-                {requirements && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    <strong>Requirements:</strong> {requirements}
-                  </p>
-                )}
-                {budget && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    <strong>Budget:</strong> R{budget}
-                  </p>
-                )}
-                {deadline && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    <strong>Deadline:</strong> {deadline}
-                  </p>
-                )}
-                <button
-                  className={`primary-btn mt-2 ${
-                    applied ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
-                  disabled={applied}
-                  onClick={() => handleApply(proj.id)}
-                >
-                  {applied ? "Application Submitted" : "Apply Now"}
-                </button>
-              </div>
+                <header>
+                  <h2 className="text-xl text-accent font-bold">{title}</h2>
+                  <p className="text-sm text-gray-300 mt-1">{details}</p>
+                </header>
+
+                <section className="mt-2">
+                  {requirements && (
+                    <p className="text-sm text-gray-500">
+                      <strong>Requirements:</strong> {requirements}
+                    </p>
+                  )}
+                  {budget && (
+                    <p className="text-sm text-gray-500">
+                      <strong>Budget:</strong> R{budget}
+                    </p>
+                  )}
+                  {deadline && (
+                    <p className="text-sm text-gray-500 mb-2">
+                      <strong>Deadline:</strong> {deadline}
+                    </p>
+                  )}
+                </section>
+
+                <footer>
+                  <button
+                    className={`primary-btn mt-3 ${applied ? "opacity-60 cursor-not-allowed" : ""}`}
+                    disabled={applied}
+                    onClick={() => handleApply(proj.id)}
+                  >
+                    {applied ? "Application Submitted" : "Apply Now"}
+                  </button>
+                </footer>
+              </article>
             );
           })}
-        </div>
+        </section>
       )}
     </section>
   );
