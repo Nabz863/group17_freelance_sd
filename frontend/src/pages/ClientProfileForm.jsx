@@ -20,7 +20,7 @@ export default function ClientProfileForm() {
     if (!user) return;
     supabase
       .from("clients")
-      .select("profileData")
+      .select("profile")
       .eq("user_id", user.sub)
       .maybeSingle()
       .then(({ data }) => {
@@ -40,7 +40,7 @@ export default function ClientProfileForm() {
 
     const {error} = await supabase
       .from("clients")
-      .update({ profileData: formData, status: "pending" })
+      .update({ profile: formData, status: "pending" })
       .eq("user_id", user.sub);
 
     if (error) {

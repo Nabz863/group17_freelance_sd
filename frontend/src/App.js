@@ -26,8 +26,16 @@ export default function App() {
 
     try {
       const [{data: client}, {data: freelancer}] = await Promise.all([
-        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
-        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
+        supabase
+          .from("clients")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("freelancers")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
       ]);
 
       const isClient = !!client;
@@ -41,7 +49,9 @@ export default function App() {
       }
 
       if (!profile) {
-        const profilePath = isClient ? "/create-client-profile" : "/create-freelancer-profile";
+        const profilePath = isClient
+          ? "/create-client-profile"
+          : "/create-freelancer-profile";
         if (location.pathname !== profilePath) navigate(profilePath);
         return;
       }
@@ -52,7 +62,12 @@ export default function App() {
       }
 
       const dashboard = isClient ? "/client" : "/freelancer";
-      const protectedPaths = ["/client", "/freelancer", "/post-job", "/review-applicants"]; //whitelist
+      const protectedPaths = [
+        "/client",
+        "/freelancer",
+        "/post-job",
+        "/review-applicants",
+      ];
       if (!protectedPaths.includes(location.pathname)) {
         navigate(dashboard);
       }
