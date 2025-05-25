@@ -1,4 +1,3 @@
-import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "../styles/theme.css";
 import "../styles/Landing.css";
@@ -19,13 +18,6 @@ export default function Landing() {
 
   return (
     <main className="landing-container">
-      <header className="flex justify-center py-6">
-        <img
-          src="https://thegigisupblob.blob.core.windows.net/documents/Logo%20Black.jpg?sp=r&st=2025-05-25T17:38:19Z&se=2025-12-31T01:38:19Z&spr=https&sv=2024-11-04&sr=b&sig=Ytd5ZuG5lB5zrduJvOPUl8ufXLe4KeFGw8yOZ9vGl7A%3D"
-          alt="The Gig Is Up Logo"
-          className="h-14 object-contain"
-        />
-      </header>
       <section className="hero-section">
         <h1 className="hero-title">The Gig Is Up</h1>
         <p className="hero-subtitle">
