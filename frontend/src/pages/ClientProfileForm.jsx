@@ -14,16 +14,19 @@ export default function ClientProfileForm() {
     firstName: "",
     lastName: "",
     industry: "",
+    registrationType: "individual",
+    companyName: "",
+    companySize: "",
   });
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("clients")
-      .select("profile")
+      .select("profileData")
       .eq("user_id", user.sub)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({data}) => {
         if (!data) {
           navigate("/create-profile");
         } else {
@@ -40,7 +43,7 @@ export default function ClientProfileForm() {
 
     const {error} = await supabase
       .from("clients")
-      .update({ profile: formData, status: "pending" })
+      .update({ profileData: formData, status: "pending" })
       .eq("user_id", user.sub);
 
     if (error) {
@@ -61,7 +64,7 @@ export default function ClientProfileForm() {
   return (
     <ProfileFormLayout
       title="Client Profile"
-      subtitle="Tell us about your company to get started"
+      subtitle="Tell us about your company or yourself"
       onSubmit={handleSubmit}
     >
       <label className="form-label">
@@ -100,11 +103,53 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <div className="form-footer form-full-width">
+      <label className="form-label form-full-width">
+        Registering as
+        <select
+          id="registrationType"
+          name="registrationType"
+          value={formData.registrationType}
+          onChange={handleChange}
+          className="form-select"
+        >
+          <option value="individual">Individual</option>
+          <option value="company">Company</option>
+        </select>
+      </label>
+
+      {formData.registrationType === "company" && (
+        <>
+          <label className="form-label">
+            Company Name
+            <input
+              id="companyName"
+              name="companyName"
+              required
+              value={formData.companyName}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+
+          <label className="form-label">
+            Company Size
+            <input
+              id="companySize"
+              name="companySize"
+              required
+              value={formData.companySize}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+        </>
+      )}
+
+      <footer className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
           Submit Profile
         </button>
-      </div>
+      </footer>
     </ProfileFormLayout>
   );
 }
