@@ -5,7 +5,7 @@ import supabase from "./utils/supabaseClient";
 import RoutesComponent from "./routes";
 
 export default function App() {
-  const {isAuthenticated, user, isLoading, loginWithRedirect} = useAuth0();
+  const { isAuthenticated, user, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -14,20 +14,31 @@ export default function App() {
 
     const userId = user.sub;
 
+    // Redirect to admin dashboard
     if (userId === process.env.REACT_APP_AUTH0_ADMIN_ID) {
       if (location.pathname !== "/admin") navigate("/admin");
       return;
     }
 
+    // Block access if email is not verified
     if (!user.email_verified) {
       if (location.pathname !== "/verify-email") navigate("/verify-email");
       return;
     }
 
     try {
-      const [{data: client}, {data: freelancer}] = await Promise.all([
-        supabase.from("clients").select("status, profile").eq("user_id", userId).maybeSingle(),
-        supabase.from("freelancers").select("status, profile").eq("user_id", userId).maybeSingle()
+      // Check if user is client or freelancer
+      const [{ data: client }, { data: freelancer }] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("freelancers")
+          .select("status, profile")
+          .eq("user_id", userId)
+          .maybeSingle(),
       ]);
 
       const isClient = !!client;
@@ -41,8 +52,10 @@ export default function App() {
       }
 
       if (!profile) {
-        const profilePath = isClient ? "/create-client-profile" : "/create-freelancer-profile";
-        if (location.pathname !== profilePath) navigate(profilePath);
+        const path = isClient
+          ? "/create-client-profile"
+          : "/create-freelancer-profile";
+        if (location.pathname !== path) navigate(path);
         return;
       }
 
@@ -52,7 +65,13 @@ export default function App() {
       }
 
       const dashboard = isClient ? "/client" : "/freelancer";
-      const protectedPaths = ["/client", "/freelancer", "/post-job", "/review-applicants"];
+      const protectedPaths = [
+        "/client",
+        "/freelancer",
+        "/post-job",
+        "/review-applicants",
+      ];
+
       if (!protectedPaths.includes(location.pathname)) {
         navigate(dashboard);
       }
@@ -71,7 +90,14 @@ export default function App() {
     } else if (isAuthenticated && user) {
       handleAuth();
     }
-  }, [isLoading, isAuthenticated, user, location.pathname, handleAuth, loginWithRedirect]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    user,
+    location.pathname,
+    handleAuth,
+    loginWithRedirect,
+  ]);
 
   if (isLoading) return <main><p>Loading...</p></main>;
 
