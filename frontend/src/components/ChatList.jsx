@@ -4,25 +4,21 @@ import supabase from '../utils/supabaseClient';
 export default function ChatList({userId, isClient, onSelect}) {
   const [projects, setProjects] = useState([]);
 
-  useEffect(() => {
-    if (!userId) return;
+useEffect(() => {
+  if (!userId) return;
 
-    (async () => {
-      let q = supabase.from('projects').select('id, description');
-      if (isClient) {
-        q = q.eq('client_id', userId);
-      } else {
-        q = q.eq('freelancer_id', userId);
-      }
+  (async () => {
+    const res = await fetch('/functions/v1/get-chat-projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, is_client: isClient })
+    });
 
-      const {data, error} = await q;
-      if (error) {
-        console.error('Error loading projects for chat:', error);
-      } else {
-        setProjects(data);
-      }
-    })();
-  }, [userId, isClient]);
+    const data = await res.json();
+    if (res.ok) setProjects(data);
+    else console.error('Error loading projects:', data.error);
+  })();
+}, [userId, isClient]);
 
   return (
     <aside className="w-1/3 max-w-sm h-full overflow-y-auto bg-[#111] border-r border-[#222]">
