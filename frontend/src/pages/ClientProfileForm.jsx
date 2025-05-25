@@ -1,23 +1,20 @@
-import React, {useState, useEffect} from "react";
-import {useAuth0} from "@auth0/auth0-react";
-import {useNavigate} from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import supabase from "../utils/supabaseClient";
 import ProfileFormLayout from "../components/ProfileFormLayout";
 import "../styles/theme.css";
 
 export default function ClientProfileForm() {
-  const {user} = useAuth0();
+  const { user } = useAuth0();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    registrationType: "individual",
     firstName: "",
     lastName: "",
-    companyName: "",
     industry: "",
-    contactNumber: "",
-    email: "",
+    type: "individual", // default
   });
 
   useEffect(() => {
@@ -27,7 +24,7 @@ export default function ClientProfileForm() {
       .select("profile")
       .eq("user_id", user.sub)
       .maybeSingle()
-      .then(({data}) => {
+      .then(({ data }) => {
         if (!data) {
           navigate("/create-profile");
         } else {
@@ -37,21 +34,20 @@ export default function ClientProfileForm() {
   }, [user, navigate]);
 
   const handleChange = (e) =>
-    setFormData((f) => ({...f, [e.target.name]: e.target.value}));
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleToggle = () => {
+  const handleTypeToggle = () =>
     setFormData((f) => ({
       ...f,
-      registrationType: f.registrationType === "individual" ? "company" : "individual",
+      type: f.type === "individual" ? "company" : "individual",
     }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { error } = await supabase
       .from("clients")
-      .update({profile: formData, status: "pending"})
+      .update({ profile: formData, status: "pending" })
       .eq("user_id", user.sub);
 
     if (error) {
@@ -72,48 +68,9 @@ export default function ClientProfileForm() {
   return (
     <ProfileFormLayout
       title="Client Profile"
-      subtitle="Tell us about yourself or your company to get started"
+      subtitle="Tell us about your company to get started"
       onSubmit={handleSubmit}
     >
-      <section className="form-full-width">
-        <label className="form-label">Registering As</label>
-        <section className="flex items-center gap-4">
-          <label className="text-white font-medium">
-            Individual
-          </label>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={formData.registrationType === "company"}
-            onClick={handleToggle}
-            className={`relative w-14 h-8 bg-[#444] rounded-full transition-colors duration-300 
-              ${formData.registrationType === "company" ? "bg-[#1abc9c]" : "bg-[#444]"}`}
-          >
-            <span
-              className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 
-                ${formData.registrationType === "company" ? "translate-x-6" : "translate-x-0"}`}
-            />
-          </button>
-          <label className="text-white font-medium">
-            Company
-          </label>
-        </section>
-      </section>
-
-      {formData.registrationType === "company" && (
-        <label className="form-label form-full-width">
-          Company Name
-          <input
-            id="companyName"
-            name="companyName"
-            required
-            value={formData.companyName}
-            onChange={handleChange}
-            className="form-input"
-          />
-        </label>
-      )}
-
       <label className="form-label">
         First Name
         <input
@@ -139,7 +96,7 @@ export default function ClientProfileForm() {
       </label>
 
       <label className="form-label">
-        Industry / Sector
+        Industry/Sector
         <input
           id="industry"
           name="industry"
@@ -150,37 +107,29 @@ export default function ClientProfileForm() {
         />
       </label>
 
-      <label className="form-label">
-        Contact Number
-        <input
-          id="contactNumber"
-          name="contactNumber"
-          required
-          value={formData.contactNumber}
-          onChange={handleChange}
-          className="form-input"
-          type="tel"
-        />
-      </label>
+      <section className="form-full-width" style={{ marginTop: "1rem" }}>
+        <strong className="text-white mb-2 block">
+          Are you registering as an Individual or Company?
+        </strong>
+        <section style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <span className="text-white">Individual</span>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={formData.type === "company"}
+              onChange={handleTypeToggle}
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className="text-white">Company</span>
+        </section>
+      </section>
 
-      <label className="form-label">
-        Email
-        <input
-          id="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="form-input"
-          type="email"
-        />
-      </label>
-
-      <footer className="form-footer form-full-width">
+      <section className="form-footer form-full-width">
         <button type="submit" className="primary-btn">
           Submit Profile
         </button>
-      </footer>
+      </section>
     </ProfileFormLayout>
   );
 }
