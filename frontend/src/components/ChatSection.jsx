@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import supabase from '../utils/supabaseClient';
 
-export default function ChatSection({ projectId, currentUserId }) {
+export default function ChatSection({ projectId, currentUserId, isClient }) {
   const [messages, setMessages] = useState([]);
   const [newText, setNewText] = useState('');
   const bottomRef = useRef(null);
@@ -10,20 +9,22 @@ export default function ChatSection({ projectId, currentUserId }) {
     if (!projectId) return;
 
     (async () => {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('id, sender_id, text, timestamp')
-        .eq('project_id', projectId)
-        .order('timestamp', { ascending: true });
-      if (error) console.error('Load messages error:', error);
-      else setMessages(data);
+      const res = await fetch('/functions/v1/get-messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId })
+      });
+
+      const data = await res.json();
+      if (res.ok) setMessages(data);
+      else console.error('Load messages error:', data.error);
     })();
   }, [projectId]);
 
   useEffect(() => {
     if (!projectId) return;
 
-    const channel = supabase
+    const channel = window.supabase
       .channel('public:messages')
       .on(
         'postgres_changes',
@@ -40,7 +41,7 @@ export default function ChatSection({ projectId, currentUserId }) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      window.supabase.removeChannel(channel);
     };
   }, [projectId]);
 
@@ -52,31 +53,14 @@ export default function ChatSection({ projectId, currentUserId }) {
     const text = newText.trim();
     if (!text) return;
 
-    // look up receiver_id from project
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('client_id, freelancer_id')
-      .eq('id', projectId)
-      .single();
-
-    if (projectError || !project) {
-      console.error('Error looking up project participants:', projectError);
-      return;
-    }
-
-    const receiverId =
-      currentUserId === project.client_id
-        ? project.freelancer_id
-        : project.client_id;
-
-    const { error } = await supabase.from('messages').insert({
-      project_id: projectId,
-      sender_id: currentUserId,
-      receiver_id: receiverId,
-      text,
+    const res = await fetch('/functions/v1/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: projectId, sender_id: currentUserId, text })
     });
 
-    if (error) console.error('Send message error:', error);
+    const result = await res.json();
+    if (!res.ok) console.error('Send message error:', result.error);
     else setNewText('');
   };
 

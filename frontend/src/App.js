@@ -2,7 +2,13 @@ import { useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import supabase from "./utils/supabaseClient";
+import { createClient } from '@supabase/supabase-js';
 import RoutesComponent from "./routes";
+
+window.supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
 
 export default function App() {
   const { isAuthenticated, user, isLoading, loginWithRedirect } = useAuth0();
