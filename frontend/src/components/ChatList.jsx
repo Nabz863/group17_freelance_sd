@@ -1,5 +1,4 @@
 import {useEffect, useState} from 'react';
-import supabase from '../utils/supabaseClient';
 
 export default function ChatList({userId, isClient, onSelect}) {
   const [projects, setProjects] = useState([]);
